@@ -20,7 +20,7 @@
     <span class="brand-tag">money-recovery agent</span>
   </div>
   <div class="topbar-right">
-    <div class="chips" id="status-chips"><!-- injected --></div>
+    <div class="chips" id="status-chips" role="list" aria-label="System status"><!-- injected --></div>
     <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
     <a class="signin-link" href="/login.html">Sign in</a>
   </div>
@@ -77,7 +77,7 @@
       <h3>Recovery swarm <span class="muted" id="swarm-meta">—</span></h3>
       <span class="muted">coordinator → specialists → verifier</span>
     </div>
-    <div class="swarm" id="swarm"><!-- injected --></div>
+    <div class="swarm" id="swarm" role="list" aria-label="Recovery specialist agents"><!-- injected --></div>
   </section>
 
   <!-- FINDINGS -->
@@ -86,7 +86,7 @@
       <h3>Recoverable money <span class="count-pill" id="findings-count">0</span></h3>
       <div class="legend"><span class="lg leak">leak</span><span class="lg owed">owed to you</span></div>
     </div>
-    <div class="findings" id="findings"><!-- injected --></div>
+    <div class="findings" id="findings" role="list" aria-label="Recoverable money"><!-- injected --></div>
   </section>
 
   <!-- AUDIT -->
@@ -106,7 +106,7 @@
 
 <!-- drawer for drafted message -->
 <div class="drawer-scrim" id="drawer-scrim"></div>
-<aside class="drawer" id="drawer">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
   <div class="drawer-head"><h4 id="drawer-title">Drafted message</h4><button class="x" id="drawer-x">✕</button></div>
   <div class="drawer-meta" id="drawer-meta"></div>
   <div class="drawer-prov" id="drawer-prov"></div>

@@ -59,6 +59,8 @@
     if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0}/${S.actions.length} verified` : "—";
     roster.forEach((a) => {
       const c = el("div", "agent-card" + (a.count ? " active" : ""));
+      c.setAttribute("role", "listitem");
+      c.setAttribute("aria-label", `${a.name}: ${a.count} found, $${money(a.amount)} recoverable`);
       c.innerHTML = `<div class="ag-top"><span class="ag-dot"></span><span class="ag-name">${esc(a.name)}</span><span class="ag-count">${a.count}</span></div>
         <div class="ag-mandate">${esc(a.mandate)}</div>
         <div class="ag-stat">$${money(a.amount)} recoverable</div>`;
@@ -129,7 +131,7 @@
 
   function renderFindings() {
     const box = $("#findings"); box.innerHTML = "";
-    S.actions.forEach((a) => box.appendChild(card(a)));
+    S.actions.forEach((a, i) => { const c = card(a); c.style.animationDelay = (i * 0.04) + "s"; box.appendChild(c); });
   }
 
   function card(a) {
@@ -137,6 +139,8 @@
     const st = a.status, approved = a.approvalState === "approved";
     const c = el("div", "fcard" + (approved ? " claim-ready" : a.approvalState === "rejected" ? " skipped" : "") + (once ? " fc-onetime" : "") + (st === "paid" ? " paid" : ""));
     c.id = "card-" + a.id;
+    c.setAttribute("role", "listitem");
+    c.setAttribute("aria-label", `${a.title}, ${a.amount_label}, ${a.confidence ? Math.round(a.confidence * 100) + "% confidence" : ""}`);
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
         <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text">⧉ Copy</button>

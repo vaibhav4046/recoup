@@ -11,6 +11,9 @@
   --radius:18px;
 }
 *{box-sizing:border-box}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:6px}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 html,body{margin:0;padding:0}
 body{
   background:radial-gradient(1200px 700px at 80% -10%,rgba(34,211,238,.08),transparent 60%),
@@ -171,7 +174,7 @@ body{
 
 /* findings */
 .findings{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
-.fcard{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:11px;transition:.25s;position:relative;overflow:hidden}
+.fcard{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:11px;transition:.25s;position:relative;overflow:hidden;animation:cardIn .42s both}
 .fcard:hover{border-color:var(--border2);transform:translateY(-2px)}
 .fcard.recovered{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,rgba(52,211,153,.09),var(--panel))}
 .fcard.skipped{opacity:.5}
