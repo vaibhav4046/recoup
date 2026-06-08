@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # --- auth (all optional; each provider activates when its key is set) ---
     app_secret: str = ""                    # HMAC secret for session tokens
     base_url: str = "http://localhost:8099"  # public backend URL (for OAuth/magic-link callbacks)
+    frontend_url: str = "https://recoup-vaibhav4046s-projects.vercel.app"  # where to send the user after Gmail OAuth
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
     resend_api_key: str = ""                # magic-link email sender (resend.com, free)

@@ -45,6 +45,15 @@
     recompute();
     renderAll(true);
     wire();
+    // Gmail OAuth handoff: ?gmail=<one-time-token> | ok | err
+    try {
+      const gp = new URLSearchParams(location.search).get("gmail");
+      if (gp) {
+        history.replaceState({}, "", location.pathname);
+        if (gp === "err") toast("Gmail connect failed — try again, or use the paste scan");
+        else if (gp !== "ok" && API) loadGmail(gp);
+      }
+    } catch (e) {}
   }
 
   function sumAmt(pred) { return r2(S.actions.filter(pred).reduce((s, a) => s + (a.amount || 0), 0)); }
@@ -333,26 +342,63 @@
     });
   }
 
+  async function applyFindings(findings, opts) {
+    opts = opts || {};
+    S.actions = findings;
+    S._real = true; S._live = false;
+    S.recurring_year = r2(findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + a.amount, 0));
+    S.one_time = r2(findings.filter((a) => a.cadence === "once").reduce((s, a) => s + a.amount, 0));
+    S.recoverable = r2(S.recurring_year + S.one_time);
+    S.needs_confirm = findings.filter((a) => a.verify && a.verify.needs_confirm).length;
+    S.verified = findings.filter((a) => a.verify && a.verify.ok && !(a.verify && a.verify.needs_confirm)).length;
+    S.flagged = 0;
+    S.swarm = rosterFrom(findings);
+    S.run = { model: opts.model || "in-browser rules", live: false, latency_ms: 0 };
+    S.reasoning = opts.reasoning || [
+      { t: `Found ${findings.length} recoverable items`, tone: "cyan" },
+      { t: `$${money(S.recurring_year)}/yr recurring + $${money(S.one_time)} one-time`, tone: "ok" },
+      { t: "Review each; nothing sends without your approval", tone: "dim" },
+    ];
+    S.audit = [];
+    await appendAudit("system", opts.scanner || "Recoup", "SCAN_RUN", opts.auditLabel || `Found ${findings.length} recoverable items, $${money(S.recoverable)} recoverable`, S.recoverable);
+    renderAll(true);
+  }
+
   async function runScan() {
     const text = ($("#scan-input") && $("#scan-input").value) || "";
     const res = window.RecoupScan ? window.RecoupScan.scan(text) : { findings: [] };
     if (!res.findings || !res.findings.length) { toast("No recurring charges found — add more lines or try the sample"); return; }
-    S.actions = res.findings;
-    S._real = true; S._live = false;
-    S.recurring_year = res.recurring_year; S.one_time = res.one_time; S.recoverable = res.total;
-    S.swarm = rosterFrom(res.findings); S.verified = res.findings.length; S.flagged = 0;
-    S.run = { model: "in-browser rules", live: false, latency_ms: 0 };
-    S.reasoning = [
-      { t: `Scanned ${res.txns} transactions in your browser — nothing left this device`, tone: "cyan" },
-      { t: `Subscription Hunter + Billing Auditor found ${res.findings.length} recoverable items`, tone: "warn" },
-      { t: `$${money(res.recurring_year)}/yr recurring + $${money(res.one_time)} one-time`, tone: "ok" },
-      { t: "Review each; nothing sends without your approval", tone: "dim" },
-    ];
-    S.audit = [];
-    await appendAudit("system", "Recoup (in-browser)", "SCAN_RUN", `Scanned ${res.txns} of your transactions — ${res.findings.length} items, $${money(res.total)} recoverable`, res.total);
+    await applyFindings(res.findings, {
+      scanner: "Recoup (in-browser)",
+      auditLabel: `Scanned ${res.txns} of your transactions — ${res.findings.length} items, $${money(res.total)} recoverable`,
+      reasoning: [
+        { t: `Scanned ${res.txns} transactions in your browser — nothing left this device`, tone: "cyan" },
+        { t: `Subscription Hunter + Billing Auditor found ${res.findings.length} recoverable items`, tone: "warn" },
+        { t: `$${money(res.recurring_year)}/yr recurring + $${money(res.one_time)} one-time`, tone: "ok" },
+        { t: "Review each; nothing sends without your approval", tone: "dim" },
+      ],
+    });
     closeScan();
-    renderAll(true);
     toast(`Found ${res.findings.length} recoverable items in YOUR data`);
+  }
+
+  async function loadGmail(token) {
+    try {
+      const d = await fetch(API + "/api/gmail/findings?token=" + encodeURIComponent(token)).then((r) => r.json());
+      if (d.findings && d.findings.length) {
+        await applyFindings(d.findings, {
+          model: "Gmail read-only", scanner: "Recoup (Gmail)",
+          auditLabel: `Read your subscription emails — ${d.findings.length} subscriptions found`,
+          reasoning: [
+            { t: "Connected your Gmail (read-only) — scanned subscription & receipt emails", tone: "cyan" },
+            { t: `Subscription Hunter found ${d.findings.length} subscriptions you're paying for`, tone: "warn" },
+            { t: `$${money(S.recurring_year)}/yr across your subscriptions`, tone: "ok" },
+            { t: "Review each; nothing sends without your approval", tone: "dim" },
+          ],
+        });
+        toast(`Found ${d.findings.length} subscriptions in your Gmail`);
+      } else { toast("No subscriptions detected in your Gmail — try the paste scan"); }
+    } catch (e) { toast("Couldn't load Gmail results — try again"); }
   }
 
   // ---- misc ----

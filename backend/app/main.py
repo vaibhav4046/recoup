@@ -230,22 +230,23 @@ async def gmail_start():
 @app.get("/api/gmail/callback")
 async def gmail_cb(code: str):
     from . import gmail as gmailmod
+    fe = get_settings().frontend_url.rstrip("/")
     try:
         tok = auth.google_exchange(code, redirect_path="/api/gmail/callback")
         access = tok.get("access_token")
         if not access:
-            return RedirectResponse("/?gmail=err")
+            return RedirectResponse(f"{fe}/?gmail=err")
         msgs = gmailmod.fetch_subscription_emails(access)
         findings = gmailmod.to_findings(gmailmod.detect(msgs))
     except Exception:
-        return RedirectResponse("/?gmail=err")
-    sess = auth.create_session("gmail-user")
-    _GMAIL_FINDINGS[sess] = findings
-    resp = RedirectResponse("/?gmail=ok")
-    _set_session(resp, sess)
-    return resp
+        return RedirectResponse(f"{fe}/?gmail=err")
+    token = uuid.uuid4().hex  # one-time handoff token (cookies don't cross origin)
+    _GMAIL_FINDINGS[token] = findings
+    return RedirectResponse(f"{fe}/?gmail={token}")
 
 
 @app.get("/api/gmail/findings")
-async def gmail_findings(request: Request, ro_session: str = Cookie(default="")):
-    return _ok(request, findings=_GMAIL_FINDINGS.get(ro_session, []))
+async def gmail_findings(request: Request, token: str = "", ro_session: str = Cookie(default="")):
+    key = token or ro_session
+    findings = _GMAIL_FINDINGS.pop(key, []) if token else _GMAIL_FINDINGS.get(key, [])
+    return _ok(request, findings=findings)
