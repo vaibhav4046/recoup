@@ -328,9 +328,9 @@
   function renderVrec() {
     const list = $("#vrec-list"); if (!list) return;
     const v = getVrec();
-    if (!v.length) { list.innerHTML = `<div class="vrec-empty">No verified recoveries yet. When you actually get money back — cancel a real subscription, claim real unclaimed cash — log it here with its confirmation. It shows as <b>evidenced proof</b>, never a self-reported guess.</div>`; return; }
+    if (!v.length) { list.innerHTML = `<div class="vrec-empty">Nothing logged yet. When you actually get money back — cancel a real subscription, claim real unclaimed cash — log it here with its confirmation reference, so it's <b>checkable</b>, not a vague estimate. (You-logged, not independently audited.)</div>`; return; }
     const total = r2(v.reduce((s, r) => s + (r.amount || 0), 0));
-    list.innerHTML = `<div class="vrec-empty">Total verified recovered: <b style="color:#37d67a">£${total.toFixed(2)}</b></div>` +
+    list.innerHTML = `<div class="vrec-empty">Total you've logged: <b style="color:#37d67a">£${total.toFixed(2)}</b> <span class="muted">(you-confirmed)</span></div>` +
       v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">£${Number(r.amount).toFixed(2)}</span></div>`).join("");
   }
   function addVrec() {
