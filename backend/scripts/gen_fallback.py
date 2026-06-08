@@ -24,6 +24,7 @@ state = {
     "reasoning": APP.last_plan["reasoning"],
     "swarm": APP.last_plan.get("swarm"),
     "verified": APP.last_plan.get("verified"),
+    "needs_confirm": APP.last_plan.get("needs_confirm"),
     "flagged": APP.last_plan.get("flagged"),
     "totals": APP.totals(),
     "recurring_year": APP.scan_result["recurring_year"],

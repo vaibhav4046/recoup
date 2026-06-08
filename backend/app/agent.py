@@ -134,7 +134,7 @@ def draft_plan(scan: dict) -> dict:
     s = get_settings()
     meta = swarm.orchestrate(scan)             # attribute + verify findings; build roster + orchestration trace
     actions = build_actions(scan["findings"])  # findings now carry agent attribution + verdict
-    sw = {"swarm": meta["roster"], "verified": meta["verified"],
+    sw = {"swarm": meta["roster"], "verified": meta["verified"], "needs_confirm": meta["needs_confirm"],
           "flagged": meta["flagged"], "agents": meta["agents"]}
     closing = [
         {"t": "One-time payouts are never annualized; amounts come from the rules, not the model", "tone": "dim"},

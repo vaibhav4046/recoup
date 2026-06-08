@@ -56,7 +56,7 @@
     const box = $("#swarm"); if (!box) return; box.innerHTML = "";
     const roster = S.swarm || [];
     const meta = $("#swarm-meta");
-    if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0}/${S.actions.length} verified` : "—";
+    if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0} auto-verified${S.needs_confirm ? " · " + S.needs_confirm + " need sign-off" : ""}` : "—";
     roster.forEach((a) => {
       const c = el("div", "agent-card" + (a.count ? " active" : ""));
       c.setAttribute("role", "listitem");
@@ -188,7 +188,7 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
-      ${a.agent_name ? `<div class="fc-agent">◆ ${esc(a.agent_name)}${a.verify && a.verify.ok ? " · verified" : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent">◆ ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm">⚠ confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
@@ -248,7 +248,7 @@
   async function markPaid(id) {
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
     a.status = "paid";
-    await appendAudit("human", "You", "CLAIM_PAID", "Recovered: " + a.title + " (" + a.amount_label + ")", a.amount);
+    await appendAudit("human", "You", "CLAIM_PAID", "Recovered — you confirmed: " + a.title + " (" + a.amount_label + ")", a.amount);
     updateReadyUI(); renderAudit();
     const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
     toast(`💰 Recovered ${a.amount_label} — ${a.title}`);

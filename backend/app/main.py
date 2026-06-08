@@ -141,6 +141,7 @@ async def full_state(request: Request):
         reasoning=APP.last_plan["reasoning"] if APP.last_plan else [],
         swarm=APP.last_plan.get("swarm") if APP.last_plan else [],
         verified=APP.last_plan.get("verified") if APP.last_plan else 0,
+        needs_confirm=APP.last_plan.get("needs_confirm") if APP.last_plan else 0,
         flagged=APP.last_plan.get("flagged") if APP.last_plan else 0,
         totals=APP.totals(),
         recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,

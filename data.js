@@ -28,6 +28,7 @@ window.RO_FALLBACK = {
         "verify": {
           "ok": true,
           "review": false,
+          "needs_confirm": false,
           "checks": [
             {
               "label": "amount is positive",
@@ -43,6 +44,10 @@ window.RO_FALLBACK = {
             },
             {
               "label": "within plausible range (≤ $5k)",
+              "ok": true
+            },
+            {
+              "label": "eligibility is auto-confirmable",
               "ok": true
             }
           ],
@@ -71,6 +76,7 @@ window.RO_FALLBACK = {
         "verify": {
           "ok": true,
           "review": false,
+          "needs_confirm": false,
           "checks": [
             {
               "label": "amount is positive",
@@ -86,6 +92,10 @@ window.RO_FALLBACK = {
             },
             {
               "label": "within plausible range (≤ $5k)",
+              "ok": true
+            },
+            {
+              "label": "eligibility is auto-confirmable",
               "ok": true
             }
           ],
@@ -114,6 +124,7 @@ window.RO_FALLBACK = {
         "verify": {
           "ok": true,
           "review": false,
+          "needs_confirm": false,
           "checks": [
             {
               "label": "amount is positive",
@@ -129,6 +140,10 @@ window.RO_FALLBACK = {
             },
             {
               "label": "within plausible range (≤ $5k)",
+              "ok": true
+            },
+            {
+              "label": "eligibility is auto-confirmable",
               "ok": true
             }
           ],
@@ -157,6 +172,7 @@ window.RO_FALLBACK = {
         "verify": {
           "ok": true,
           "review": false,
+          "needs_confirm": false,
           "checks": [
             {
               "label": "amount is positive",
@@ -172,6 +188,10 @@ window.RO_FALLBACK = {
             },
             {
               "label": "within plausible range (≤ $5k)",
+              "ok": true
+            },
+            {
+              "label": "eligibility is auto-confirmable",
               "ok": true
             }
           ],
@@ -200,6 +220,7 @@ window.RO_FALLBACK = {
         "verify": {
           "ok": true,
           "review": false,
+          "needs_confirm": false,
           "checks": [
             {
               "label": "amount is positive",
@@ -215,6 +236,10 @@ window.RO_FALLBACK = {
             },
             {
               "label": "within plausible range (≤ $5k)",
+              "ok": true
+            },
+            {
+              "label": "eligibility is auto-confirmable",
               "ok": true
             }
           ],
@@ -242,7 +267,8 @@ window.RO_FALLBACK = {
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
-          "review": false,
+          "review": true,
+          "needs_confirm": true,
           "checks": [
             {
               "label": "amount is positive",
@@ -259,9 +285,15 @@ window.RO_FALLBACK = {
             {
               "label": "within plausible range (≤ $5k)",
               "ok": true
+            },
+            {
+              "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+              "ok": false
             }
           ],
-          "reasons": []
+          "reasons": [
+            "eligibility needs YOUR confirmation (can't auto-verify)"
+          ]
         }
       },
       {
@@ -285,7 +317,8 @@ window.RO_FALLBACK = {
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
-          "review": false,
+          "review": true,
+          "needs_confirm": true,
           "checks": [
             {
               "label": "amount is positive",
@@ -302,9 +335,15 @@ window.RO_FALLBACK = {
             {
               "label": "within plausible range (≤ $5k)",
               "ok": true
+            },
+            {
+              "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+              "ok": false
             }
           ],
-          "reasons": []
+          "reasons": [
+            "eligibility needs YOUR confirmation (can't auto-verify)"
+          ]
         }
       },
       {
@@ -328,7 +367,8 @@ window.RO_FALLBACK = {
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
-          "review": false,
+          "review": true,
+          "needs_confirm": true,
           "checks": [
             {
               "label": "amount is positive",
@@ -345,9 +385,15 @@ window.RO_FALLBACK = {
             {
               "label": "within plausible range (≤ $5k)",
               "ok": true
+            },
+            {
+              "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+              "ok": false
             }
           ],
-          "reasons": []
+          "reasons": [
+            "eligibility needs YOUR confirmation (can't auto-verify)"
+          ]
         }
       },
       {
@@ -371,7 +417,8 @@ window.RO_FALLBACK = {
         "agent_name": "Refund Claimant",
         "verify": {
           "ok": true,
-          "review": false,
+          "review": true,
+          "needs_confirm": true,
           "checks": [
             {
               "label": "amount is positive",
@@ -388,9 +435,15 @@ window.RO_FALLBACK = {
             {
               "label": "within plausible range (≤ $5k)",
               "ok": true
+            },
+            {
+              "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+              "ok": false
             }
           ],
-          "reasons": []
+          "reasons": [
+            "eligibility needs YOUR confirmation (can't auto-verify)"
+          ]
         }
       },
       {
@@ -414,7 +467,8 @@ window.RO_FALLBACK = {
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
-          "review": false,
+          "review": true,
+          "needs_confirm": true,
           "checks": [
             {
               "label": "amount is positive",
@@ -431,9 +485,15 @@ window.RO_FALLBACK = {
             {
               "label": "within plausible range (≤ $5k)",
               "ok": true
+            },
+            {
+              "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+              "ok": false
             }
           ],
-          "reasons": []
+          "reasons": [
+            "eligibility needs YOUR confirmation (can't auto-verify)"
+          ]
         }
       }
     ],
@@ -565,6 +625,7 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "needs_confirm": false,
         "checks": [
           {
             "label": "amount is positive",
@@ -580,6 +641,10 @@ window.RO_FALLBACK = {
           },
           {
             "label": "within plausible range (≤ $5k)",
+            "ok": true
+          },
+          {
+            "label": "eligibility is auto-confirmable",
             "ok": true
           }
         ],
@@ -613,6 +678,7 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "needs_confirm": false,
         "checks": [
           {
             "label": "amount is positive",
@@ -628,6 +694,10 @@ window.RO_FALLBACK = {
           },
           {
             "label": "within plausible range (≤ $5k)",
+            "ok": true
+          },
+          {
+            "label": "eligibility is auto-confirmable",
             "ok": true
           }
         ],
@@ -661,6 +731,7 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "needs_confirm": false,
         "checks": [
           {
             "label": "amount is positive",
@@ -676,6 +747,10 @@ window.RO_FALLBACK = {
           },
           {
             "label": "within plausible range (≤ $5k)",
+            "ok": true
+          },
+          {
+            "label": "eligibility is auto-confirmable",
             "ok": true
           }
         ],
@@ -709,6 +784,7 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "needs_confirm": false,
         "checks": [
           {
             "label": "amount is positive",
@@ -724,6 +800,10 @@ window.RO_FALLBACK = {
           },
           {
             "label": "within plausible range (≤ $5k)",
+            "ok": true
+          },
+          {
+            "label": "eligibility is auto-confirmable",
             "ok": true
           }
         ],
@@ -757,6 +837,7 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "needs_confirm": false,
         "checks": [
           {
             "label": "amount is positive",
@@ -772,6 +853,10 @@ window.RO_FALLBACK = {
           },
           {
             "label": "within plausible range (≤ $5k)",
+            "ok": true
+          },
+          {
+            "label": "eligibility is auto-confirmable",
             "ok": true
           }
         ],
@@ -804,7 +889,8 @@ window.RO_FALLBACK = {
       "agent_name": "Entitlement Finder",
       "verify": {
         "ok": true,
-        "review": false,
+        "review": true,
+        "needs_confirm": true,
         "checks": [
           {
             "label": "amount is positive",
@@ -821,9 +907,15 @@ window.RO_FALLBACK = {
           {
             "label": "within plausible range (≤ $5k)",
             "ok": true
+          },
+          {
+            "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+            "ok": false
           }
         ],
-        "reasons": []
+        "reasons": [
+          "eligibility needs YOUR confirmation (can't auto-verify)"
+        ]
       },
       "confidence": 0.7,
       "confidence_band": "medium",
@@ -852,7 +944,8 @@ window.RO_FALLBACK = {
       "agent_name": "Entitlement Finder",
       "verify": {
         "ok": true,
-        "review": false,
+        "review": true,
+        "needs_confirm": true,
         "checks": [
           {
             "label": "amount is positive",
@@ -869,9 +962,15 @@ window.RO_FALLBACK = {
           {
             "label": "within plausible range (≤ $5k)",
             "ok": true
+          },
+          {
+            "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+            "ok": false
           }
         ],
-        "reasons": []
+        "reasons": [
+          "eligibility needs YOUR confirmation (can't auto-verify)"
+        ]
       },
       "confidence": 0.6,
       "confidence_band": "review",
@@ -900,7 +999,8 @@ window.RO_FALLBACK = {
       "agent_name": "Entitlement Finder",
       "verify": {
         "ok": true,
-        "review": false,
+        "review": true,
+        "needs_confirm": true,
         "checks": [
           {
             "label": "amount is positive",
@@ -917,9 +1017,15 @@ window.RO_FALLBACK = {
           {
             "label": "within plausible range (≤ $5k)",
             "ok": true
+          },
+          {
+            "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+            "ok": false
           }
         ],
-        "reasons": []
+        "reasons": [
+          "eligibility needs YOUR confirmation (can't auto-verify)"
+        ]
       },
       "confidence": 0.85,
       "confidence_band": "high",
@@ -948,7 +1054,8 @@ window.RO_FALLBACK = {
       "agent_name": "Refund Claimant",
       "verify": {
         "ok": true,
-        "review": false,
+        "review": true,
+        "needs_confirm": true,
         "checks": [
           {
             "label": "amount is positive",
@@ -965,9 +1072,15 @@ window.RO_FALLBACK = {
           {
             "label": "within plausible range (≤ $5k)",
             "ok": true
+          },
+          {
+            "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+            "ok": false
           }
         ],
-        "reasons": []
+        "reasons": [
+          "eligibility needs YOUR confirmation (can't auto-verify)"
+        ]
       },
       "confidence": 0.85,
       "confidence_band": "high",
@@ -996,7 +1109,8 @@ window.RO_FALLBACK = {
       "agent_name": "Entitlement Finder",
       "verify": {
         "ok": true,
-        "review": false,
+        "review": true,
+        "needs_confirm": true,
         "checks": [
           {
             "label": "amount is positive",
@@ -1013,9 +1127,15 @@ window.RO_FALLBACK = {
           {
             "label": "within plausible range (≤ $5k)",
             "ok": true
+          },
+          {
+            "label": "eligibility needs YOUR confirmation (can't auto-verify)",
+            "ok": false
           }
         ],
-        "reasons": []
+        "reasons": [
+          "eligibility needs YOUR confirmation (can't auto-verify)"
+        ]
       },
       "confidence": 0.8,
       "confidence_band": "medium",
@@ -1028,15 +1148,16 @@ window.RO_FALLBACK = {
     }
   ],
   "run": {
-    "run_id": "run_2d2cbf",
+    "run_id": "run_aa12a9",
     "model": "deterministic-fallback",
     "live": false,
-    "latency_ms": 1335,
+    "latency_ms": 1603,
     "actions": 10,
     "agents": 4,
-    "verified": 10,
-    "flagged": 0,
-    "created_at": "2026-06-08T19:19:34.423336+00:00"
+    "verified": 5,
+    "needs_confirm": 5,
+    "flagged": 5,
+    "created_at": "2026-06-08T19:56:03.939844+00:00"
   },
   "reasoning": [
     {
@@ -1060,7 +1181,7 @@ window.RO_FALLBACK = {
       "tone": "warn"
     },
     {
-      "t": "Verifier validated 10/10 findings",
+      "t": "Verifier auto-confirmed 5/10 · 5 need your eligibility sign-off",
       "tone": "ok"
     },
     {
@@ -1110,8 +1231,9 @@ window.RO_FALLBACK = {
       "status": "active"
     }
   ],
-  "verified": 10,
-  "flagged": 0,
+  "verified": 5,
+  "needs_confirm": 5,
+  "flagged": 5,
   "totals": {
     "approved_recurring_year": 0,
     "approved_one_time": 0,
@@ -1135,9 +1257,9 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 2310.76,
       "trace_id": "",
-      "timestamp": "2026-06-08T19:19:33.088402+00:00",
+      "timestamp": "2026-06-08T19:56:02.336494+00:00",
       "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hash": "b66e429fa19319d2b9d44a2683dccf2333f99737708abf3fbfa28092f4e72f4f"
+      "hash": "49f9d0aa6425ef53e8366f5f2562e0ef2fa6103010f0684dfeeb5e8542654a26"
     },
     {
       "event_id": "au_0002",
@@ -1148,15 +1270,15 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 0.0,
       "trace_id": "",
-      "timestamp": "2026-06-08T19:19:34.423283+00:00",
-      "prev_hash": "b66e429fa19319d2b9d44a2683dccf2333f99737708abf3fbfa28092f4e72f4f",
-      "hash": "fa24f829b65fd32168e8c2339cfde788417164cfedd3dc0db1b817fc426f4b95"
+      "timestamp": "2026-06-08T19:56:03.939768+00:00",
+      "prev_hash": "49f9d0aa6425ef53e8366f5f2562e0ef2fa6103010f0684dfeeb5e8542654a26",
+      "hash": "4603175a14d775ca933c07f1159a39189090096ccc707ae87b3c062c5ddc8e78"
     }
   ],
   "auditIntegrity": {
     "intact": true,
     "count": 2,
-    "head": "fa24f829b65fd32168e8c2339cfde788417164cfedd3dc0db1b817fc426f4b95"
+    "head": "4603175a14d775ca933c07f1159a39189090096ccc707ae87b3c062c5ddc8e78"
   },
   "generated": "static-fallback"
 };

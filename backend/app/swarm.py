@@ -27,16 +27,26 @@ SPECIALISTS = [
 _PLAUSIBLE_MAX = 5000.0  # a single finding above this is flagged for human review
 
 
+_AUTO_VERIFIABLE = {"dead_subscription", "price_creep", "billing_error", "price_drop"}
+
+
 def _verify(f: dict) -> dict:
-    """Independent boolean checks per finding — surfaced so users can see the work."""
+    """Independent boolean checks per finding — surfaced so users can see the work.
+    Mechanical leaks are auto-confirmable; entitlements (flight comp, settlements,
+    unclaimed property, warranty, deposits) need the human to confirm eligibility —
+    the Verifier says so out loud rather than rubber-stamping its sibling agents."""
+    applicable = f.get("kind", "") in _AUTO_VERIFIABLE
     checks = [
         {"label": "amount is positive", "ok": f.get("amount", 0) > 0},
         {"label": "cites a real consumer-protection rule", "ok": f.get("rule") in RULES},
         {"label": "has source evidence", "ok": bool(f.get("evidence"))},
         {"label": "within plausible range (≤ $5k)", "ok": f.get("amount", 0) <= _PLAUSIBLE_MAX},
+        {"label": "eligibility is auto-confirmable" if applicable else "eligibility needs YOUR confirmation (can't auto-verify)", "ok": applicable},
     ]
     hard_ok = all(c["ok"] for c in checks[:3])  # first three are hard requirements
-    return {"ok": hard_ok, "review": not checks[3]["ok"], "checks": checks,
+    needs_confirm = not applicable
+    return {"ok": hard_ok, "review": needs_confirm or not checks[3]["ok"],
+            "needs_confirm": needs_confirm, "checks": checks,
             "reasons": [c["label"] for c in checks if not c["ok"]]}
 
 
@@ -53,7 +63,8 @@ def orchestrate(scan_result: dict) -> dict:
         if owner:
             by_agent[sid].append(f)
 
-    verified = sum(1 for f in findings if f["verify"]["ok"])
+    verified = sum(1 for f in findings if f["verify"]["ok"] and not f["verify"].get("needs_confirm"))
+    needs = sum(1 for f in findings if f["verify"].get("needs_confirm"))
     flagged = sum(1 for f in findings if f["verify"]["review"])
 
     roster = []
@@ -69,11 +80,11 @@ def orchestrate(scan_result: dict) -> dict:
     for r in roster:
         if r["count"]:
             trace.append({"t": f"{r['name']} → {r['count']} found (${r['amount']:,.0f})", "tone": "warn"})
-    vmsg = f"Verifier validated {verified}/{len(findings)} findings"
-    if flagged:
-        vmsg += f" · {flagged} flagged for review"
+    vmsg = f"Verifier auto-confirmed {verified}/{len(findings)}"
+    if needs:
+        vmsg += f" · {needs} need your eligibility sign-off"
     trace.append({"t": vmsg, "tone": "ok"})
     trace.append({"t": f"Claim Drafter attached {len(findings)} ready-to-send drafts", "tone": "cyan"})
 
-    return {"roster": roster, "verified": verified, "flagged": flagged,
+    return {"roster": roster, "verified": verified, "needs_confirm": needs, "flagged": flagged,
             "agents": len(SPECIALISTS), "trace": trace}
