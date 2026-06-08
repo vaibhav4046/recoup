@@ -26,6 +26,8 @@ RULES = {
     "settlement": "Open class-action settlements (e.g. the $1.5B Amazon Prime / FTC fund) pay eligible consumers who file.",
     "unclaimed": "State unclaimed-property programs (NAUPA) hold forgotten deposits, refunds, and balances under your name.",
     "refund_window": "Many retailers and airlines owe a refund for a price drop or cancellation within a stated window.",
+    "warranty": "Active warranty / protection plans cover repair or replacement at no cost — don't pay out of pocket.",
+    "deposit": "Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
 }
 
 
@@ -57,6 +59,14 @@ def _money_surface() -> dict:
              "est_payout": 51.00, "deadline": "open"},
             {"id": "unc_1", "type": "unclaimed", "name": "State unclaimed property (utility deposit)",
              "est_payout": 214.00, "source": "NAUPA"},
+        ],
+        "warranties": [
+            {"id": "war_1", "name": "Laptop screen repair", "issue": "covered_repair",
+             "payout": 120.00, "plan": "extended protection plan"},
+        ],
+        "deposits": [
+            {"id": "dep_1", "name": "Apartment security deposit", "held_days": 95,
+             "amount": 850.00, "overdue": True},
         ],
     }
 
@@ -124,6 +134,19 @@ def scan() -> dict:
         findings.append(_once(
             f"f_{m['id']}", m["type"], f"Claim: {m['name']}",
             m["est_payout"], "$", m["type"], m.get("source", "open claim window"), "file_claim", "medium"))
+
+    for w in s.get("warranties", []):
+        findings.append(_once(
+            f"f_{w['id']}", "warranty", f"Claim warranty repair: {w['name']}",
+            w["payout"], "$", "warranty",
+            f"{w['issue'].replace('_', ' ')} under {w.get('plan', 'active plan')}", "file_claim", "medium"))
+
+    for d in s.get("deposits", []):
+        if d.get("overdue"):
+            findings.append(_once(
+                f"f_{d['id']}", "deposit", f"Recover {d['name']}",
+                d["amount"], "$", "deposit",
+                f"held {d['held_days']}d — past the statutory return window", "request_refund", "high"))
 
     recurring = round(sum(f["amount"] for f in findings if f["cadence"] == "yearly"), 2)
     one_time = round(sum(f["amount"] for f in findings if f["cadence"] == "once"), 2)

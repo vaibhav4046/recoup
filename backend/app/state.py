@@ -62,9 +62,12 @@ class AppState:
         self.last_run = {
             "run_id": f"run_{uuid.uuid4().hex[:6]}", "model": plan["model"],
             "live": plan["live"], "latency_ms": latency,
-            "actions": len(self.actions), "created_at": _now_iso(),
+            "actions": len(self.actions), "agents": plan.get("agents"),
+            "verified": plan.get("verified"), "flagged": plan.get("flagged"),
+            "created_at": _now_iso(),
         }
         return {"run": self.last_run, "reasoning": plan["reasoning"], "actions": self.actions,
+                "swarm": plan.get("swarm"), "verified": plan.get("verified"), "flagged": plan.get("flagged"),
                 "recurring_year": self.scan_result["recurring_year"],
                 "one_time": self.scan_result["one_time"],
                 "total_recoverable": self.scan_result["total_recoverable"], "note": plan["note"]}

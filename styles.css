@@ -127,6 +127,19 @@ body{
 .bd-fill{height:100%;border-radius:8px;background:var(--grad);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
 .bd-fill.leak{background:linear-gradient(90deg,#fbbf24,#fb7185)}
 
+/* recovery swarm */
+.swarm{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.agent-card{border:1px solid var(--border);border-radius:13px;padding:14px;background:var(--panel);opacity:.55;transition:.25s}
+.agent-card.active{opacity:1;border-color:rgba(167,139,250,.38);background:linear-gradient(180deg,rgba(167,139,250,.08),var(--panel))}
+.ag-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ag-dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.agent-card.active .ag-dot{background:var(--violet);box-shadow:0 0 8px var(--violet);animation:pulse 2s infinite}
+.ag-name{font-weight:700;font-size:13.5px;flex:1;letter-spacing:-.2px}
+.ag-count{font-weight:800;font-size:12px;color:#c5b6fb;background:rgba(167,139,250,.16);padding:1px 9px;border-radius:20px}
+.ag-mandate{font-size:12px;color:var(--muted);min-height:30px;line-height:1.4}
+.ag-stat{font-size:13px;font-weight:700;color:var(--emerald);margin-top:8px}
+.fc-agent{font-size:11px;color:#c5b6fb;font-weight:600;opacity:.9}
+
 /* findings */
 .findings{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
 .fcard{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:11px;transition:.25s;position:relative;overflow:hidden}

@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import time
 
+from . import swarm
 from .config import get_settings
 from .snapshot import RULES
 
@@ -59,6 +60,14 @@ def _draft_text(f: dict) -> str:
         "unclaimed": (
             f"Filing to recover property held in my name ({ev}), a one-time {label}. "
             f"Basis: {RULES['unclaimed']}"),
+        "warranty": (
+            f"Subject: Warranty claim — covered repair\n\n"
+            f"My item is covered ({ev}). Please repair or replace at no cost under the plan; "
+            f"value {label} (one-time). Basis: {RULES['warranty']}"),
+        "deposit": (
+            f"Subject: Return of overdue security deposit\n\n"
+            f"My deposit is overdue ({ev}). Please return {label} in full, plus any statutory "
+            f"penalty for late return. Basis: {RULES['deposit']}"),
     }.get(kind, f"Draft action for {name} — recover {label}.")
 
 
@@ -71,6 +80,7 @@ def build_actions(findings: list[dict]) -> list[dict]:
             "amount": f["amount"], "cadence": f["cadence"], "currency": f["currency"],
             "amount_label": f["amount_label"], "unit_note": f["unit_note"],
             "priority": f["priority"], "evidence": f["evidence"], "rule": f["rule"],
+            "agent": f.get("agent"), "agent_name": f.get("agent_name"), "verify": f.get("verify"),
             "draft": _draft_text(f),
             "approvalState": "pending", "status": "drafted", "claimedAt": None,
         })
@@ -120,26 +130,33 @@ def _generate(model: str, prompt: str, attempts: int = 3):
 
 def draft_plan(scan: dict) -> dict:
     s = get_settings()
-    actions = build_actions(scan["findings"])
+    meta = swarm.orchestrate(scan)             # attribute + verify findings; build roster + orchestration trace
+    actions = build_actions(scan["findings"])  # findings now carry agent attribution + verdict
+    sw = {"swarm": meta["roster"], "verified": meta["verified"],
+          "flagged": meta["flagged"], "agents": meta["agents"]}
+    closing = [
+        {"t": "One-time payouts are never annualized; amounts come from the rules, not the model", "tone": "dim"},
+        {"t": "Nothing is sent without your approval", "tone": "ok"},
+    ]
 
     if not s.gemini_ready:
-        return {"reasoning": _fallback_reasoning(scan), "actions": actions,
+        return {"reasoning": meta["trace"] + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
-                "note": "Gemini not configured — deterministic reasoning (labelled)."}
+                "note": "Gemini not configured — deterministic swarm reasoning (labelled)."}
     try:
         prompt = (f"{SYSTEM_PROMPT}\n\nSCAN (amounts already computed — do not change them):\n"
                   f"{json.dumps(scan, ensure_ascii=False)[:9000]}\n\n"
-                  'Return JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 6-9 concise '
-                  "trace lines explaining how you found this recoverable money. Keep recurring vs "
-                  "one-time distinct; never annualize a one-time payout.")
+                  'Return JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 2-3 concise '
+                  "narration lines on the most valuable recoveries. Keep recurring vs one-time "
+                  "distinct; never annualize a one-time payout.")
         t0 = time.perf_counter()
         resp = _generate(s.gemini_model, prompt)
         latency = round((time.perf_counter() - t0) * 1000)
-        data = json.loads(resp.text)
-        return {"reasoning": data.get("reasoning") or _fallback_reasoning(scan), "actions": actions,
+        gem = (json.loads(resp.text).get("reasoning") or [])[:3]
+        return {"reasoning": meta["trace"] + gem + closing[:1], "actions": actions, **sw,
                 "model": s.gemini_model, "latency_ms": latency, "live": True,
-                "note": f"Live {s.gemini_model} reasoning over your money surface."}
+                "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm."}
     except Exception as e:  # noqa: BLE001
-        return {"reasoning": _fallback_reasoning(scan), "actions": actions,
+        return {"reasoning": meta["trace"] + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
                 "note": f"Gemini call failed ({type(e).__name__}); used labelled fallback."}

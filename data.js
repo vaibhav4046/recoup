@@ -18,7 +18,14 @@ window.RO_FALLBACK = {
         "rule": "dead_sub",
         "evidence": "Unused 142 days · billing since 2023-04",
         "action": "cancel",
-        "priority": "high"
+        "priority": "high",
+        "agent": "sub_hunter",
+        "agent_name": "Subscription Hunter",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_sub_3",
@@ -32,7 +39,14 @@ window.RO_FALLBACK = {
         "rule": "dead_sub",
         "evidence": "Unused 210 days · billing since 2024-02",
         "action": "cancel",
-        "priority": "high"
+        "priority": "high",
+        "agent": "sub_hunter",
+        "agent_name": "Subscription Hunter",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_sub_4",
@@ -46,7 +60,14 @@ window.RO_FALLBACK = {
         "rule": "price_creep",
         "evidence": "Rose $7.99→$12.99/mo",
         "action": "dispute_price",
-        "priority": "medium"
+        "priority": "medium",
+        "agent": "sub_hunter",
+        "agent_name": "Subscription Hunter",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_bill_1",
@@ -60,7 +81,14 @@ window.RO_FALLBACK = {
         "rule": "billing_error",
         "evidence": "duplicate line fee on a $78.40 bill",
         "action": "dispute_charge",
-        "priority": "high"
+        "priority": "high",
+        "agent": "billing_auditor",
+        "agent_name": "Billing Auditor",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_pur_1",
@@ -74,7 +102,14 @@ window.RO_FALLBACK = {
         "rule": "refund_window",
         "evidence": "Bought $299 6d ago · now $229",
         "action": "request_refund",
-        "priority": "medium"
+        "priority": "medium",
+        "agent": "refund_claimant",
+        "agent_name": "Refund Claimant",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_flt_1",
@@ -88,7 +123,14 @@ window.RO_FALLBACK = {
         "rule": "eu261",
         "evidence": "LHR→BCN (1137km) delayed 4h on an EU carrier",
         "action": "file_claim",
-        "priority": "high"
+        "priority": "high",
+        "agent": "entitlement_finder",
+        "agent_name": "Entitlement Finder",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_set_1",
@@ -102,7 +144,14 @@ window.RO_FALLBACK = {
         "rule": "settlement",
         "evidence": "open claim window",
         "action": "file_claim",
-        "priority": "medium"
+        "priority": "medium",
+        "agent": "entitlement_finder",
+        "agent_name": "Entitlement Finder",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       },
       {
         "id": "f_unc_1",
@@ -116,12 +165,61 @@ window.RO_FALLBACK = {
         "rule": "unclaimed",
         "evidence": "NAUPA",
         "action": "file_claim",
-        "priority": "medium"
+        "priority": "medium",
+        "agent": "entitlement_finder",
+        "agent_name": "Entitlement Finder",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
+      },
+      {
+        "id": "f_war_1",
+        "kind": "warranty",
+        "title": "Claim warranty repair: Laptop screen repair",
+        "cadence": "once",
+        "amount": 120.0,
+        "currency": "$",
+        "amount_label": "$120",
+        "unit_note": "one-time",
+        "rule": "warranty",
+        "evidence": "covered repair under extended protection plan",
+        "action": "file_claim",
+        "priority": "medium",
+        "agent": "refund_claimant",
+        "agent_name": "Refund Claimant",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
+      },
+      {
+        "id": "f_dep_1",
+        "kind": "deposit",
+        "title": "Recover Apartment security deposit",
+        "cadence": "once",
+        "amount": 850.0,
+        "currency": "$",
+        "amount_label": "$850",
+        "unit_note": "one-time",
+        "rule": "deposit",
+        "evidence": "held 95d — past the statutory return window",
+        "action": "request_refund",
+        "priority": "high",
+        "agent": "entitlement_finder",
+        "agent_name": "Entitlement Finder",
+        "verify": {
+          "ok": true,
+          "review": false,
+          "reasons": []
+        }
       }
     ],
     "recurring_year": 755.76,
-    "one_time": 585.0,
-    "total_recoverable": 1340.76,
+    "one_time": 1555.0,
+    "total_recoverable": 2310.76,
     "surface": {
       "subscriptions": [
         {
@@ -206,6 +304,24 @@ window.RO_FALLBACK = {
           "est_payout": 214.0,
           "source": "NAUPA"
         }
+      ],
+      "warranties": [
+        {
+          "id": "war_1",
+          "name": "Laptop screen repair",
+          "issue": "covered_repair",
+          "payout": 120.0,
+          "plan": "extended protection plan"
+        }
+      ],
+      "deposits": [
+        {
+          "id": "dep_1",
+          "name": "Apartment security deposit",
+          "held_days": 95,
+          "amount": 850.0,
+          "overdue": true
+        }
       ]
     }
   },
@@ -224,6 +340,13 @@ window.RO_FALLBACK = {
       "priority": "high",
       "evidence": "Unused 142 days · billing since 2023-04",
       "rule": "dead_sub",
+      "agent": "sub_hunter",
+      "agent_name": "Subscription Hunter",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 142 days · billing since 2023-04). This stops a recurring leak of $240/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -243,6 +366,13 @@ window.RO_FALLBACK = {
       "priority": "high",
       "evidence": "Unused 210 days · billing since 2024-02",
       "rule": "dead_sub",
+      "agent": "sub_hunter",
+      "agent_name": "Subscription Hunter",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 210 days · billing since 2024-02). This stops a recurring leak of $180/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -262,6 +392,13 @@ window.RO_FALLBACK = {
       "priority": "medium",
       "evidence": "Rose $7.99→$12.99/mo",
       "rule": "price_creep",
+      "agent": "sub_hunter",
+      "agent_name": "Subscription Hunter",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: Apply current rate or cancel\n\nMy price rose (Rose $7.99→$12.99/mo). Please match the current new-customer / retention rate, or treat this as notice of cancellation. Recovers $60/yr. Basis: Silent price increases can be challenged or matched to the new-customer rate (retention offer).",
       "approvalState": "pending",
       "status": "drafted",
@@ -281,6 +418,13 @@ window.RO_FALLBACK = {
       "priority": "high",
       "evidence": "duplicate line fee on a $78.40 bill",
       "rule": "billing_error",
+      "agent": "billing_auditor",
+      "agent_name": "Billing Auditor",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: Dispute an incorrect charge\n\nThere is an erroneous charge on my account (duplicate line fee on a $78.40 bill). Please remove it and credit me — worth $276/yr if recurring. Basis: Duplicate charges / undisclosed fees are recoverable; card issuers allow chargebacks within 60–120 days.",
       "approvalState": "pending",
       "status": "drafted",
@@ -300,6 +444,13 @@ window.RO_FALLBACK = {
       "priority": "medium",
       "evidence": "Bought $299 6d ago · now $229",
       "rule": "refund_window",
+      "agent": "refund_claimant",
+      "agent_name": "Refund Claimant",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: Price-protection refund request\n\nBought $299 6d ago · now $229. Per your price-protection / refund-window policy, please refund the one-time difference of $70. Basis: Many retailers and airlines owe a refund for a price drop or cancellation within a stated window.",
       "approvalState": "pending",
       "status": "drafted",
@@ -319,6 +470,13 @@ window.RO_FALLBACK = {
       "priority": "high",
       "evidence": "LHR→BCN (1137km) delayed 4h on an EU carrier",
       "rule": "eu261",
+      "agent": "entitlement_finder",
+      "agent_name": "Entitlement Finder",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Subject: EU261 delay compensation claim\n\nMy flight LHR→BCN (1137km) delayed 4h on an EU carrier. Under EU261/UK261 I am owed €250 in cash compensation (one-time, not a voucher). Please process. Basis: EU261/UK261: flights delayed 3h+ owe €250 (<1500km), €400 (1500–3500km), or €600 cash.",
       "approvalState": "pending",
       "status": "drafted",
@@ -338,6 +496,13 @@ window.RO_FALLBACK = {
       "priority": "medium",
       "evidence": "open claim window",
       "rule": "settlement",
+      "agent": "entitlement_finder",
+      "agent_name": "Entitlement Finder",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Filing my consumer claim (open claim window) for a one-time $51. Basis: Open class-action settlements (e.g. the $1.5B Amazon Prime / FTC fund) pay eligible consumers who file.",
       "approvalState": "pending",
       "status": "drafted",
@@ -357,87 +522,197 @@ window.RO_FALLBACK = {
       "priority": "medium",
       "evidence": "NAUPA",
       "rule": "unclaimed",
+      "agent": "entitlement_finder",
+      "agent_name": "Entitlement Finder",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
       "draft": "Filing to recover property held in my name (NAUPA), a one-time $214. Basis: State unclaimed-property programs (NAUPA) hold forgotten deposits, refunds, and balances under your name.",
+      "approvalState": "pending",
+      "status": "drafted",
+      "claimedAt": null
+    },
+    {
+      "id": "act_9",
+      "finding_id": "f_war_1",
+      "kind": "warranty",
+      "title": "Claim warranty repair: Laptop screen repair",
+      "verb": "File claim",
+      "amount": 120.0,
+      "cadence": "once",
+      "currency": "$",
+      "amount_label": "$120",
+      "unit_note": "one-time",
+      "priority": "medium",
+      "evidence": "covered repair under extended protection plan",
+      "rule": "warranty",
+      "agent": "refund_claimant",
+      "agent_name": "Refund Claimant",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
+      "draft": "Subject: Warranty claim — covered repair\n\nMy item is covered (covered repair under extended protection plan). Please repair or replace at no cost under the plan; value $120 (one-time). Basis: Active warranty / protection plans cover repair or replacement at no cost — don't pay out of pocket.",
+      "approvalState": "pending",
+      "status": "drafted",
+      "claimedAt": null
+    },
+    {
+      "id": "act_10",
+      "finding_id": "f_dep_1",
+      "kind": "deposit",
+      "title": "Recover Apartment security deposit",
+      "verb": "Refund",
+      "amount": 850.0,
+      "cadence": "once",
+      "currency": "$",
+      "amount_label": "$850",
+      "unit_note": "one-time",
+      "priority": "high",
+      "evidence": "held 95d — past the statutory return window",
+      "rule": "deposit",
+      "agent": "entitlement_finder",
+      "agent_name": "Entitlement Finder",
+      "verify": {
+        "ok": true,
+        "review": false,
+        "reasons": []
+      },
+      "draft": "Subject: Return of overdue security deposit\n\nMy deposit is overdue (held 95d — past the statutory return window). Please return $850 in full, plus any statutory penalty for late return. Basis: Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
       "approvalState": "pending",
       "status": "drafted",
       "claimedAt": null
     }
   ],
   "run": {
-    "run_id": "run_7a7aa5",
+    "run_id": "run_c3bd5b",
     "model": "deterministic-fallback",
     "live": false,
-    "latency_ms": 1460,
-    "actions": 8,
-    "created_at": "2026-06-08T18:24:44.538604+00:00"
+    "latency_ms": 1605,
+    "actions": 10,
+    "agents": 4,
+    "verified": 10,
+    "flagged": 0,
+    "created_at": "2026-06-08T18:42:42.620118+00:00"
   },
   "reasoning": [
     {
-      "t": "Scanned money surface — 8 recoverable items found",
+      "t": "Coordinator dispatched 4 specialist agents in parallel",
       "tone": "cyan"
     },
     {
-      "t": "Recurring leaks: 4 worth $756/yr",
+      "t": "Subscription Hunter → 3 found ($480)",
       "tone": "warn"
     },
     {
-      "t": "Owed to you (one-time): 4 worth ~$585",
+      "t": "Billing Auditor → 1 found ($276)",
       "tone": "warn"
     },
     {
-      "t": "Each finding cites a real consumer-protection rule",
-      "tone": "dim"
+      "t": "Refund Claimant → 2 found ($190)",
+      "tone": "warn"
     },
     {
-      "t": "Drafted 8 claims — every one needs your approval before it sends",
+      "t": "Entitlement Finder → 4 found ($1,365)",
+      "tone": "warn"
+    },
+    {
+      "t": "Verifier validated 10/10 findings",
+      "tone": "ok"
+    },
+    {
+      "t": "Claim Drafter attached 10 ready-to-send drafts",
       "tone": "cyan"
     },
     {
       "t": "One-time payouts are never annualized; amounts come from the rules, not the model",
+      "tone": "dim"
+    },
+    {
+      "t": "Nothing is sent without your approval",
       "tone": "ok"
     }
   ],
+  "swarm": [
+    {
+      "id": "sub_hunter",
+      "name": "Subscription Hunter",
+      "mandate": "recurring subscription leaks",
+      "count": 3,
+      "amount": 479.76,
+      "status": "active"
+    },
+    {
+      "id": "billing_auditor",
+      "name": "Billing Auditor",
+      "mandate": "duplicate fees & billing errors",
+      "count": 1,
+      "amount": 276.0,
+      "status": "active"
+    },
+    {
+      "id": "refund_claimant",
+      "name": "Refund Claimant",
+      "mandate": "refunds & warranty within policy windows",
+      "count": 2,
+      "amount": 190.0,
+      "status": "active"
+    },
+    {
+      "id": "entitlement_finder",
+      "name": "Entitlement Finder",
+      "mandate": "money owed to you by law / settlement",
+      "count": 4,
+      "amount": 1365.0,
+      "status": "active"
+    }
+  ],
+  "verified": 10,
+  "flagged": 0,
   "totals": {
     "approved_recurring_year": 0,
     "approved_one_time": 0,
     "pending_recurring_year": 755.76,
-    "pending_one_time": 585.0
+    "pending_one_time": 1555.0
   },
   "recurring_year": 755.76,
-  "one_time": 585.0,
-  "recoverable": 1340.76,
+  "one_time": 1555.0,
+  "recoverable": 2310.76,
   "audit": [
     {
       "event_id": "au_0001",
       "actor_type": "system",
       "actor_name": "Recoup scanner",
       "event_type": "SCAN_RUN",
-      "label": "Scanned money surface — 8 items: $756/yr recurring + $585 one-time",
+      "label": "Scanned money surface — 10 items: $756/yr recurring + $1,555 one-time",
       "evidence_ref": "",
-      "amount": 1340.76,
+      "amount": 2310.76,
       "trace_id": "",
-      "timestamp": "2026-06-08T18:24:43.078147+00:00",
+      "timestamp": "2026-06-08T18:42:41.014791+00:00",
       "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hash": "442fbf7d08704708d884e9c00fd556e0606a76a4a39da2c39ddaffb48dfbfcae"
+      "hash": "61bbc69c2fba82c546af2ef603b87ae546ba5b7dc88685a2474a091448904864"
     },
     {
       "event_id": "au_0002",
       "actor_type": "agent",
       "actor_name": "Gemini agent",
       "event_type": "PLAN_DRAFTED",
-      "label": "8 claims drafted (fallback)",
+      "label": "10 claims drafted (fallback)",
       "evidence_ref": "",
       "amount": 0.0,
       "trace_id": "",
-      "timestamp": "2026-06-08T18:24:44.538550+00:00",
-      "prev_hash": "442fbf7d08704708d884e9c00fd556e0606a76a4a39da2c39ddaffb48dfbfcae",
-      "hash": "847eb46e90827b4488f955578a804db200d1a211bfdea3ce156e07793a562b90"
+      "timestamp": "2026-06-08T18:42:42.620064+00:00",
+      "prev_hash": "61bbc69c2fba82c546af2ef603b87ae546ba5b7dc88685a2474a091448904864",
+      "hash": "ad447dac03ee6e0cbb087c28a19dcc549828398cc7790185e5a25ed1d4549058"
     }
   ],
   "auditIntegrity": {
     "intact": true,
     "count": 2,
-    "head": "847eb46e90827b4488f955578a804db200d1a211bfdea3ce156e07793a562b90"
+    "head": "ad447dac03ee6e0cbb087c28a19dcc549828398cc7790185e5a25ed1d4549058"
   },
   "generated": "static-fallback"
 };

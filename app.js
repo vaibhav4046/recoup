@@ -12,6 +12,8 @@
     settlement: "Open class-action settlement — file to get paid.",
     unclaimed: "State unclaimed-property (NAUPA) held in your name.",
     refund_window: "Price-protection / refund window owed back.",
+    warranty: "Active warranty / protection plan — repair at no cost.",
+    deposit: "Security deposit overdue past the statutory return window.",
   };
   let S = null;
 
@@ -45,8 +47,22 @@
   }
 
   function renderAll(animateTrace) {
-    renderChips(); renderHero(); renderBreakdown(); renderFindings(); renderAudit();
+    renderChips(); renderHero(); renderSwarm(); renderBreakdown(); renderFindings(); renderAudit();
     renderTrace(animateTrace);
+  }
+
+  function renderSwarm() {
+    const box = $("#swarm"); if (!box) return; box.innerHTML = "";
+    const roster = S.swarm || [];
+    const meta = $("#swarm-meta");
+    if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0}/${S.actions.length} verified` : "—";
+    roster.forEach((a) => {
+      const c = el("div", "agent-card" + (a.count ? " active" : ""));
+      c.innerHTML = `<div class="ag-top"><span class="ag-dot"></span><span class="ag-name">${esc(a.name)}</span><span class="ag-count">${a.count}</span></div>
+        <div class="ag-mandate">${esc(a.mandate)}</div>
+        <div class="ag-stat">$${money(a.amount)} recoverable</div>`;
+      box.appendChild(c);
+    });
   }
 
   function renderChips() {
@@ -133,6 +149,7 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
+      ${a.agent_name ? `<div class="fc-agent">◆ found by ${esc(a.agent_name)}${a.verify && a.verify.ok ? " · verified" : ""}</div>` : ""}
       ${actions}`;
     return c;
   }
@@ -254,7 +271,7 @@
   }
 
   function catLabel(k) {
-    return { dead_subscription: "Dead subscriptions", price_creep: "Price hikes", billing_error: "Billing errors", price_drop: "Price-drop refunds", flight_comp: "Flight compensation", settlement: "Settlements", unclaimed: "Unclaimed property" }[k] || k;
+    return { dead_subscription: "Dead subscriptions", price_creep: "Price hikes", billing_error: "Billing errors", price_drop: "Price-drop refunds", flight_comp: "Flight compensation", settlement: "Settlements", unclaimed: "Unclaimed property", warranty: "Warranty claims", deposit: "Deposit returns" }[k] || k;
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
