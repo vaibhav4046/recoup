@@ -103,42 +103,30 @@ def _fallback_reasoning(scan: dict) -> list[dict]:
     ]
 
 
-_CLIENT = None
-
-
-def _client(fresh: bool = False):
-    """Singleton genai client. `fresh=True` rebuilds it (recovers from a closed
-    httpx client — seen on the Python 3.12 Spaces container)."""
-    global _CLIENT
-    if fresh:
-        _CLIENT = None
-    if _CLIENT is None:
-        from google import genai
-        s = get_settings()
-        if s.use_vertex and s.google_cloud_project:
-            _CLIENT = genai.Client(vertexai=True, project=s.google_cloud_project, location=s.google_cloud_region)
-        else:
-            _CLIENT = genai.Client(api_key=s.google_api_key)
-    return _CLIENT
-
-
-def _generate(model: str, prompt: str, attempts: int = 3):
-    """Call Gemini; rebuild the client + retry on a closed-client RuntimeError,
-    back off on transient rate/availability errors."""
+def _generate(model: str, prompt: str, attempts: int = 3) -> str:
+    """Call the Gemini REST API directly via httpx — robust across runtimes
+    (avoids the google-genai SDK client-lifecycle RuntimeError on the Spaces
+    container). Returns the model's JSON text; backs off on 429/503."""
+    import httpx
+    s = get_settings()
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4},
+    }
     last = None
     for i in range(attempts):
         try:
-            return _client(fresh=(i > 0)).models.generate_content(
-                model=model, contents=prompt,
-                config={"response_mime_type": "application/json", "temperature": 0.4})
+            r = httpx.post(url, params={"key": s.google_api_key}, json=body, timeout=20)
+            if r.status_code in (429, 503) and i < attempts - 1:
+                time.sleep(1.2 * (i + 1))
+                continue
+            r.raise_for_status()
+            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
         except Exception as e:  # noqa: BLE001
             last = e
-            msg = str(e)
-            closed = "closed" in msg.lower() or isinstance(e, RuntimeError)
-            transient = any(t in msg for t in ("RESOURCE_EXHAUSTED", "429", "503", "UNAVAILABLE"))
-            if (closed or transient) and i < attempts - 1:
-                if not closed:
-                    time.sleep(1.2 * (i + 1))
+            if i < attempts - 1 and any(t in str(e) for t in ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "timed out", "Connect")):
+                time.sleep(1.0 * (i + 1))
                 continue
             raise
     raise last  # pragma: no cover
@@ -166,9 +154,9 @@ def draft_plan(scan: dict) -> dict:
                   "narration lines on the most valuable recoveries. Keep recurring vs one-time "
                   "distinct; never annualize a one-time payout.")
         t0 = time.perf_counter()
-        resp = _generate(s.gemini_model, prompt)
+        text = _generate(s.gemini_model, prompt)
         latency = round((time.perf_counter() - t0) * 1000)
-        gem = (json.loads(resp.text).get("reasoning") or [])[:3]
+        gem = (json.loads(text).get("reasoning") or [])[:3]
         return {"reasoning": meta["trace"] + gem + closing[:1], "actions": actions, **sw,
                 "model": s.gemini_model, "latency_ms": latency, "live": True,
                 "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm."}
