@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy · Recoup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.legal{max-width:760px;margin:0 auto;padding:40px 20px 80px}
+.legal h1{font-size:30px;letter-spacing:-1px;margin-bottom:6px}
+.legal .upd{color:var(--dim);font-size:13px;margin-bottom:28px}
+.legal h2{font-size:17px;margin:26px 0 8px}
+.legal p,.legal li{color:var(--muted);line-height:1.6;font-size:14.5px}
+.legal b{color:var(--text)}
+.legal a{color:var(--cyan)}
+.back{display:inline-block;margin-bottom:20px;color:var(--muted);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<main class="legal">
+  <a class="back" href="/">← Back to Recoup</a>
+  <h1>Privacy & data handling</h1>
+  <div class="upd">Plain-English. This is how Recoup treats your data — and the limits we hold ourselves to.</div>
+
+  <h2>The paste path never leaves your device</h2>
+  <p>When you <b>paste a statement</b>, the entire recovery scan runs <b>100% in your browser</b> (<code>recover.js</code>). No statement text is uploaded, logged, or sent anywhere. Close the tab and it's gone.</p>
+
+  <h2>The Gmail path — read-only, minimal, deletable</h2>
+  <ul>
+    <li><b>Scope:</b> read-only Google OAuth (<code>gmail.readonly</code>). Recoup can read mail to detect subscriptions/receipts; it can <b>never send, delete, or modify</b> anything.</li>
+    <li><b>What we use:</b> only the <b>sender + subject + snippet</b> of subscription/receipt emails, to identify recurring services. We don't store your message bodies.</li>
+    <li><b>What we store:</b> only the resulting findings and the claims you approve, in our database (MongoDB). We never store your Gmail password or full inbox.</li>
+    <li><b>Revoke anytime:</b> remove Recoup's access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>. You can also disconnect in-app.</li>
+    <li><b>Current status:</b> the OAuth app is in Google <b>"testing"</b> mode — only explicitly-added test users can connect, which is why you'll see an "unverified app" screen. Full public access requires Google's formal security review.</li>
+  </ul>
+
+  <h2>We never sell your data</h2>
+  <p>We do not sell, rent, or share your data with advertisers or data brokers — ever. Reasoning is done by Google Gemini on the text of your findings only; amounts come from deterministic rules, not the model.</p>
+
+  <h2>Your control</h2>
+  <p>You approve every action — nothing is sent on your behalf without your tap. You can disconnect Gmail and request deletion of your stored findings at any time by emailing the address in the repo.</p>
+
+  <h2>Honest limits</h2>
+  <p>This is a hackathon project. It is <b>not</b> yet a verified, audited, production financial service. Treat it as a tool that helps you <i>find and draft</i> claims — you file them yourself on the official portals, and you're responsible for the accuracy of anything you submit.</p>
+
+  <a class="back" href="/">← Back to Recoup</a>
+</main>
+</body>
+</html>

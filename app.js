@@ -135,9 +135,13 @@
     const n = S.actions.length;
     setText("#ready-count", appr.length);
     setText("#total-count", n);
-    setText("#pending-count", S.actions.filter((a) => a.approvalState === "pending").length);
+    const pendingN = S.actions.filter((a) => a.approvalState === "pending").length;
+    setText("#pending-count", pendingN);
     const paid = r2(S.actions.filter((a) => a.status === "paid").reduce((s, a) => s + a.amount, 0));
-    setText("#recovered-amt", "$" + money(paid));
+    const foot = $("#ready-foot");
+    if (foot) foot.innerHTML = paid > 0
+      ? `<b>$${money(paid)}</b> recovered (you confirmed) · ${pendingN} pending`
+      : `<b>$${money(S.recoverable || 0)}</b> recoverable · approve a claim to start`;
     const frac = n ? appr.length / n : 0;
     const C = 2 * Math.PI * 52;
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
