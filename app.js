@@ -300,19 +300,27 @@
   async function demoRecovery() {
     if (demoRunning) return; demoRunning = true;
     showResults();
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const W = (ms) => wait(reduce ? 0 : ms);
+    const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
     const pick = S.actions.find((a) => a.kind === "flight_comp" && a.approvalState === "pending")
       || S.actions.find((a) => a.cadence === "once" && a.approvalState === "pending")
       || S.actions.find((a) => a.approvalState === "pending");
     if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); demoRunning = false; return; }
     const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(`▶ Illustrative walkthrough — approving ${pick.amount_label}…`); await wait(1100);
-    await approve(pick.id); await wait(1200);
-    toast("✉ Claim filed — and nothing sent until you approved it"); await markSent(pick.id); await wait(1500);
+    toast(`▶ Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
+    await approve(pick.id); await W(1200);
+    toast("✉ Claim filed — nothing sent until you approved it"); await markSent(pick.id); await W(1500);
     const ref = "RC-" + Math.floor(100000 + Math.random() * 900000);
-    toast(`📨 Acknowledged · reference #${ref}`); await wait(1700);
+    toast(`📨 Acknowledged · reference #${ref} (demo)`); await W(1700);
     await markPaid(pick.id);
-    toast(`💰 Recovered ${pick.amount_label} — that's the full loop, detect → approve → file → paid.`);
+    toast(`💰 Demo complete — full loop shown: detect → approve → file → paid. Real payouts land in the timeline each card shows.`);
     demoRunning = false;
+  }
+
+  async function forgetData() {
+    try { if (API) await fetch(API + "/api/account/forget", { method: "POST" }); } catch (e) {}
+    toast("Your stored data was cleared. Revoke Gmail access at myaccount.google.com/permissions.");
   }
 
   function mailtoFor(a) {
@@ -463,6 +471,7 @@
     $("#btn-scan").onclick = rescan;
     $("#btn-approve-all").onclick = approveAllSafe;
     const dr = $("#demo-recovery"); if (dr) dr.onclick = demoRecovery;
+    const fd = $("#forget-data"); if (fd) fd.onclick = (e) => { e.preventDefault(); forgetData(); };
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");

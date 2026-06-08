@@ -250,3 +250,16 @@ async def gmail_findings(request: Request, token: str = "", ro_session: str = Co
     key = token or ro_session
     findings = _GMAIL_FINDINGS.pop(key, []) if token else _GMAIL_FINDINGS.get(key, [])
     return _ok(request, findings=findings)
+
+
+@app.post("/api/account/forget")
+async def forget(request: Request, token: str = "", ro_session: str = Cookie(default="")):
+    """Right-to-erasure: clear any Gmail-derived findings we hold for this user.
+    Revoke the OAuth grant itself at myaccount.google.com/permissions."""
+    if token:
+        _GMAIL_FINDINGS.pop(token, None)
+    elif ro_session:
+        _GMAIL_FINDINGS.pop(ro_session, None)
+    else:
+        _GMAIL_FINDINGS.clear()
+    return _ok(request, cleared=True, revoke_at="https://myaccount.google.com/permissions")
