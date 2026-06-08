@@ -70,6 +70,9 @@ body{
 .landing-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .btn-xl{font-size:16px;padding:15px 26px;border-radius:14px}
 .landing-trust{margin-top:24px;font-size:12.5px;color:var(--dim)}
+.founder-strip{margin:18px auto 0;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);max-width:58ch;line-height:1.5}
+.founder-strip b{color:var(--text)}
+.founder-strip a{color:var(--cyan);text-decoration:none}
 
 /* hero */
 .hero{display:grid;grid-template-columns:1.4fr .9fr;gap:24px;padding:clamp(22px,3vw,38px)}
