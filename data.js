@@ -23,6 +23,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Confirm you've truly stopped using it before you cancel.",
         "claim_url": null,
+        "odds": "very likely",
+        "timeline": "instant–1 billing cycle",
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
@@ -71,6 +73,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Confirm you've truly stopped using it before you cancel.",
         "claim_url": null,
+        "odds": "very likely",
+        "timeline": "instant–1 billing cycle",
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
@@ -119,6 +123,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "The vendor can decline; cancelling is your leverage.",
         "claim_url": null,
+        "odds": "often works",
+        "timeline": "a few days",
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
@@ -167,6 +173,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Have the statement line ready — some fees are contractual.",
         "claim_url": null,
+        "odds": "likely",
+        "timeline": "1–2 statements",
         "agent": "billing_auditor",
         "agent_name": "Billing Auditor",
         "verify": {
@@ -215,6 +223,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Only valid inside the retailer's price-protection window.",
         "claim_url": null,
+        "odds": "likely",
+        "timeline": "a few days",
         "agent": "refund_claimant",
         "agent_name": "Refund Claimant",
         "verify": {
@@ -263,6 +273,8 @@ window.RO_FALLBACK = {
         "confidence_band": "medium",
         "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).",
         "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/",
+        "odds": "~60–70% if eligible",
+        "timeline": "2–8 weeks",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
@@ -313,6 +325,8 @@ window.RO_FALLBACK = {
         "confidence_band": "review",
         "caveat": "You must have been an affected customer within the claim period.",
         "claim_url": "https://www.ftc.gov/enforcement/refunds",
+        "odds": "if eligible",
+        "timeline": "months",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
@@ -363,6 +377,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Requires ID verification to prove the property is yours.",
         "claim_url": "https://www.missingmoney.com/",
+        "odds": "high if it's you",
+        "timeline": "2–12 weeks",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
@@ -413,6 +429,8 @@ window.RO_FALLBACK = {
         "confidence_band": "high",
         "caveat": "Check the plan covers this failure and is still active.",
         "claim_url": null,
+        "odds": "high",
+        "timeline": "days–weeks",
         "agent": "refund_claimant",
         "agent_name": "Refund Claimant",
         "verify": {
@@ -463,6 +481,8 @@ window.RO_FALLBACK = {
         "confidence_band": "medium",
         "caveat": "The landlord may deduct for documented damages.",
         "claim_url": null,
+        "odds": "high",
+        "timeline": "2–4 weeks",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
@@ -654,6 +674,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Confirm you've truly stopped using it before you cancel.",
       "claim_url": null,
+      "odds": "very likely",
+      "timeline": "instant–1 billing cycle",
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 142 days · billing since 2023-04). This stops a recurring leak of $240/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -707,6 +729,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Confirm you've truly stopped using it before you cancel.",
       "claim_url": null,
+      "odds": "very likely",
+      "timeline": "instant–1 billing cycle",
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 210 days · billing since 2024-02). This stops a recurring leak of $180/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -760,6 +784,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "The vendor can decline; cancelling is your leverage.",
       "claim_url": null,
+      "odds": "often works",
+      "timeline": "a few days",
       "draft": "Subject: Apply current rate or cancel\n\nMy price rose (Rose $7.99→$12.99/mo). Please match the current new-customer / retention rate, or treat this as notice of cancellation. Recovers $60/yr. Basis: Silent price increases can be challenged or matched to the new-customer rate (retention offer).",
       "approvalState": "pending",
       "status": "drafted",
@@ -813,6 +839,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Have the statement line ready — some fees are contractual.",
       "claim_url": null,
+      "odds": "likely",
+      "timeline": "1–2 statements",
       "draft": "Subject: Dispute an incorrect charge\n\nThere is an erroneous charge on my account (duplicate line fee on a $78.40 bill). Please remove it and credit me — worth $276/yr if recurring. Basis: Duplicate charges / undisclosed fees are recoverable; card issuers allow chargebacks within 60–120 days.",
       "approvalState": "pending",
       "status": "drafted",
@@ -866,6 +894,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Only valid inside the retailer's price-protection window.",
       "claim_url": null,
+      "odds": "likely",
+      "timeline": "a few days",
       "draft": "Subject: Price-protection refund request\n\nBought $299 6d ago · now $229. Per your price-protection / refund-window policy, please refund the one-time difference of $70. Basis: Many retailers and airlines owe a refund for a price drop or cancellation within a stated window.",
       "approvalState": "pending",
       "status": "drafted",
@@ -921,6 +951,8 @@ window.RO_FALLBACK = {
       "confidence_band": "medium",
       "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).",
       "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/",
+      "odds": "~60–70% if eligible",
+      "timeline": "2–8 weeks",
       "draft": "Subject: EU261 delay compensation claim\n\nMy flight LHR→BCN (1137km) delayed 4h on an EU carrier. Under EU261/UK261 I am owed €250 in cash compensation (one-time, not a voucher). Please process. Basis: EU261/UK261: flights delayed 3h+ owe €250 (<1500km), €400 (1500–3500km), or €600 cash.",
       "approvalState": "pending",
       "status": "drafted",
@@ -976,6 +1008,8 @@ window.RO_FALLBACK = {
       "confidence_band": "review",
       "caveat": "You must have been an affected customer within the claim period.",
       "claim_url": "https://www.ftc.gov/enforcement/refunds",
+      "odds": "if eligible",
+      "timeline": "months",
       "draft": "Filing my consumer claim (open claim window) for a one-time $51. Basis: Open class-action settlements (e.g. the $1.5B Amazon Prime / FTC fund) pay eligible consumers who file.",
       "approvalState": "pending",
       "status": "drafted",
@@ -1031,6 +1065,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Requires ID verification to prove the property is yours.",
       "claim_url": "https://www.missingmoney.com/",
+      "odds": "high if it's you",
+      "timeline": "2–12 weeks",
       "draft": "Filing to recover property held in my name (NAUPA), a one-time $214. Basis: State unclaimed-property programs (NAUPA) hold forgotten deposits, refunds, and balances under your name.",
       "approvalState": "pending",
       "status": "drafted",
@@ -1086,6 +1122,8 @@ window.RO_FALLBACK = {
       "confidence_band": "high",
       "caveat": "Check the plan covers this failure and is still active.",
       "claim_url": null,
+      "odds": "high",
+      "timeline": "days–weeks",
       "draft": "Subject: Warranty claim — covered repair\n\nMy item is covered (covered repair under extended protection plan). Please repair or replace at no cost under the plan; value $120 (one-time). Basis: Active warranty / protection plans cover repair or replacement at no cost — don't pay out of pocket.",
       "approvalState": "pending",
       "status": "drafted",
@@ -1141,6 +1179,8 @@ window.RO_FALLBACK = {
       "confidence_band": "medium",
       "caveat": "The landlord may deduct for documented damages.",
       "claim_url": null,
+      "odds": "high",
+      "timeline": "2–4 weeks",
       "draft": "Subject: Return of overdue security deposit\n\nMy deposit is overdue (held 95d — past the statutory return window). Please return $850 in full, plus any statutory penalty for late return. Basis: Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
       "approvalState": "pending",
       "status": "drafted",
@@ -1148,16 +1188,16 @@ window.RO_FALLBACK = {
     }
   ],
   "run": {
-    "run_id": "run_aa12a9",
+    "run_id": "run_88ce65",
     "model": "deterministic-fallback",
     "live": false,
-    "latency_ms": 1603,
+    "latency_ms": 5016,
     "actions": 10,
     "agents": 4,
     "verified": 5,
     "needs_confirm": 5,
     "flagged": 5,
-    "created_at": "2026-06-08T19:56:03.939844+00:00"
+    "created_at": "2026-06-08T21:44:55.769312+00:00"
   },
   "reasoning": [
     {
@@ -1257,9 +1297,9 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 2310.76,
       "trace_id": "",
-      "timestamp": "2026-06-08T19:56:02.336494+00:00",
+      "timestamp": "2026-06-08T21:44:50.753412+00:00",
       "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hash": "49f9d0aa6425ef53e8366f5f2562e0ef2fa6103010f0684dfeeb5e8542654a26"
+      "hash": "9d4a754141223280ab7367689fd0487a1406ef2cb0e5c40effbc1c7e11b6d847"
     },
     {
       "event_id": "au_0002",
@@ -1270,15 +1310,15 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 0.0,
       "trace_id": "",
-      "timestamp": "2026-06-08T19:56:03.939768+00:00",
-      "prev_hash": "49f9d0aa6425ef53e8366f5f2562e0ef2fa6103010f0684dfeeb5e8542654a26",
-      "hash": "4603175a14d775ca933c07f1159a39189090096ccc707ae87b3c062c5ddc8e78"
+      "timestamp": "2026-06-08T21:44:55.769246+00:00",
+      "prev_hash": "9d4a754141223280ab7367689fd0487a1406ef2cb0e5c40effbc1c7e11b6d847",
+      "hash": "72f521abf5b940c28a56b87eedcce5aa57cace1bfdce6e45e1a373e5c5f62061"
     }
   ],
   "auditIntegrity": {
     "intact": true,
     "count": 2,
-    "head": "4603175a14d775ca933c07f1159a39189090096ccc707ae87b3c062c5ddc8e78"
+    "head": "72f521abf5b940c28a56b87eedcce5aa57cace1bfdce6e45e1a373e5c5f62061"
   },
   "generated": "static-fallback"
 };

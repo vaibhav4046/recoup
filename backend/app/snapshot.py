@@ -30,17 +30,17 @@ RULES = {
     "deposit": "Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
 }
 
-# per-kind confidence + an honest "why you might NOT qualify" caveat + a real claim link
+# per-kind confidence + honest caveat + real claim link + de-risk (odds you'll get paid, how long)
 KIND_META = {
-    "dead_subscription": {"confidence": 0.95, "caveat": "Confirm you've truly stopped using it before you cancel.", "claim_url": None},
-    "price_creep": {"confidence": 0.85, "caveat": "The vendor can decline; cancelling is your leverage.", "claim_url": None},
-    "billing_error": {"confidence": 0.90, "caveat": "Have the statement line ready — some fees are contractual.", "claim_url": None},
-    "price_drop": {"confidence": 0.90, "caveat": "Only valid inside the retailer's price-protection window.", "claim_url": None},
-    "flight_comp": {"confidence": 0.70, "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).", "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/"},
-    "settlement": {"confidence": 0.60, "caveat": "You must have been an affected customer within the claim period.", "claim_url": "https://www.ftc.gov/enforcement/refunds"},
-    "unclaimed": {"confidence": 0.85, "caveat": "Requires ID verification to prove the property is yours.", "claim_url": "https://www.missingmoney.com/"},
-    "warranty": {"confidence": 0.85, "caveat": "Check the plan covers this failure and is still active.", "claim_url": None},
-    "deposit": {"confidence": 0.80, "caveat": "The landlord may deduct for documented damages.", "claim_url": None},
+    "dead_subscription": {"confidence": 0.95, "caveat": "Confirm you've truly stopped using it before you cancel.", "claim_url": None, "odds": "very likely", "timeline": "instant–1 billing cycle"},
+    "price_creep": {"confidence": 0.85, "caveat": "The vendor can decline; cancelling is your leverage.", "claim_url": None, "odds": "often works", "timeline": "a few days"},
+    "billing_error": {"confidence": 0.90, "caveat": "Have the statement line ready — some fees are contractual.", "claim_url": None, "odds": "likely", "timeline": "1–2 statements"},
+    "price_drop": {"confidence": 0.90, "caveat": "Only valid inside the retailer's price-protection window.", "claim_url": None, "odds": "likely", "timeline": "a few days"},
+    "flight_comp": {"confidence": 0.70, "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).", "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/", "odds": "~60–70% if eligible", "timeline": "2–8 weeks"},
+    "settlement": {"confidence": 0.60, "caveat": "You must have been an affected customer within the claim period.", "claim_url": "https://www.ftc.gov/enforcement/refunds", "odds": "if eligible", "timeline": "months"},
+    "unclaimed": {"confidence": 0.85, "caveat": "Requires ID verification to prove the property is yours.", "claim_url": "https://www.missingmoney.com/", "odds": "high if it's you", "timeline": "2–12 weeks"},
+    "warranty": {"confidence": 0.85, "caveat": "Check the plan covers this failure and is still active.", "claim_url": None, "odds": "high", "timeline": "days–weeks"},
+    "deposit": {"confidence": 0.80, "caveat": "The landlord may deduct for documented damages.", "claim_url": None, "odds": "high", "timeline": "2–4 weeks"},
 }
 
 
@@ -48,7 +48,8 @@ def _meta(kind: str) -> dict:
     m = KIND_META.get(kind, {})
     c = m.get("confidence", 0.8)
     band = "high" if c >= 0.85 else "medium" if c >= 0.7 else "review"
-    return {"confidence": c, "confidence_band": band, "caveat": m.get("caveat", ""), "claim_url": m.get("claim_url")}
+    return {"confidence": c, "confidence_band": band, "caveat": m.get("caveat", ""), "claim_url": m.get("claim_url"),
+            "odds": m.get("odds", "varies"), "timeline": m.get("timeline", "varies")}
 
 
 def _money_surface() -> dict:

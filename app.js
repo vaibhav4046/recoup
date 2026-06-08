@@ -205,6 +205,7 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
+      ${a.timeline ? `<div class="fc-expect">⏱ ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
       ${a.agent_name ? `<div class="fc-agent">◆ ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm">⚠ confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
       ${actions}`;
     return c;
@@ -316,6 +317,7 @@
       (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"} ${esc(c.label)}</div>`).join("") : `<div class="prov-check ok">✓ verified</div>`) +
       `</div>` +
       (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">⚠ You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
+      (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">⏱ Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
       (a.claim_url ? `<a class="btn btn-mail full" href="${esc(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ↗</a>` : "") +
       `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
     $("#drawer-body").textContent = a.draft || "(no draft)";

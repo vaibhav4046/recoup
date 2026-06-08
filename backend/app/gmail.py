@@ -86,7 +86,8 @@ def to_findings(subs: list[dict]) -> list[dict]:
             "evidence": f"From your Gmail: \"{s['evidence']}\" — {note}",
             "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium",
             "caveat": "Confirm you've stopped using it before cancelling." if not s["trial"] else "Cancel before the trial converts to avoid the charge.",
-            "claim_url": None, "agent": "sub_hunter", "agent_name": "Subscription Hunter",
+            "claim_url": None, "odds": "very likely", "timeline": "before renewal" if s["trial"] else "instant–1 cycle",
+            "agent": "sub_hunter", "agent_name": "Subscription Hunter",
             "verify": {"ok": True, "checks": [
                 {"label": "matched a known subscription sender", "ok": True},
                 {"label": "amount from receipt" if s["amount_known"] else "amount estimated (confirm)", "ok": s["amount_known"]},

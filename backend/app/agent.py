@@ -83,6 +83,7 @@ def build_actions(findings: list[dict]) -> list[dict]:
             "agent": f.get("agent"), "agent_name": f.get("agent_name"), "verify": f.get("verify"),
             "confidence": f.get("confidence"), "confidence_band": f.get("confidence_band"),
             "caveat": f.get("caveat"), "claim_url": f.get("claim_url"),
+            "odds": f.get("odds"), "timeline": f.get("timeline"),
             "draft": _draft_text(f),
             "approvalState": "pending", "status": "drafted", "claimedAt": None,
         })

@@ -49,6 +49,8 @@ window.RecoupScan = (function () {
         : kind === "price_creep" ? "The vendor can decline; cancelling is your leverage."
         : "Confirm you've actually stopped using it before you cancel.",
       claim_url: null,
+      odds: kind === "billing_error" ? "likely" : kind === "price_creep" ? "often works" : "very likely",
+      timeline: kind === "billing_error" ? "1–2 statements" : kind === "price_creep" ? "a few days" : "instant–1 cycle",
       agent: kind === "billing_error" ? "billing_auditor" : "sub_hunter",
       agent_name: kind === "billing_error" ? "Billing Auditor" : kind === "price_creep" ? "Subscription Hunter" : "Subscription Hunter",
       verify: { ok: true, review: false, checks: [
