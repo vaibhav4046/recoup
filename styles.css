@@ -3,7 +3,7 @@
   --bg:#07080c; --bg2:#0b0d14;
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.05);
   --border:rgba(255,255,255,.09); --border2:rgba(255,255,255,.14);
-  --text:#eef1f7; --muted:#8b93a7; --dim:#5d647a;
+  --text:#eef1f7; --muted:#8b93a7; --dim:#7c849a;
   --emerald:#34d399; --cyan:#22d3ee; --amber:#fbbf24; --rose:#fb7185; --violet:#a78bfa;
   --grad:linear-gradient(135deg,#34d399,#22d3ee);
   --grad-money:linear-gradient(135deg,#5eead4,#34d399 45%,#22d3ee);
@@ -63,11 +63,11 @@ body{
 .skip-link:focus{left:8px}
 .demo-flag{margin-top:8px;font-size:11px;color:#f5c87a;font-weight:700;letter-spacing:.2px}
 .vrec-list{display:flex;flex-direction:column;gap:8px}
-.vrec-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(46,213,115,.07)}
-.vrec-item .amt{font-weight:800;color:#37d67a;white-space:nowrap}
+.vrec-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:rgba(52,211,153,.08)}
+.vrec-item .amt{font-weight:800;color:#34d399;white-space:nowrap}
 .vrec-empty{color:var(--muted);font-size:13px;line-height:1.5;padding:6px 0}
 .vrec-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.vrec-form input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit}
+.vrec-form input{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit}
 .vrec-form input:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
 .btn-sm{padding:7px 12px;font-size:12.5px}
 .gmail-testnote{font-size:11.5px;color:var(--dim);margin:9px 2px 0;line-height:1.45}
@@ -80,7 +80,7 @@ body{
 .landing-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .btn-xl{font-size:16px;padding:15px 26px;border-radius:14px}
 .landing-trust{margin-top:24px;font-size:12.5px;color:var(--dim)}
-.founder-strip{margin:18px auto 0;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);max-width:58ch;line-height:1.5}
+.founder-strip{margin:18px auto 0;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted);max-width:58ch;line-height:1.5}
 .founder-strip b{color:var(--text)}
 .founder-strip a{color:var(--cyan);text-decoration:none}
 
@@ -292,13 +292,15 @@ body.light .fc-expect b{color:#0e7490}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid rgba(52,211,153,.4);
   color:#baf5e0;padding:13px 22px;border-radius:12px;font-weight:600;font-size:14px;z-index:50;opacity:0;transition:.3s;box-shadow:var(--shadow)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.divider{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:12px;margin:16px 0}
+.divider::before,.divider::after{content:"";height:1px;flex:1;background:var(--border)}
 
 /* ---- light mode ---- */
 body.light{
   --bg:#eef1f7; --bg2:#ffffff;
   --panel:rgba(15,23,42,.045); --panel2:rgba(15,23,42,.07);
   --border:rgba(15,23,42,.11); --border2:rgba(15,23,42,.18);
-  --text:#0d1526; --muted:#586074; --dim:#8a93a6;
+  --text:#0d1526; --muted:#586074; --dim:#5f6678;
   --shadow:0 18px 50px -22px rgba(30,41,73,.22);
 }
 body.light #bg-orbs{opacity:.3}
@@ -322,3 +324,12 @@ body.light .linklike{color:#6d28d9}
 body.light .prov-check.ok{color:#047857}
 body.light .prov-sec.caveat div:not(.prov-h){color:#92400e}
 body.light .btn-life.paid,body.light .fc-paid{color:#047857}
+body.light .demo-flag{color:#92400e}
+body.light .ring-bg{stroke:rgba(15,23,42,.10)}
+body.light .bd-bar{background:rgba(15,23,42,.08)}
+body.light .au-actor.system{background:rgba(15,23,42,.06)}
+body.light .fc-conf.review{color:#be123c;background:rgba(190,18,60,.12)}
+body.light .fc-onetime .fc-amount{color:#047857}
+body.light .vrec-item .amt{color:#047857}
+body.light .btn-approve,body.light .btn-mail{color:#047857;background:rgba(4,120,87,.1)}
+body.light .btn-copy{color:#0e7490;background:rgba(14,116,144,.1)}
