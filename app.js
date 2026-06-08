@@ -147,7 +147,9 @@
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
     setText("#ring-pct", Math.round(frac * 100) + "%");
     const ringEl = document.querySelector(".ring");
-    if (ringEl) { ringEl.setAttribute("role", "img"); ringEl.setAttribute("aria-label", `Claims ready: ${appr.length} of ${n}; $${money(paid)} recovered so far`); }
+    if (ringEl) ringEl.setAttribute("aria-hidden", "true");
+    const rs = $("#ring-status");
+    if (rs) { const msg = `${appr.length} of ${n} claims ready; $${money(paid)} recovered`; if (rs.textContent !== msg) rs.textContent = msg; }
   }
   function setText(sel, v) { const e = $(sel); if (e) e.textContent = v; }
 
@@ -366,8 +368,11 @@
   }
 
   // ---- drawer ----
+  let _invoker = null;
+  function restoreFocus() { if (_invoker && _invoker.focus && document.contains(_invoker)) { try { _invoker.focus(); } catch (e) {} } _invoker = null; }
   function openDrawer(id) {
     const a = S.actions.find((x) => x.id === id); if (!a) return;
+    _invoker = document.activeElement;
     $("#drawer-title").textContent = a.title;
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     $("#drawer-meta").innerHTML =
@@ -394,12 +399,13 @@
     ab.onclick = () => { approve(id); closeDrawer(); };
     sb.onclick = () => skip(id);
     $("#drawer").classList.add("open"); $("#drawer-scrim").classList.add("open");
+    setTimeout(() => { const x = $("#drawer-x"); if (x) x.focus(); }, 60);
   }
-  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer-scrim").classList.remove("open"); }
+  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer-scrim").classList.remove("open"); restoreFocus(); }
 
   // ---- scan your own data (100% client-side) ----
-  function openScan() { $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
-  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); }
+  function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
+  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); restoreFocus(); }
   function showResults() {
     const r = $("#results"), l = $("#landing");
     if (r) r.classList.remove("hidden");
@@ -496,6 +502,7 @@
     const fd = $("#forget-data"); if (fd) fd.onclick = (e) => { e.preventDefault(); forgetData(); };
     const va = $("#vrec-add"); if (va) va.onclick = () => { const f = $("#vrec-form"); if (f) f.classList.toggle("hidden"); };
     const vf = $("#vrec-form"); if (vf) vf.onsubmit = (e) => { e.preventDefault(); addVrec(); };
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drawer").classList.contains("open")) closeDrawer(); else if ($("#scan-modal").classList.contains("open")) closeScan(); } });
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");
