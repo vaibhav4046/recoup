@@ -103,28 +103,42 @@ def _fallback_reasoning(scan: dict) -> list[dict]:
     ]
 
 
-def _client():
-    from google import genai
-    s = get_settings()
-    if s.use_vertex and s.google_cloud_project:
-        return genai.Client(vertexai=True, project=s.google_cloud_project, location=s.google_cloud_region)
-    return genai.Client(api_key=s.google_api_key)
+_CLIENT = None
+
+
+def _client(fresh: bool = False):
+    """Singleton genai client. `fresh=True` rebuilds it (recovers from a closed
+    httpx client — seen on the Python 3.12 Spaces container)."""
+    global _CLIENT
+    if fresh:
+        _CLIENT = None
+    if _CLIENT is None:
+        from google import genai
+        s = get_settings()
+        if s.use_vertex and s.google_cloud_project:
+            _CLIENT = genai.Client(vertexai=True, project=s.google_cloud_project, location=s.google_cloud_region)
+        else:
+            _CLIENT = genai.Client(api_key=s.google_api_key)
+    return _CLIENT
 
 
 def _generate(model: str, prompt: str, attempts: int = 3):
-    """Call Gemini with light backoff on transient rate/availability errors."""
+    """Call Gemini; rebuild the client + retry on a closed-client RuntimeError,
+    back off on transient rate/availability errors."""
     last = None
     for i in range(attempts):
         try:
-            return _client().models.generate_content(
+            return _client(fresh=(i > 0)).models.generate_content(
                 model=model, contents=prompt,
                 config={"response_mime_type": "application/json", "temperature": 0.4})
         except Exception as e:  # noqa: BLE001
             last = e
             msg = str(e)
+            closed = "closed" in msg.lower() or isinstance(e, RuntimeError)
             transient = any(t in msg for t in ("RESOURCE_EXHAUSTED", "429", "503", "UNAVAILABLE"))
-            if transient and i < attempts - 1:
-                time.sleep(1.2 * (i + 1))
+            if (closed or transient) and i < attempts - 1:
+                if not closed:
+                    time.sleep(1.2 * (i + 1))
                 continue
             raise
     raise last  # pragma: no cover
@@ -161,4 +175,4 @@ def draft_plan(scan: dict) -> dict:
     except Exception as e:  # noqa: BLE001
         return {"reasoning": meta["trace"] + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
-                "note": f"Gemini call failed ({type(e).__name__}); used labelled fallback."}
+                "note": f"Gemini fallback ({type(e).__name__}): {str(e)[:90]}"}
