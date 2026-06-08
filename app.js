@@ -30,6 +30,7 @@
   }
 
   async function boot() {
+    try { applyTheme(localStorage.getItem("ro-theme") || "dark"); } catch (e) {}
     if (API) { try { const res = await fetch(API + "/api/state"); if (res.ok) { S = await res.json(); S._live = true; } } catch (e) { /* fall back */ } }
     if (!S) { S = JSON.parse(JSON.stringify(window.RO_FALLBACK || { actions: [], audit: [], reasoning: [] })); S._live = false; }
     S.actions = S.actions || []; S.audit = S.audit || []; S.reasoning = S.reasoning || [];
@@ -68,11 +69,13 @@
   function renderChips() {
     const live = S.integrations || {};
     const box = $("#status-chips"); box.innerHTML = "";
-    const mk = (name, ok) => el("span", "chip " + (ok ? "live" : "warn"), `<span class="d"></span>${name} · ${ok ? "live" : "fallback"}`);
-    box.appendChild(mk("Gemini", (live.gemini || "fallback") === "live"));
-    box.appendChild(mk("MongoDB", (live.mongodb || "fallback") === "live"));
-    box.appendChild(el("span", "chip live", `<span class="d"></span>Audit · SHA-256`));
-    box.appendChild(el("span", "chip" + (S._live ? " live" : ""), `<span class="d"></span>${S._live ? "Backend live" : "Demo data"}`));
+    const gem = (live.gemini || "fallback") === "live";
+    const mon = (live.mongodb || "fallback") === "live";
+    const chip = (txt, cls) => el("span", "chip " + cls, `<span class="d"></span>${txt}`);
+    box.appendChild(chip(gem ? "Gemini · live" : "AI reasoning · on", gem ? "live" : ""));
+    box.appendChild(chip(mon ? "MongoDB · live" : "Storage · local", mon ? "live" : ""));
+    box.appendChild(chip("Audit · SHA-256", "live"));
+    box.appendChild(chip(S._live ? "Backend · live" : "Sample data", S._live ? "live" : ""));
   }
 
   function renderHero() {
@@ -86,15 +89,21 @@
   }
 
   function updateReadyUI() {
-    S.ready = sumAmt((a) => a.approvalState === "approved");
-    animateCount($("#claim-ready"), S.ready);
-    $("#ready-count").textContent = S.actions.filter((a) => a.approvalState === "approved").length;
-    $("#pending-count").textContent = S.actions.filter((a) => a.approvalState === "pending").length;
-    const frac = S.recoverable ? Math.min(1, S.ready / S.recoverable) : 0;
+    const appr = S.actions.filter((a) => a.approvalState === "approved");
+    const n = S.actions.length;
+    setText("#ready-count", appr.length);
+    setText("#total-count", n);
+    setText("#pending-count", S.actions.filter((a) => a.approvalState === "pending").length);
+    const once = r2(appr.filter((a) => a.cadence === "once").reduce((s, a) => s + a.amount, 0));
+    const rec = r2(appr.filter((a) => a.cadence === "yearly").reduce((s, a) => s + a.amount, 0));
+    setText("#secured-once", "$" + money(once));
+    setText("#secured-rec", "$" + money(rec));
+    const frac = n ? appr.length / n : 0;
     const C = 2 * Math.PI * 52;
-    $("#ring-fg").style.strokeDashoffset = String(C * (1 - frac));
-    $("#ring-pct").textContent = Math.round(frac * 100) + "%";
+    const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
+    setText("#ring-pct", Math.round(frac * 100) + "%");
   }
+  function setText(sel, v) { const e = $(sel); if (e) e.textContent = v; }
 
   function renderTrace(animate) {
     const box = $("#trace"); box.innerHTML = "";
@@ -141,10 +150,9 @@
            ${a.approvalState === "pending" ? `<button class="btn btn-skip" data-skip="${a.id}">Skip</button>` : ""}
          </div>`;
     c.innerHTML = `
-      <div class="ribbon">READY</div>
       <div class="fc-top">
         <div class="fc-title">${esc(a.title)}</div>
-        <span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed · one-time" : "leak · yearly"}</span>
+        ${approved ? `<span class="fc-kind ready">✓ ready</span>` : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed · one-time" : "leak · yearly"}</span>`}
       </div>
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
@@ -249,6 +257,13 @@
     $("#btn-approve-all").onclick = approveAllSafe;
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
+    const tt = $("#theme-toggle");
+    if (tt) tt.onclick = () => { const t = document.body.classList.contains("light") ? "dark" : "light"; try { localStorage.setItem("ro-theme", t); } catch (e) {} applyTheme(t); };
+  }
+
+  function applyTheme(t) {
+    document.body.classList.toggle("light", t === "light");
+    const b = document.querySelector("#theme-toggle"); if (b) b.textContent = t === "light" ? "☀" : "◐";
   }
 
   let toastT;

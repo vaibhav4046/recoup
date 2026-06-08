@@ -19,7 +19,10 @@
     <div class="brand-name">Recoup<span class="brand-dot">.</span></div>
     <span class="brand-tag">money-recovery agent</span>
   </div>
-  <div class="chips" id="status-chips"><!-- injected --></div>
+  <div class="topbar-right">
+    <div class="chips" id="status-chips"><!-- injected --></div>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
+  </div>
 </header>
 
 <main class="wrap">
@@ -47,10 +50,10 @@
     </div>
     <div class="hero-right">
       <div class="recovered-card">
-        <div class="recovered-label">READY TO CLAIM</div>
-        <div class="recovered-amount">$<span id="claim-ready">0</span></div>
+        <div class="recovered-label">CLAIMS READY</div>
+        <div class="recovered-amount"><span id="ready-count">0</span><span class="rc-of">/<span id="total-count">0</span></span></div>
         <div class="ring"><svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"/></svg><div class="ring-pct" id="ring-pct">0%</div></div>
-        <div class="recovered-foot"><span id="ready-count">0</span> approved · <span id="pending-count">0</span> pending</div>
+        <div class="recovered-foot"><b id="secured-once">$0</b> + <b id="secured-rec">$0</b>/yr secured · <span id="pending-count">0</span> pending</div>
       </div>
     </div>
   </section>
