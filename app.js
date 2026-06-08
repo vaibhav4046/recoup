@@ -330,6 +330,12 @@
   // ---- scan your own data (100% client-side) ----
   function openScan() { $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
   function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); }
+  function showResults() {
+    const r = $("#results"), l = $("#landing");
+    if (r) r.classList.remove("hidden");
+    if (l) l.classList.add("hidden");
+    try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+  }
 
   function rosterFrom(findings) {
     const defs = [
@@ -362,6 +368,7 @@
     S.audit = [];
     await appendAudit("system", opts.scanner || "Recoup", "SCAN_RUN", opts.auditLabel || `Found ${findings.length} recoverable items, $${money(S.recoverable)} recoverable`, S.recoverable);
     renderAll(true);
+    showResults();
   }
 
   async function runScan() {
@@ -432,6 +439,8 @@
       } catch (e) { toast("Backend waking up — paste a statement below (works offline), or retry in a moment."); }
     };
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
+    const fm = $("#find-money"); if (fm) fm.onclick = openScan;
+    const se = $("#see-example"); if (se) se.onclick = showResults;
   }
 
   function applyTheme(t) {
