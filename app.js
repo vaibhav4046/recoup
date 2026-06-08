@@ -31,7 +31,15 @@
 
   async function boot() {
     try { applyTheme(localStorage.getItem("ro-theme") || "dark"); } catch (e) {}
-    if (API) { try { const res = await fetch(API + "/api/state"); if (res.ok) { S = await res.json(); S._live = true; } } catch (e) { /* fall back */ } }
+    if (API) {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000); // cold-start safety: fall back to embedded data fast
+        const res = await fetch(API + "/api/state", { signal: ctrl.signal });
+        clearTimeout(t);
+        if (res.ok) { S = await res.json(); S._live = true; }
+      } catch (e) { /* fall back to embedded data instantly */ }
+    }
     if (!S) { S = JSON.parse(JSON.stringify(window.RO_FALLBACK || { actions: [], audit: [], reasoning: [] })); S._live = false; }
     S.actions = S.actions || []; S.audit = S.audit || []; S.reasoning = S.reasoning || [];
     recompute();
@@ -369,7 +377,14 @@
     const ssc = $("#scan-scrim"); if (ssc) ssc.onclick = closeScan;
     const sr = $("#scan-run"); if (sr) sr.onclick = runScan;
     const sm = $("#scan-sample"); if (sm) sm.onclick = () => { const i = $("#scan-input"); if (i && window.RecoupScan) i.value = window.RecoupScan.SAMPLE; };
-    const gc = $("#gmail-connect"); if (gc) gc.onclick = () => { if (API) location.href = API + "/api/gmail/start"; else toast("Connect Gmail goes live with the backend — paste a statement below to try it now (100% private)."); };
+    const gc = $("#gmail-connect"); if (gc) gc.onclick = async () => {
+      if (!API) { toast("Connect Gmail goes live with the backend — paste a statement below (works now)."); return; }
+      try {
+        const st = await fetch(API + "/api/auth/status").then((r) => r.json());
+        if (st.providers && st.providers.google) location.href = API + "/api/gmail/start";
+        else toast("Gmail connect needs the Google OAuth client (your ~4 clicks) — paste a statement below for now.");
+      } catch (e) { toast("Backend waking up — paste a statement below (works offline), or retry in a moment."); }
+    };
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
   }
 
