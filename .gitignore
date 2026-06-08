@@ -1,0 +1,21 @@
+# secrets
+.env
+backend/.env
+*.key
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# node / tooling
+node_modules/
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

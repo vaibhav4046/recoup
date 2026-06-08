@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recoup — the AI that gets your money back</title>
+<meta name="description" content="Recoup finds money you're owed and money you're losing — refunds, settlements, flight compensation, dead subscriptions, billing errors — drafts every claim, and you approve each with one tap." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">R</div>
+    <div class="brand-name">Recoup<span class="brand-dot">.</span></div>
+    <span class="brand-tag">money-recovery agent</span>
+  </div>
+  <div class="chips" id="status-chips"><!-- injected --></div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero glass">
+    <div class="hero-left">
+      <div class="eyebrow">YOU'RE OWED &amp; LOSING</div>
+      <div class="hero-figures">
+        <div class="figure">
+          <div class="fig-amount owed">≈$<span id="one-time">0</span></div>
+          <div class="fig-label"><b>owed to you now</b> · one-time payouts</div>
+        </div>
+        <div class="fig-div"></div>
+        <div class="figure">
+          <div class="fig-amount leak">$<span id="recurring">0</span><span class="per">/yr</span></div>
+          <div class="fig-label"><b>leaking every year</b> · recurring drains</div>
+        </div>
+      </div>
+      <p class="hero-sub" id="hero-sub">Scanning your money surface…</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btn-scan"><span class="dot"></span> Run recovery scan</button>
+        <button class="btn btn-ghost" id="btn-approve-all">Approve all safe wins</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="recovered-card">
+        <div class="recovered-label">READY TO CLAIM</div>
+        <div class="recovered-amount">$<span id="claim-ready">0</span></div>
+        <div class="ring"><svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"/></svg><div class="ring-pct" id="ring-pct">0%</div></div>
+        <div class="recovered-foot"><span id="ready-count">0</span> approved · <span id="pending-count">0</span> pending</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REASONING + BREAKDOWN -->
+  <section class="grid-2">
+    <div class="panel glass">
+      <div class="panel-head"><h3>Agent reasoning</h3><span class="muted" id="reason-model">—</span></div>
+      <div class="trace" id="trace"><!-- injected --></div>
+    </div>
+    <div class="panel glass">
+      <div class="panel-head"><h3>Where it's hiding</h3><span class="muted">by category</span></div>
+      <div class="breakdown" id="breakdown"><!-- injected --></div>
+    </div>
+  </section>
+
+  <!-- FINDINGS -->
+  <section class="panel glass">
+    <div class="panel-head">
+      <h3>Recoverable money <span class="count-pill" id="findings-count">0</span></h3>
+      <div class="legend"><span class="lg leak">leak</span><span class="lg owed">owed to you</span></div>
+    </div>
+    <div class="findings" id="findings"><!-- injected --></div>
+  </section>
+
+  <!-- AUDIT -->
+  <section class="panel glass">
+    <div class="panel-head">
+      <h3>Audit trail</h3>
+      <span class="audit-badge" id="audit-badge">● verifying…</span>
+    </div>
+    <div class="audit" id="audit"><!-- injected --></div>
+  </section>
+
+  <footer class="foot">
+    <span>Recoup · Gemini + MongoDB · human-in-the-loop · tamper-evident audit</span>
+    <span class="muted">Nothing is ever sent without your approval.</span>
+  </footer>
+</main>
+
+<!-- drawer for drafted message -->
+<div class="drawer-scrim" id="drawer-scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head"><h4 id="drawer-title">Drafted message</h4><button class="x" id="drawer-x">✕</button></div>
+  <div class="drawer-meta" id="drawer-meta"></div>
+  <pre class="drawer-body" id="drawer-body"></pre>
+  <div class="drawer-foot">
+    <button class="btn btn-primary" id="drawer-approve">✓ Approve &amp; recover</button>
+    <button class="btn btn-ghost" id="drawer-skip">Skip</button>
+  </div>
+</aside>
+
+<script>window.RO_CONFIG = { apiBase: "" };  /* set to your HF Space URL for live backend, e.g. "https://USER-recoup.hf.space" */</script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
