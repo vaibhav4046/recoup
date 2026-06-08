@@ -123,10 +123,22 @@ def _generate(model: str, prompt: str, attempts: int = 3) -> str:
                 time.sleep(1.2 * (i + 1))
                 continue
             r.raise_for_status()
-            return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+            data = r.json()
+            cands = data.get("candidates") or []
+            parts = (cands[0].get("content", {}).get("parts") if cands else None) or []
+            if not parts or "text" not in parts[0]:
+                fr = (cands[0].get("finishReason") if cands else None) or "no_candidates"
+                raise RuntimeError(f"Gemini returned 200 with no text (finishReason={fr})")
+            return parts[0]["text"]
+        except httpx.TransportError as e:  # timeouts, connect/read errors
+            last = e
+            if i < attempts - 1:
+                time.sleep(1.0 * (i + 1))
+                continue
+            raise
         except Exception as e:  # noqa: BLE001
             last = e
-            if i < attempts - 1 and any(t in str(e) for t in ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "timed out", "Connect")):
+            if i < attempts - 1 and any(t in str(e) for t in ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
                 time.sleep(1.0 * (i + 1))
                 continue
             raise
