@@ -48,11 +48,15 @@ flowchart LR
    findings; it never invents the numbers (amounts come from the rules).
 3. **Draft** — each finding becomes a ready-to-send claim (cancellation email, dispute
    letter, EU261 claim, settlement filing…), each citing the consumer-protection rule.
-4. **Approve** — the **only** path that readies a claim. One tap → status `claim_ready`,
-   with **Copy email** and **Open in email** actions. Approving drafts a claim; it never
-   asserts the money is already in hand.
-5. **Audit** — every scan, draft, and approval folds into a **SHA-256 hash chain**
-   (`audit.py`) with a `verify()` re-walk that detects any tampering.
+4. **Approve → Send → Recover** — approval is the **only** path that readies a claim, and
+   each claim then advances **Drafted → Sent → Recovered**. Every card carries a **Copy**
+   button, a deep-link to the *real* claim form (MissingMoney/NAUPA, the CAA for EU261, the
+   FTC for settlements), a per-claim **confidence score**, and an honest **"why you might
+   not qualify"** caveat. A one-tap **"show your work"** drawer renders the rule, the source
+   evidence, and the Verifier agent's boolean checks. *"Recovered"* only counts money the
+   user marks as actually received — never an overstated total.
+5. **Audit** — every scan, draft, approval, send, and recovery folds into a **SHA-256 hash
+   chain** (`audit.py`) with a `verify()` re-walk that detects any tampering.
 
 ## Design principles (why it's trustworthy)
 
@@ -111,9 +115,13 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 
 ## Screens
 
-| Command center | Mobile |
+| Command center (4-agent swarm) | "Show your work" provenance |
 |---|---|
-| ![desktop](screens/desktop.png) | ![mobile](screens/mobile.png) |
+| ![desktop](screens/desktop.png) | ![provenance](screens/prov-drawer.png) |
+
+| Mobile | Light mode |
+|---|---|
+| ![mobile](screens/mobile.png) | ![light](screens/light.png) |
 
 ## Run locally
 
