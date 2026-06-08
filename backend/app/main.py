@@ -212,3 +212,39 @@ async def auth_logout():
     resp = JSONResponse(content={"ok": True})
     resp.delete_cookie(COOKIE)
     return resp
+
+
+# ---- Gmail subscription intake (read-only; subscriptions only, never bank data) ----
+_GMAIL_FINDINGS: dict[str, list] = {}
+
+
+@app.get("/api/gmail/start")
+async def gmail_start():
+    url = auth.google_auth_url(state="gmail_" + uuid.uuid4().hex[:8], gmail=True)
+    if not url:
+        return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured — set GOOGLE_OAUTH_CLIENT_ID"})
+    return RedirectResponse(url)
+
+
+@app.get("/api/gmail/callback")
+async def gmail_cb(code: str):
+    from . import gmail as gmailmod
+    try:
+        tok = auth.google_exchange(code, redirect_path="/api/gmail/callback")
+        access = tok.get("access_token")
+        if not access:
+            return RedirectResponse("/?gmail=err")
+        msgs = gmailmod.fetch_subscription_emails(access)
+        findings = gmailmod.to_findings(gmailmod.detect(msgs))
+    except Exception:
+        return RedirectResponse("/?gmail=err")
+    sess = auth.create_session("gmail-user")
+    _GMAIL_FINDINGS[sess] = findings
+    resp = RedirectResponse("/?gmail=ok")
+    _set_session(resp, sess)
+    return resp
+
+
+@app.get("/api/gmail/findings")
+async def gmail_findings(request: Request, ro_session: str = Cookie(default="")):
+    return _ok(request, findings=_GMAIL_FINDINGS.get(ro_session, []))

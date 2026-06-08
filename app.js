@@ -97,7 +97,7 @@
     const dn = $("#demo-note");
     if (dn) dn.innerHTML = S._real
       ? '🔒 <b>Your data</b> — scanned privately in your browser. Nothing was uploaded. <button class="linklike2" id="open-scan">Re-scan →</button>'
-      : '🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button>';
+      : '🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Recover your own subscriptions →</button>';
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     updateReadyUI();
   }
@@ -369,6 +369,7 @@
     const ssc = $("#scan-scrim"); if (ssc) ssc.onclick = closeScan;
     const sr = $("#scan-run"); if (sr) sr.onclick = runScan;
     const sm = $("#scan-sample"); if (sm) sm.onclick = () => { const i = $("#scan-input"); if (i && window.RecoupScan) i.value = window.RecoupScan.SAMPLE; };
+    const gc = $("#gmail-connect"); if (gc) gc.onclick = () => { if (API) location.href = API + "/api/gmail/start"; else toast("Connect Gmail goes live with the backend — paste a statement below to try it now (100% private)."); };
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
   }
 

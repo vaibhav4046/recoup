@@ -107,18 +107,33 @@ def verify_captcha(token: str, ip: str = "") -> bool:
 
 
 # ---- Google OAuth ----
-def google_auth_url(state: str) -> str | None:
+def google_auth_url(state: str, gmail: bool = False) -> str | None:
     s = get_settings()
     if not s.google_oauth_client_id:
         return None
     from urllib.parse import urlencode
+    scope, redirect = "openid email profile", "/api/auth/google/callback"
+    if gmail:  # read-only subscription emails only
+        scope += " https://www.googleapis.com/auth/gmail.readonly"
+        redirect = "/api/gmail/callback"
     q = urlencode({
         "client_id": s.google_oauth_client_id,
-        "redirect_uri": f"{s.base_url.rstrip('/')}/api/auth/google/callback",
-        "response_type": "code", "scope": "openid email profile",
-        "state": state, "access_type": "online", "prompt": "select_account",
+        "redirect_uri": f"{s.base_url.rstrip('/')}{redirect}",
+        "response_type": "code", "scope": scope,
+        "state": state, "access_type": "online", "prompt": "consent select_account",
     })
     return f"https://accounts.google.com/o/oauth2/v2/auth?{q}"
+
+
+def google_exchange(code: str, redirect_path: str = "/api/auth/google/callback") -> dict:
+    """Exchange an auth code for tokens (access_token used for the Gmail read)."""
+    s = get_settings()
+    import httpx
+    return httpx.post("https://oauth2.googleapis.com/token", data={
+        "code": code, "client_id": s.google_oauth_client_id,
+        "client_secret": s.google_oauth_client_secret,
+        "redirect_uri": f"{s.base_url.rstrip('/')}{redirect_path}",
+        "grant_type": "authorization_code"}, timeout=10).json()
 
 
 def google_callback(code: str) -> str | None:
