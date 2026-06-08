@@ -19,11 +19,33 @@ window.RO_FALLBACK = {
         "evidence": "Unused 142 days · billing since 2023-04",
         "action": "cancel",
         "priority": "high",
+        "confidence": 0.95,
+        "confidence_band": "high",
+        "caveat": "Confirm you've truly stopped using it before you cancel.",
+        "claim_url": null,
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -40,11 +62,33 @@ window.RO_FALLBACK = {
         "evidence": "Unused 210 days · billing since 2024-02",
         "action": "cancel",
         "priority": "high",
+        "confidence": 0.95,
+        "confidence_band": "high",
+        "caveat": "Confirm you've truly stopped using it before you cancel.",
+        "claim_url": null,
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -61,11 +105,33 @@ window.RO_FALLBACK = {
         "evidence": "Rose $7.99→$12.99/mo",
         "action": "dispute_price",
         "priority": "medium",
+        "confidence": 0.85,
+        "confidence_band": "high",
+        "caveat": "The vendor can decline; cancelling is your leverage.",
+        "claim_url": null,
         "agent": "sub_hunter",
         "agent_name": "Subscription Hunter",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -82,11 +148,33 @@ window.RO_FALLBACK = {
         "evidence": "duplicate line fee on a $78.40 bill",
         "action": "dispute_charge",
         "priority": "high",
+        "confidence": 0.9,
+        "confidence_band": "high",
+        "caveat": "Have the statement line ready — some fees are contractual.",
+        "claim_url": null,
         "agent": "billing_auditor",
         "agent_name": "Billing Auditor",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -103,11 +191,33 @@ window.RO_FALLBACK = {
         "evidence": "Bought $299 6d ago · now $229",
         "action": "request_refund",
         "priority": "medium",
+        "confidence": 0.9,
+        "confidence_band": "high",
+        "caveat": "Only valid inside the retailer's price-protection window.",
+        "claim_url": null,
         "agent": "refund_claimant",
         "agent_name": "Refund Claimant",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -124,11 +234,33 @@ window.RO_FALLBACK = {
         "evidence": "LHR→BCN (1137km) delayed 4h on an EU carrier",
         "action": "file_claim",
         "priority": "high",
+        "confidence": 0.7,
+        "confidence_band": "medium",
+        "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).",
+        "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -145,11 +277,33 @@ window.RO_FALLBACK = {
         "evidence": "open claim window",
         "action": "file_claim",
         "priority": "medium",
+        "confidence": 0.6,
+        "confidence_band": "review",
+        "caveat": "You must have been an affected customer within the claim period.",
+        "claim_url": "https://www.ftc.gov/enforcement/refunds",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -166,11 +320,33 @@ window.RO_FALLBACK = {
         "evidence": "NAUPA",
         "action": "file_claim",
         "priority": "medium",
+        "confidence": 0.85,
+        "confidence_band": "high",
+        "caveat": "Requires ID verification to prove the property is yours.",
+        "claim_url": "https://www.missingmoney.com/",
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -187,11 +363,33 @@ window.RO_FALLBACK = {
         "evidence": "covered repair under extended protection plan",
         "action": "file_claim",
         "priority": "medium",
+        "confidence": 0.85,
+        "confidence_band": "high",
+        "caveat": "Check the plan covers this failure and is still active.",
+        "claim_url": null,
         "agent": "refund_claimant",
         "agent_name": "Refund Claimant",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       },
@@ -208,11 +406,33 @@ window.RO_FALLBACK = {
         "evidence": "held 95d — past the statutory return window",
         "action": "request_refund",
         "priority": "high",
+        "confidence": 0.8,
+        "confidence_band": "medium",
+        "caveat": "The landlord may deduct for documented damages.",
+        "claim_url": null,
         "agent": "entitlement_finder",
         "agent_name": "Entitlement Finder",
         "verify": {
           "ok": true,
           "review": false,
+          "checks": [
+            {
+              "label": "amount is positive",
+              "ok": true
+            },
+            {
+              "label": "cites a real consumer-protection rule",
+              "ok": true
+            },
+            {
+              "label": "has source evidence",
+              "ok": true
+            },
+            {
+              "label": "within plausible range (≤ $5k)",
+              "ok": true
+            }
+          ],
           "reasons": []
         }
       }
@@ -345,8 +565,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.95,
+      "confidence_band": "high",
+      "caveat": "Confirm you've truly stopped using it before you cancel.",
+      "claim_url": null,
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 142 days · billing since 2023-04). This stops a recurring leak of $240/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -371,8 +613,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.95,
+      "confidence_band": "high",
+      "caveat": "Confirm you've truly stopped using it before you cancel.",
+      "claim_url": null,
       "draft": "Subject: Cancel my subscription — effective immediately\n\nPlease cancel my plan and confirm in writing, including any proration owed. It has gone unused (Unused 210 days · billing since 2024-02). This stops a recurring leak of $180/yr.",
       "approvalState": "pending",
       "status": "drafted",
@@ -397,8 +661,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.85,
+      "confidence_band": "high",
+      "caveat": "The vendor can decline; cancelling is your leverage.",
+      "claim_url": null,
       "draft": "Subject: Apply current rate or cancel\n\nMy price rose (Rose $7.99→$12.99/mo). Please match the current new-customer / retention rate, or treat this as notice of cancellation. Recovers $60/yr. Basis: Silent price increases can be challenged or matched to the new-customer rate (retention offer).",
       "approvalState": "pending",
       "status": "drafted",
@@ -423,8 +709,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.9,
+      "confidence_band": "high",
+      "caveat": "Have the statement line ready — some fees are contractual.",
+      "claim_url": null,
       "draft": "Subject: Dispute an incorrect charge\n\nThere is an erroneous charge on my account (duplicate line fee on a $78.40 bill). Please remove it and credit me — worth $276/yr if recurring. Basis: Duplicate charges / undisclosed fees are recoverable; card issuers allow chargebacks within 60–120 days.",
       "approvalState": "pending",
       "status": "drafted",
@@ -449,8 +757,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.9,
+      "confidence_band": "high",
+      "caveat": "Only valid inside the retailer's price-protection window.",
+      "claim_url": null,
       "draft": "Subject: Price-protection refund request\n\nBought $299 6d ago · now $229. Per your price-protection / refund-window policy, please refund the one-time difference of $70. Basis: Many retailers and airlines owe a refund for a price drop or cancellation within a stated window.",
       "approvalState": "pending",
       "status": "drafted",
@@ -475,8 +805,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.7,
+      "confidence_band": "medium",
+      "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).",
+      "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/",
       "draft": "Subject: EU261 delay compensation claim\n\nMy flight LHR→BCN (1137km) delayed 4h on an EU carrier. Under EU261/UK261 I am owed €250 in cash compensation (one-time, not a voucher). Please process. Basis: EU261/UK261: flights delayed 3h+ owe €250 (<1500km), €400 (1500–3500km), or €600 cash.",
       "approvalState": "pending",
       "status": "drafted",
@@ -501,8 +853,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.6,
+      "confidence_band": "review",
+      "caveat": "You must have been an affected customer within the claim period.",
+      "claim_url": "https://www.ftc.gov/enforcement/refunds",
       "draft": "Filing my consumer claim (open claim window) for a one-time $51. Basis: Open class-action settlements (e.g. the $1.5B Amazon Prime / FTC fund) pay eligible consumers who file.",
       "approvalState": "pending",
       "status": "drafted",
@@ -527,8 +901,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.85,
+      "confidence_band": "high",
+      "caveat": "Requires ID verification to prove the property is yours.",
+      "claim_url": "https://www.missingmoney.com/",
       "draft": "Filing to recover property held in my name (NAUPA), a one-time $214. Basis: State unclaimed-property programs (NAUPA) hold forgotten deposits, refunds, and balances under your name.",
       "approvalState": "pending",
       "status": "drafted",
@@ -553,8 +949,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.85,
+      "confidence_band": "high",
+      "caveat": "Check the plan covers this failure and is still active.",
+      "claim_url": null,
       "draft": "Subject: Warranty claim — covered repair\n\nMy item is covered (covered repair under extended protection plan). Please repair or replace at no cost under the plan; value $120 (one-time). Basis: Active warranty / protection plans cover repair or replacement at no cost — don't pay out of pocket.",
       "approvalState": "pending",
       "status": "drafted",
@@ -579,8 +997,30 @@ window.RO_FALLBACK = {
       "verify": {
         "ok": true,
         "review": false,
+        "checks": [
+          {
+            "label": "amount is positive",
+            "ok": true
+          },
+          {
+            "label": "cites a real consumer-protection rule",
+            "ok": true
+          },
+          {
+            "label": "has source evidence",
+            "ok": true
+          },
+          {
+            "label": "within plausible range (≤ $5k)",
+            "ok": true
+          }
+        ],
         "reasons": []
       },
+      "confidence": 0.8,
+      "confidence_band": "medium",
+      "caveat": "The landlord may deduct for documented damages.",
+      "claim_url": null,
       "draft": "Subject: Return of overdue security deposit\n\nMy deposit is overdue (held 95d — past the statutory return window). Please return $850 in full, plus any statutory penalty for late return. Basis: Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
       "approvalState": "pending",
       "status": "drafted",
@@ -588,15 +1028,15 @@ window.RO_FALLBACK = {
     }
   ],
   "run": {
-    "run_id": "run_c3bd5b",
+    "run_id": "run_2d2cbf",
     "model": "deterministic-fallback",
     "live": false,
-    "latency_ms": 1605,
+    "latency_ms": 1335,
     "actions": 10,
     "agents": 4,
     "verified": 10,
     "flagged": 0,
-    "created_at": "2026-06-08T18:42:42.620118+00:00"
+    "created_at": "2026-06-08T19:19:34.423336+00:00"
   },
   "reasoning": [
     {
@@ -676,7 +1116,11 @@ window.RO_FALLBACK = {
     "approved_recurring_year": 0,
     "approved_one_time": 0,
     "pending_recurring_year": 755.76,
-    "pending_one_time": 1555.0
+    "pending_one_time": 1555.0,
+    "paid_recurring_year": 0,
+    "paid_one_time": 0,
+    "sent_count": 0,
+    "paid_count": 0
   },
   "recurring_year": 755.76,
   "one_time": 1555.0,
@@ -691,9 +1135,9 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 2310.76,
       "trace_id": "",
-      "timestamp": "2026-06-08T18:42:41.014791+00:00",
+      "timestamp": "2026-06-08T19:19:33.088402+00:00",
       "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hash": "61bbc69c2fba82c546af2ef603b87ae546ba5b7dc88685a2474a091448904864"
+      "hash": "b66e429fa19319d2b9d44a2683dccf2333f99737708abf3fbfa28092f4e72f4f"
     },
     {
       "event_id": "au_0002",
@@ -704,15 +1148,15 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 0.0,
       "trace_id": "",
-      "timestamp": "2026-06-08T18:42:42.620064+00:00",
-      "prev_hash": "61bbc69c2fba82c546af2ef603b87ae546ba5b7dc88685a2474a091448904864",
-      "hash": "ad447dac03ee6e0cbb087c28a19dcc549828398cc7790185e5a25ed1d4549058"
+      "timestamp": "2026-06-08T19:19:34.423283+00:00",
+      "prev_hash": "b66e429fa19319d2b9d44a2683dccf2333f99737708abf3fbfa28092f4e72f4f",
+      "hash": "fa24f829b65fd32168e8c2339cfde788417164cfedd3dc0db1b817fc426f4b95"
     }
   ],
   "auditIntegrity": {
     "intact": true,
     "count": 2,
-    "head": "ad447dac03ee6e0cbb087c28a19dcc549828398cc7790185e5a25ed1d4549058"
+    "head": "fa24f829b65fd32168e8c2339cfde788417164cfedd3dc0db1b817fc426f4b95"
   },
   "generated": "static-fallback"
 };

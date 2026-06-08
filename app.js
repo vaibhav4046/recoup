@@ -94,10 +94,8 @@
     setText("#ready-count", appr.length);
     setText("#total-count", n);
     setText("#pending-count", S.actions.filter((a) => a.approvalState === "pending").length);
-    const once = r2(appr.filter((a) => a.cadence === "once").reduce((s, a) => s + a.amount, 0));
-    const rec = r2(appr.filter((a) => a.cadence === "yearly").reduce((s, a) => s + a.amount, 0));
-    setText("#secured-once", "$" + money(once));
-    setText("#secured-rec", "$" + money(rec));
+    const paid = r2(S.actions.filter((a) => a.status === "paid").reduce((s, a) => s + a.amount, 0));
+    setText("#recovered-amt", "$" + money(paid));
     const frac = n ? appr.length / n : 0;
     const C = 2 * Math.PI * 52;
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
@@ -136,28 +134,45 @@
 
   function card(a) {
     const leak = isLeak(a.kind), once = a.cadence === "once";
-    const approved = a.approvalState === "approved";
-    const c = el("div", "fcard" + (approved ? " claim-ready" : a.approvalState === "rejected" ? " skipped" : "") + (once ? " fc-onetime" : ""));
+    const st = a.status, approved = a.approvalState === "approved";
+    const c = el("div", "fcard" + (approved ? " claim-ready" : a.approvalState === "rejected" ? " skipped" : "") + (once ? " fc-onetime" : "") + (st === "paid" ? " paid" : ""));
     c.id = "card-" + a.id;
-    const actions = approved
-      ? `<div class="fc-send">
-           <button class="btn btn-copy" data-copy="${a.id}">⧉ Copy email</button>
-           <button class="btn btn-mail" data-mail="${a.id}">✉ Open in email</button>
-         </div>`
-      : `<div class="fc-actions">
+    const conf = a.confidence ? Math.round(a.confidence * 100) : null;
+    const sendRow = `<div class="fc-send">
+        <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text">⧉ Copy</button>
+        ${a.claim_url ? `<a class="btn btn-mail" href="${esc(a.claim_url)}" target="_blank" rel="noopener">Claim form ↗</a>` : `<button class="btn btn-mail" data-mail="${a.id}">✉ Email</button>`}
+      </div>`;
+    let actions;
+    if (a.approvalState === "rejected") {
+      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${a.id}">✓ Approve instead</button><button class="btn btn-view" data-view="${a.id}">Show work</button></div>`;
+    } else if (!approved) {
+      actions = `<div class="fc-actions">
            <button class="btn btn-approve" data-approve="${a.id}">✓ Approve</button>
-           <button class="btn btn-view" data-view="${a.id}">View draft</button>
-           ${a.approvalState === "pending" ? `<button class="btn btn-skip" data-skip="${a.id}">Skip</button>` : ""}
+           <button class="btn btn-view" data-view="${a.id}">Show work</button>
+           <button class="btn btn-skip" data-skip="${a.id}">Skip</button>
          </div>`;
+    } else if (st === "paid") {
+      actions = `<div class="fc-paid">✓ Recovered ${esc(a.amount_label)}</div>`;
+    } else if (st === "sent") {
+      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${a.id}">💰 Mark recovered</button>`;
+    } else {
+      actions = `${sendRow}<button class="btn btn-life full" data-sent="${a.id}">Mark sent →</button>`;
+    }
+    const tag = approved
+      ? `<span class="fc-kind ready">${st === "paid" ? "✓ paid" : st === "sent" ? "sent" : "✓ ready"}</span>`
+      : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed" : "leak"}</span>`;
     c.innerHTML = `
       <div class="fc-top">
         <div class="fc-title">${esc(a.title)}</div>
-        ${approved ? `<span class="fc-kind ready">✓ ready</span>` : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed · one-time" : "leak · yearly"}</span>`}
+        <div class="fc-tags">
+          ${conf ? `<span class="fc-conf ${esc(a.confidence_band || "")}" title="confidence the rule applies">${conf}%</span>` : ""}
+          ${tag}
+        </div>
       </div>
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
-      ${a.agent_name ? `<div class="fc-agent">◆ found by ${esc(a.agent_name)}${a.verify && a.verify.ok ? " · verified" : ""}</div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent">◆ ${esc(a.agent_name)}${a.verify && a.verify.ok ? " · verified" : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
@@ -204,6 +219,26 @@
     if (API) { try { await fetch(`${API}/api/actions/${id}/reject`, { method: "POST" }); } catch (e) {} }
   }
 
+  async function markSent(id) {
+    const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
+    a.status = "sent";
+    await appendAudit("human", "You", "CLAIM_SENT", "Claim sent: " + a.title, a.amount);
+    renderAudit();
+    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    toast(`Marked sent — ${a.title}`);
+    if (API) { try { await fetch(`${API}/api/actions/${id}/sent`, { method: "POST" }); } catch (e) {} }
+  }
+
+  async function markPaid(id) {
+    const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
+    a.status = "paid";
+    await appendAudit("human", "You", "CLAIM_PAID", "Recovered: " + a.title + " (" + a.amount_label + ")", a.amount);
+    updateReadyUI(); renderAudit();
+    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    toast(`💰 Recovered ${a.amount_label} — ${a.title}`);
+    if (API) { try { await fetch(`${API}/api/actions/${id}/paid`, { method: "POST" }); } catch (e) {} }
+  }
+
   function approveAllSafe() {
     const safe = S.actions.filter((a) => a.approvalState === "pending" && isLeak(a.kind));
     safe.forEach((a, i) => setTimeout(() => approve(a.id), i * 180));
@@ -233,7 +268,23 @@
   function openDrawer(id) {
     const a = S.actions.find((x) => x.id === id); if (!a) return;
     $("#drawer-title").textContent = a.title;
-    $("#drawer-meta").innerHTML = `<span class="lg ${isLeak(a.kind) ? "leak" : "owed"}">${a.cadence === "once" ? "owed · one-time" : "leak · yearly"}</span><span class="chip">${esc(a.amount_label)} · ${esc(a.unit_note)}</span>`;
+    const conf = a.confidence ? Math.round(a.confidence * 100) : null;
+    $("#drawer-meta").innerHTML =
+      `<span class="lg ${isLeak(a.kind) ? "leak" : "owed"}">${a.cadence === "once" ? "owed · one-time" : "leak · yearly"}</span>` +
+      `<span class="chip">${esc(a.amount_label)} · ${esc(a.unit_note)}</span>` +
+      (conf ? `<span class="fc-conf ${esc(a.confidence_band || "")}">${conf}% confidence</span>` : "");
+    const checks = (a.verify && a.verify.checks) || [];
+    const prov = $("#drawer-prov");
+    if (prov) prov.innerHTML =
+      `<div class="prov-sec"><div class="prov-h">Why this is recoverable</div>` +
+      `<div class="prov-rule">${esc(RULES[a.rule] || a.rule)}</div>` +
+      `<div class="prov-ev">Source — ${esc(a.evidence)}</div></div>` +
+      `<div class="prov-sec"><div class="prov-h">Verifier checks <span class="prov-by">· independent agent</span></div>` +
+      (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"} ${esc(c.label)}</div>`).join("") : `<div class="prov-check ok">✓ verified</div>`) +
+      `</div>` +
+      (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">⚠ You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
+      (a.claim_url ? `<a class="btn btn-mail full" href="${esc(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ↗</a>` : "") +
+      `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
     $("#drawer-body").textContent = a.draft || "(no draft)";
     const ab = $("#drawer-approve"), sb = $("#drawer-skip");
     ab.style.display = a.approvalState === "approved" ? "none" : "";
@@ -246,12 +297,14 @@
   // ---- misc ----
   function wire() {
     document.body.addEventListener("click", (ev) => {
-      const t = ev.target.closest("[data-approve],[data-skip],[data-view],[data-copy],[data-mail]"); if (!t) return;
+      const t = ev.target.closest("[data-approve],[data-skip],[data-view],[data-copy],[data-mail],[data-sent],[data-paid]"); if (!t) return;
       if (t.dataset.approve) approve(t.dataset.approve);
       else if (t.dataset.skip) skip(t.dataset.skip);
       else if (t.dataset.view) openDrawer(t.dataset.view);
       else if (t.dataset.copy) copyDraft(t.dataset.copy);
       else if (t.dataset.mail) openMail(t.dataset.mail);
+      else if (t.dataset.sent) markSent(t.dataset.sent);
+      else if (t.dataset.paid) markPaid(t.dataset.paid);
     });
     $("#btn-scan").onclick = rescan;
     $("#btn-approve-all").onclick = approveAllSafe;

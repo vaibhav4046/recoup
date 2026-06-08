@@ -30,6 +30,26 @@ RULES = {
     "deposit": "Security deposits must be returned within a statutory window (often 14–30 days); overdue deposits are recoverable.",
 }
 
+# per-kind confidence + an honest "why you might NOT qualify" caveat + a real claim link
+KIND_META = {
+    "dead_subscription": {"confidence": 0.95, "caveat": "Confirm you've truly stopped using it before you cancel.", "claim_url": None},
+    "price_creep": {"confidence": 0.85, "caveat": "The vendor can decline; cancelling is your leverage.", "claim_url": None},
+    "billing_error": {"confidence": 0.90, "caveat": "Have the statement line ready — some fees are contractual.", "claim_url": None},
+    "price_drop": {"confidence": 0.90, "caveat": "Only valid inside the retailer's price-protection window.", "claim_url": None},
+    "flight_comp": {"confidence": 0.70, "caveat": "Void if the delay was 'extraordinary' (weather, ATC, strike).", "claim_url": "https://www.caa.co.uk/passengers/resolving-travel-problems/"},
+    "settlement": {"confidence": 0.60, "caveat": "You must have been an affected customer within the claim period.", "claim_url": "https://www.ftc.gov/enforcement/refunds"},
+    "unclaimed": {"confidence": 0.85, "caveat": "Requires ID verification to prove the property is yours.", "claim_url": "https://www.missingmoney.com/"},
+    "warranty": {"confidence": 0.85, "caveat": "Check the plan covers this failure and is still active.", "claim_url": None},
+    "deposit": {"confidence": 0.80, "caveat": "The landlord may deduct for documented damages.", "claim_url": None},
+}
+
+
+def _meta(kind: str) -> dict:
+    m = KIND_META.get(kind, {})
+    c = m.get("confidence", 0.8)
+    band = "high" if c >= 0.85 else "medium" if c >= 0.7 else "review"
+    return {"confidence": c, "confidence_band": band, "caveat": m.get("caveat", ""), "claim_url": m.get("claim_url")}
+
 
 def _money_surface() -> dict:
     """Seeded but realistic. In live mode this comes from the user's own statement / inbox."""
@@ -77,6 +97,7 @@ def _yearly(fid, kind, title, annual, monthly, rule, evidence, action, priority)
         "cadence": "yearly", "amount": round(annual, 2), "currency": "$",
         "amount_label": f"${annual:,.0f}/yr", "unit_note": f"${monthly:,.2f}/mo",
         "rule": rule, "evidence": evidence, "action": action, "priority": priority,
+        **_meta(kind),
     }
 
 
@@ -87,6 +108,7 @@ def _once(fid, kind, title, payout, currency, rule, evidence, action, priority):
         "cadence": "once", "amount": round(payout, 2), "currency": sym,
         "amount_label": f"{sym}{payout:,.0f}", "unit_note": "one-time",
         "rule": rule, "evidence": evidence, "action": action, "priority": priority,
+        **_meta(kind),
     }
 
 

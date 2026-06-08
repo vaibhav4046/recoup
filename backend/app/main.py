@@ -103,6 +103,24 @@ async def reject(action_id: str, request: Request):
     return _ok(request, action=a, totals=APP.totals(), contained=APP.contained())
 
 
+@app.post("/api/actions/{action_id}/sent")
+async def mark_sent(action_id: str, request: Request):
+    try:
+        a = APP.mark_sent(action_id, trace_id=_tid(request))
+    except KeyError:
+        return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
+    return _ok(request, action=a, totals=APP.totals())
+
+
+@app.post("/api/actions/{action_id}/paid")
+async def mark_paid(action_id: str, request: Request):
+    try:
+        a = APP.mark_paid(action_id, trace_id=_tid(request))
+    except KeyError:
+        return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
+    return _ok(request, action=a, totals=APP.totals())
+
+
 @app.get("/api/audit")
 async def audit_ep(request: Request):
     return _ok(request, events=APP.audit.list(), integrity=APP.audit.verify())

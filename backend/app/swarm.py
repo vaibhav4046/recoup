@@ -28,15 +28,16 @@ _PLAUSIBLE_MAX = 5000.0  # a single finding above this is flagged for human revi
 
 
 def _verify(f: dict) -> dict:
-    reasons = []
-    if f.get("amount", 0) <= 0:
-        reasons.append("non-positive amount")
-    if f.get("rule") not in RULES:
-        reasons.append("no rule basis")
-    if not f.get("evidence"):
-        reasons.append("no evidence")
-    review = f.get("amount", 0) > _PLAUSIBLE_MAX
-    return {"ok": not reasons, "review": review, "reasons": reasons}
+    """Independent boolean checks per finding — surfaced so users can see the work."""
+    checks = [
+        {"label": "amount is positive", "ok": f.get("amount", 0) > 0},
+        {"label": "cites a real consumer-protection rule", "ok": f.get("rule") in RULES},
+        {"label": "has source evidence", "ok": bool(f.get("evidence"))},
+        {"label": "within plausible range (≤ $5k)", "ok": f.get("amount", 0) <= _PLAUSIBLE_MAX},
+    ]
+    hard_ok = all(c["ok"] for c in checks[:3])  # first three are hard requirements
+    return {"ok": hard_ok, "review": not checks[3]["ok"], "checks": checks,
+            "reasons": [c["label"] for c in checks if not c["ok"]]}
 
 
 def orchestrate(scan_result: dict) -> dict:

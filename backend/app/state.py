@@ -100,6 +100,30 @@ class AppState:
                           label=f'Skipped: {a["title"]}', evidence_ref=action_id, trace_id=trace_id)
         return a
 
+    # ---- claim lifecycle: approved -> sent -> paid (paid = money actually back) ----
+    def mark_sent(self, action_id: str, trace_id: str = "") -> dict:
+        a = self._find(action_id)
+        if a["approvalState"] != "approved":
+            return a  # must be approved first
+        a["status"] = "sent"
+        a["sentAt"] = _now_iso()
+        self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_SENT",
+                          label=f'Claim sent: {a["title"]}', evidence_ref=action_id,
+                          amount=a["amount"], trace_id=trace_id)
+        return a
+
+    def mark_paid(self, action_id: str, trace_id: str = "") -> dict:
+        a = self._find(action_id)
+        if a["approvalState"] != "approved":
+            return a
+        a["status"] = "paid"
+        a["paidAt"] = _now_iso()
+        self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_PAID",
+                          label=f'Recovered: {a["title"]} ({a["amount_label"]})', evidence_ref=action_id,
+                          amount=a["amount"], trace_id=trace_id)
+        self._store(a)
+        return a
+
     def _store(self, action: dict) -> None:
         if not get_settings().mongodb_ready:
             return
@@ -114,12 +138,20 @@ class AppState:
         return round(sum(a["amount"] for a in self.actions
                          if a["approvalState"] == state and a["cadence"] == cadence), 2)
 
+    def _sum_status(self, status: str, cadence: str) -> float:
+        return round(sum(a["amount"] for a in self.actions
+                         if a.get("status") == status and a["cadence"] == cadence), 2)
+
     def totals(self) -> dict:
         return {
             "approved_recurring_year": self._sum("approved", "yearly"),
             "approved_one_time": self._sum("approved", "once"),
             "pending_recurring_year": self._sum("pending", "yearly"),
             "pending_one_time": self._sum("pending", "once"),
+            "paid_recurring_year": self._sum_status("paid", "yearly"),
+            "paid_one_time": self._sum_status("paid", "once"),
+            "sent_count": sum(1 for a in self.actions if a.get("status") == "sent"),
+            "paid_count": sum(1 for a in self.actions if a.get("status") == "paid"),
         }
 
     def contained(self) -> bool:
