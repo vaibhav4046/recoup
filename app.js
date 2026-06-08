@@ -47,9 +47,13 @@
         const ctrl = new AbortController();
         const t = setTimeout(() => ctrl.abort(), 5000); // cold-start safety: fall back to embedded data fast
         const res = await fetch(API + "/api/state", { signal: ctrl.signal });
+        const ct = res.headers.get("content-type") || "";
+        if (res.ok && ct.includes("application/json")) {
+          const data = await res.json();          // timer still armed — covers a slow cold-start body read
+          if (data && Array.isArray(data.actions)) { S = data; S._live = true; }
+        }
         clearTimeout(t);
-        if (res.ok) { S = await res.json(); S._live = true; }
-      } catch (e) { /* fall back to embedded data instantly */ }
+      } catch (e) { /* cold start / HTML "starting" page / network — fall back to embedded data instantly */ }
     }
     if (!S) { S = JSON.parse(JSON.stringify(window.RO_FALLBACK || { actions: [], audit: [], reasoning: [] })); S._live = false; }
     S.actions = S.actions || []; S.audit = S.audit || []; S.reasoning = S.reasoning || [];
@@ -192,7 +196,7 @@
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
         <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text">⧉ Copy</button>
-        ${a.claim_url ? `<a class="btn btn-mail" href="${esc(a.claim_url)}" target="_blank" rel="noopener">Claim form ↗</a>` : `<button class="btn btn-mail" data-mail="${a.id}">✉ Email</button>`}
+        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Claim form ↗</a>` : `<button class="btn btn-mail" data-mail="${a.id}">✉ Email</button>`}
       </div>`;
     let actions;
     if (a.approvalState === "rejected") {
@@ -391,7 +395,7 @@
       `</div>` +
       (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">⚠ You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
       (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">⏱ Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
-      (a.claim_url ? `<a class="btn btn-mail full" href="${esc(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ↗</a>` : "") +
+      (a.claim_url ? `<a class="btn btn-mail full" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ↗</a>` : "") +
       `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
     $("#drawer-body").textContent = a.draft || "(no draft)";
     const ab = $("#drawer-approve"), sb = $("#drawer-skip");
@@ -469,13 +473,14 @@
     try {
       const d = await fetch(API + "/api/gmail/findings?token=" + encodeURIComponent(token)).then((r) => r.json());
       if (d.findings && d.findings.length) {
+        const recur = r2(d.findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + (a.amount || 0), 0));
         await applyFindings(d.findings, {
           model: "Gmail read-only", scanner: "Recoup (Gmail)",
           auditLabel: `Read your subscription emails — ${d.findings.length} subscriptions found`,
           reasoning: [
             { t: "Connected your Gmail (read-only) — scanned subscription & receipt emails", tone: "cyan" },
             { t: `Subscription Hunter found ${d.findings.length} subscriptions you're paying for`, tone: "warn" },
-            { t: `$${money(S.recurring_year)}/yr across your subscriptions`, tone: "ok" },
+            { t: `$${money(recur)}/yr across your subscriptions`, tone: "ok" },
             { t: "Review each; nothing sends without your approval", tone: "dim" },
           ],
         });
@@ -552,6 +557,7 @@
     return { dead_subscription: "Dead subscriptions", price_creep: "Price hikes", billing_error: "Billing errors", price_drop: "Price-drop refunds", flight_comp: "Flight compensation", settlement: "Settlements", unclaimed: "Unclaimed property", warranty: "Warranty claims", deposit: "Deposit returns" }[k] || k;
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+  function safeUrl(u) { const s = String(u || "").trim(); return /^https?:\/\//i.test(s) ? esc(s) : "#"; }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot); else boot();
 })();

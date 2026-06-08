@@ -32,7 +32,7 @@
   <ul>
     <li><b>Scope:</b> read-only Google OAuth (<code>gmail.readonly</code>). Recoup can read mail to detect subscriptions/receipts; it can <b>never send, delete, or modify</b> anything.</li>
     <li><b>What we use:</b> only the <b>sender + subject + snippet</b> of subscription/receipt emails, to identify recurring services. We don't store your message bodies.</li>
-    <li><b>What we store:</b> only the resulting findings and the claims you approve, in our database (MongoDB). We never store your Gmail password or full inbox.</li>
+    <li><b>What we store:</b> detected subscriptions are held only <b>transiently in server memory</b> for your session, then discarded; the claims you approve may be saved to our database (MongoDB). We never store your Gmail password or your full inbox.</li>
     <li><b>Revoke anytime:</b> remove Recoup's access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>. You can also disconnect in-app.</li>
     <li><b>Current status:</b> the OAuth app is in Google <b>"testing"</b> mode — only explicitly-added test users can connect, which is why you'll see an "unverified app" screen. Full public access requires Google's formal security review.</li>
   </ul>
