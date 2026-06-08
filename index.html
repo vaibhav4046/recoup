@@ -83,6 +83,21 @@
     </div>
   </section>
 
+  <!-- VERIFIED RECOVERIES -->
+  <section class="panel glass vrec" id="vrec">
+    <div class="panel-head">
+      <h3>✓ Verified recoveries <span class="muted">real money you confirmed landed — not a guess</span></h3>
+      <button class="btn btn-ghost btn-sm" id="vrec-add">+ Log one I actually got</button>
+    </div>
+    <div class="vrec-list" id="vrec-list"></div>
+    <form class="vrec-form hidden" id="vrec-form">
+      <input id="vrec-amt" type="number" step="0.01" min="0" placeholder="£ amount" aria-label="Amount recovered" />
+      <input id="vrec-what" type="text" maxlength="60" placeholder="What — e.g. Cancelled Adobe" aria-label="What you recovered" />
+      <input id="vrec-ref" type="text" maxlength="40" placeholder="Confirmation ref (optional)" aria-label="Confirmation reference" />
+      <button class="btn btn-primary btn-sm" type="submit">Save proof</button>
+    </form>
+  </section>
+
   <!-- REASONING + BREAKDOWN -->
   <section class="grid-2">
     <div class="panel glass">

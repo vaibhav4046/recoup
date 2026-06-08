@@ -77,7 +77,7 @@
 
   function renderAll(animateTrace) {
     renderChips(); renderHero(); renderSwarm(); renderBreakdown(); renderFindings(); renderAudit();
-    renderTrace(animateTrace);
+    renderTrace(animateTrace); renderVrec();
   }
 
   function renderSwarm() {
@@ -323,6 +323,28 @@
     toast("Your stored data was cleared. Revoke Gmail access at myaccount.google.com/permissions.");
   }
 
+  function getVrec() { try { return JSON.parse(localStorage.getItem("ro-vrec") || "[]"); } catch (e) { return []; } }
+  function setVrec(v) { try { localStorage.setItem("ro-vrec", JSON.stringify(v)); } catch (e) {} }
+  function renderVrec() {
+    const list = $("#vrec-list"); if (!list) return;
+    const v = getVrec();
+    if (!v.length) { list.innerHTML = `<div class="vrec-empty">No verified recoveries yet. When you actually get money back — cancel a real subscription, claim real unclaimed cash — log it here with its confirmation. It shows as <b>evidenced proof</b>, never a self-reported guess.</div>`; return; }
+    const total = r2(v.reduce((s, r) => s + (r.amount || 0), 0));
+    list.innerHTML = `<div class="vrec-empty">Total verified recovered: <b style="color:#37d67a">£${money(total)}</b></div>` +
+      v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">£${money(r.amount)}</span></div>`).join("");
+  }
+  function addVrec() {
+    const amt = parseFloat(($("#vrec-amt") || {}).value);
+    const what = (($("#vrec-what") || {}).value || "").trim();
+    if (!amt || amt <= 0 || !what) { toast("Add the amount and what you recovered"); return; }
+    const v = getVrec();
+    v.unshift({ amount: r2(amt), what: what.slice(0, 60), ref: (($("#vrec-ref") || {}).value || "").trim().slice(0, 40), date: new Date().toISOString().slice(0, 10) });
+    setVrec(v);
+    const f = $("#vrec-form"); if (f) { f.reset(); f.classList.add("hidden"); }
+    renderVrec();
+    toast(`✓ Logged £${money(amt)} verified recovery`);
+  }
+
   function mailtoFor(a) {
     const m = a.draft.match(/^Subject:\s*(.*)$/m);
     const subj = encodeURIComponent(m ? m[1] : "Recoup claim");
@@ -472,6 +494,8 @@
     $("#btn-approve-all").onclick = approveAllSafe;
     const dr = $("#demo-recovery"); if (dr) dr.onclick = demoRecovery;
     const fd = $("#forget-data"); if (fd) fd.onclick = (e) => { e.preventDefault(); forgetData(); };
+    const va = $("#vrec-add"); if (va) va.onclick = () => { const f = $("#vrec-form"); if (f) f.classList.toggle("hidden"); };
+    const vf = $("#vrec-form"); if (vf) vf.onsubmit = (e) => { e.preventDefault(); addVrec(); };
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");
