@@ -27,6 +27,16 @@ class Settings(BaseSettings):
     mongodb_uri: str = ""
     mongodb_db: str = "recoup"
 
+    # --- auth (all optional; each provider activates when its key is set) ---
+    app_secret: str = ""                    # HMAC secret for session tokens
+    base_url: str = "http://localhost:8099"  # public backend URL (for OAuth/magic-link callbacks)
+    google_oauth_client_id: str = ""
+    google_oauth_client_secret: str = ""
+    resend_api_key: str = ""                # magic-link email sender (resend.com, free)
+    email_from: str = "Recoup <onboarding@resend.dev>"
+    turnstile_secret: str = ""              # Cloudflare Turnstile CAPTCHA (free)
+    turnstile_site_key: str = ""
+
     # --- behaviour ---
     use_cached_fallback: bool = True
     cors_origins: str = "*"
@@ -38,6 +48,10 @@ class Settings(BaseSettings):
     @property
     def mongodb_ready(self) -> bool:
         return bool(self.mongodb_uri)
+
+    @property
+    def email_ready(self) -> bool:
+        return bool(self.resend_api_key)
 
     def integration_status(self) -> dict:
         return {

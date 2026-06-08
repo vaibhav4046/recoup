@@ -11,13 +11,16 @@ import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request
+from fastapi import Cookie, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
+from . import auth
 from .config import get_settings
 from .state import APP
+
+COOKIE = "ro_session"
 
 
 @asynccontextmanager
@@ -127,3 +130,67 @@ async def full_state(request: Request):
         recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0,
         audit=APP.audit.list(), auditIntegrity=APP.audit.verify(), contained=APP.contained(),
     )
+
+
+# ---- auth (public demo stays open; real-data endpoints require a session) ----
+def _set_session(resp, token: str) -> None:
+    resp.set_cookie(COOKIE, token, httponly=True, max_age=7 * 24 * 3600, samesite="lax", secure=True)
+
+
+@app.get("/api/auth/status")
+async def auth_status(request: Request):
+    s = get_settings()
+    return _ok(request, providers=auth.status(), turnstile_site_key=s.turnstile_site_key)
+
+
+@app.post("/api/auth/magic/start")
+async def magic_start(request: Request):
+    body = await request.json()
+    email = (body or {}).get("email", "").strip()
+    captcha = (body or {}).get("captcha", "")
+    if not email or "@" not in email:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "a valid email is required"})
+    if not auth.verify_captcha(captcha, request.client.host if request.client else ""):
+        return JSONResponse(status_code=400, content={"ok": False, "error": "captcha verification failed"})
+    return _ok(request, **auth.start_magic(email))
+
+
+@app.get("/api/auth/magic/verify")
+async def magic_verify(code: str):
+    token = auth.verify_magic(code)
+    if not token:
+        return RedirectResponse("/login.html?err=expired")
+    resp = RedirectResponse("/?signed_in=1")
+    _set_session(resp, token)
+    return resp
+
+
+@app.get("/api/auth/google/start")
+async def google_start():
+    url = auth.google_auth_url(state=uuid.uuid4().hex)
+    if not url:
+        return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured"})
+    return RedirectResponse(url)
+
+
+@app.get("/api/auth/google/callback")
+async def google_cb(code: str):
+    token = auth.google_callback(code)
+    if not token:
+        return RedirectResponse("/login.html?err=google")
+    resp = RedirectResponse("/?signed_in=1")
+    _set_session(resp, token)
+    return resp
+
+
+@app.get("/api/auth/me")
+async def auth_me(request: Request, ro_session: str = Cookie(default="")):
+    user = auth.session_user(ro_session)
+    return _ok(request, user=user, authenticated=bool(user))
+
+
+@app.post("/api/auth/logout")
+async def auth_logout():
+    resp = JSONResponse(content={"ok": True})
+    resp.delete_cookie(COOKIE)
+    return resp
