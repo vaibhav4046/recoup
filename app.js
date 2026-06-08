@@ -15,6 +15,17 @@
     warranty: "Active warranty / protection plan — repair at no cost.",
     deposit: "Security deposit overdue past the statutory return window.",
   };
+  const PLAIN = {
+    dead_subscription: "You're paying every month for something you stopped using. Cancelling stops the charge.",
+    price_creep: "The price quietly went up. You can ask for your old rate — or cancel.",
+    billing_error: "You were charged twice, or for a fee you didn't agree to. You can dispute it.",
+    price_drop: "It got cheaper right after you bought it. Many shops refund the difference.",
+    flight_comp: "Your flight was badly delayed — EU/UK law says the airline owes you cash, not a voucher.",
+    settlement: "A company was fined for overcharging customers. If you were one, you can claim a share.",
+    unclaimed: "A government database is holding money in your name — an old deposit, refund, or balance.",
+    warranty: "Your protection plan covers this repair. You shouldn't pay out of pocket.",
+    deposit: "Your landlord is past the legal deadline to return your deposit.",
+  };
   let S = null;
 
   const $ = (s) => document.querySelector(s);
@@ -131,6 +142,8 @@
     const C = 2 * Math.PI * 52;
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
     setText("#ring-pct", Math.round(frac * 100) + "%");
+    const ringEl = document.querySelector(".ring");
+    if (ringEl) { ringEl.setAttribute("role", "img"); ringEl.setAttribute("aria-label", `Claims ready: ${appr.length} of ${n}; $${money(paid)} recovered so far`); }
   }
   function setText(sel, v) { const e = $(sel); if (e) e.textContent = v; }
 
@@ -278,6 +291,26 @@
     safe.forEach((a, i) => setTimeout(() => approve(a.id), i * 180));
   }
 
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  let demoRunning = false;
+  async function demoRecovery() {
+    if (demoRunning) return; demoRunning = true;
+    showResults();
+    const pick = S.actions.find((a) => a.kind === "flight_comp" && a.approvalState === "pending")
+      || S.actions.find((a) => a.cadence === "once" && a.approvalState === "pending")
+      || S.actions.find((a) => a.approvalState === "pending");
+    if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); demoRunning = false; return; }
+    const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+    toast(`▶ Illustrative walkthrough — approving ${pick.amount_label}…`); await wait(1100);
+    await approve(pick.id); await wait(1200);
+    toast("✉ Claim filed — and nothing sent until you approved it"); await markSent(pick.id); await wait(1500);
+    const ref = "RC-" + Math.floor(100000 + Math.random() * 900000);
+    toast(`📨 Acknowledged · reference #${ref}`); await wait(1700);
+    await markPaid(pick.id);
+    toast(`💰 Recovered ${pick.amount_label} — that's the full loop, detect → approve → file → paid.`);
+    demoRunning = false;
+  }
+
   function mailtoFor(a) {
     const m = a.draft.match(/^Subject:\s*(.*)$/m);
     const subj = encodeURIComponent(m ? m[1] : "Recoup claim");
@@ -310,6 +343,7 @@
     const checks = (a.verify && a.verify.checks) || [];
     const prov = $("#drawer-prov");
     if (prov) prov.innerHTML =
+      (PLAIN[a.kind] ? `<div class="prov-sec"><div class="prov-h">In plain English</div><div class="prov-rule">${esc(PLAIN[a.kind])}</div></div>` : "") +
       `<div class="prov-sec"><div class="prov-h">Why this is recoverable</div>` +
       `<div class="prov-rule">${esc(RULES[a.rule] || a.rule)}</div>` +
       `<div class="prov-ev">Source — ${esc(a.evidence)}</div></div>` +
@@ -424,6 +458,7 @@
     });
     $("#btn-scan").onclick = rescan;
     $("#btn-approve-all").onclick = approveAllSafe;
+    const dr = $("#demo-recovery"); if (dr) dr.onclick = demoRecovery;
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");
@@ -452,7 +487,7 @@
 
   let toastT;
   function toast(msg) {
-    let t = $(".toast"); if (!t) { t = el("div", "toast"); document.body.appendChild(t); }
+    let t = $(".toast"); if (!t) { t = el("div", "toast"); t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); document.body.appendChild(t); }
     t.textContent = "✓ " + msg; t.classList.add("show");
     clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2800);
   }
