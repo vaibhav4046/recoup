@@ -65,7 +65,8 @@ flowchart LR
   Totals are split: *recurring $/yr* vs *one-time owed now*.
 - **Nothing sends without you.** The approval gate is enforced server-side in `state.py`.
 - **Honest about state.** "Ready to claim" ≠ "recovered." Live vs. fallback is labelled everywhere.
-- **Tamper-evident.** Real SHA-256 in both the backend and the in-browser demo chain.
+- **Tamper-evident.** Real SHA-256 in both the backend and the in-browser chain (proves ordering + integrity).
+- **Your data never leaves your device.** The **"Scan your statement"** path runs the entire rule engine *100% in your browser* (`recover.js`) — no upload, no account, no server. It detects your real recurring subscriptions, silent price hikes, and duplicate charges, then surfaces them in the same audited approve→recover flow.
 
 ## Architecture
 

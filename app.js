@@ -69,11 +69,18 @@
   }
 
   function renderChips() {
-    const live = S.integrations || {};
     const box = $("#status-chips"); box.innerHTML = "";
+    const chip = (txt, cls) => el("span", "chip " + cls, `<span class="d"></span>${txt}`);
+    if (S._real) {
+      box.appendChild(chip("Rules · in-browser", "live"));
+      box.appendChild(chip("Private · on-device", "live"));
+      box.appendChild(chip("Audit · SHA-256", "live"));
+      box.appendChild(chip("Your data", "live"));
+      return;
+    }
+    const live = S.integrations || {};
     const gem = (live.gemini || "fallback") === "live";
     const mon = (live.mongodb || "fallback") === "live";
-    const chip = (txt, cls) => el("span", "chip " + cls, `<span class="d"></span>${txt}`);
     box.appendChild(chip(gem ? "Gemini · live" : "AI reasoning · on", gem ? "live" : ""));
     box.appendChild(chip(mon ? "MongoDB · live" : "Storage · local", mon ? "live" : ""));
     box.appendChild(chip("Audit · SHA-256", "live"));
@@ -87,6 +94,11 @@
     const leaks = S.actions.length - owed;
     $("#hero-sub").textContent = `${S.actions.length} recoverable items — ${leaks} recurring leaks to plug, ${owed} one-time claims you're owed. Approve each; nothing sends without you.`;
     $("#findings-count").textContent = S.actions.length;
+    const dn = $("#demo-note");
+    if (dn) dn.innerHTML = S._real
+      ? '🔒 <b>Your data</b> — scanned privately in your browser. Nothing was uploaded. <button class="linklike2" id="open-scan">Re-scan →</button>'
+      : '🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button>';
+    const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     updateReadyUI();
   }
 
@@ -298,6 +310,43 @@
   }
   function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer-scrim").classList.remove("open"); }
 
+  // ---- scan your own data (100% client-side) ----
+  function openScan() { $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
+  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); }
+
+  function rosterFrom(findings) {
+    const defs = [
+      { id: "sub_hunter", name: "Subscription Hunter", mandate: "recurring subscription leaks", kinds: ["dead_subscription", "price_creep"] },
+      { id: "billing_auditor", name: "Billing Auditor", mandate: "duplicate fees & billing errors", kinds: ["billing_error"] },
+    ];
+    return defs.map((d) => {
+      const items = findings.filter((f) => d.kinds.includes(f.kind));
+      return { id: d.id, name: d.name, mandate: d.mandate, count: items.length, amount: r2(items.reduce((s, f) => s + f.amount, 0)), status: items.length ? "active" : "idle" };
+    });
+  }
+
+  async function runScan() {
+    const text = ($("#scan-input") && $("#scan-input").value) || "";
+    const res = window.RecoupScan ? window.RecoupScan.scan(text) : { findings: [] };
+    if (!res.findings || !res.findings.length) { toast("No recurring charges found — add more lines or try the sample"); return; }
+    S.actions = res.findings;
+    S._real = true; S._live = false;
+    S.recurring_year = res.recurring_year; S.one_time = res.one_time; S.recoverable = res.total;
+    S.swarm = rosterFrom(res.findings); S.verified = res.findings.length; S.flagged = 0;
+    S.run = { model: "in-browser rules", live: false, latency_ms: 0 };
+    S.reasoning = [
+      { t: `Scanned ${res.txns} transactions in your browser — nothing left this device`, tone: "cyan" },
+      { t: `Subscription Hunter + Billing Auditor found ${res.findings.length} recoverable items`, tone: "warn" },
+      { t: `$${money(res.recurring_year)}/yr recurring + $${money(res.one_time)} one-time`, tone: "ok" },
+      { t: "Review each; nothing sends without your approval", tone: "dim" },
+    ];
+    S.audit = [];
+    await appendAudit("system", "Recoup (in-browser)", "SCAN_RUN", `Scanned ${res.txns} of your transactions — ${res.findings.length} items, $${money(res.total)} recoverable`, res.total);
+    closeScan();
+    renderAll(true);
+    toast(`Found ${res.findings.length} recoverable items in YOUR data`);
+  }
+
   // ---- misc ----
   function wire() {
     document.body.addEventListener("click", (ev) => {
@@ -316,6 +365,11 @@
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");
     if (tt) tt.onclick = () => { const t = document.body.classList.contains("light") ? "dark" : "light"; try { localStorage.setItem("ro-theme", t); } catch (e) {} applyTheme(t); };
+    const sx = $("#scan-x"); if (sx) sx.onclick = closeScan;
+    const ssc = $("#scan-scrim"); if (ssc) ssc.onclick = closeScan;
+    const sr = $("#scan-run"); if (sr) sr.onclick = runScan;
+    const sm = $("#scan-sample"); if (sm) sm.onclick = () => { const i = $("#scan-input"); if (i && window.RecoupScan) i.value = window.RecoupScan.SAMPLE; };
+    const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
   }
 
   function applyTheme(t) {

@@ -31,7 +31,7 @@
   <!-- HERO -->
   <section class="hero glass">
     <div class="hero-left">
-      <div class="eyebrow">YOU'RE OWED &amp; LOSING</div>
+      <div class="eyebrow">RECOVER WHAT'S YOURS · nothing happens until you approve it</div>
       <div class="hero-figures">
         <div class="figure">
           <div class="fig-amount owed">≈$<span id="one-time">0</span></div>
@@ -48,7 +48,7 @@
         <button class="btn btn-primary" id="btn-scan"><span class="dot"></span> Run recovery scan</button>
         <button class="btn btn-ghost" id="btn-approve-all">Approve all safe wins</button>
       </div>
-      <div class="demo-note">🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <a href="/login.html">Sign in to recover your own money →</a></div>
+      <div class="demo-note" id="demo-note">🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button></div>
     </div>
     <div class="hero-right">
       <div class="recovered-card">
@@ -105,6 +105,18 @@
   </footer>
 </main>
 
+<!-- scan-your-own-data modal -->
+<div class="modal-scrim" id="scan-scrim"></div>
+<div class="modal glass" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title">
+  <div class="modal-head"><h3 id="scan-title">Scan your own statement</h3><button class="x" id="scan-x" aria-label="Close">✕</button></div>
+  <p class="modal-sub">🔒 <b>100% private.</b> This runs entirely in your browser — your statement never leaves this device, nothing is uploaded.</p>
+  <textarea id="scan-input" class="scan-input" spellcheck="false" aria-label="Paste your statement" placeholder="Paste your bank / card statement or subscription list — one per line:&#10;&#10;Netflix, 19.99&#10;2026-01-12, SPOTIFY, 11.99&#10;Gym membership 49.99&#10;..."></textarea>
+  <div class="modal-actions">
+    <button class="btn btn-ghost" id="scan-sample">Try a sample</button>
+    <button class="btn btn-primary" id="scan-run">🔒 Scan privately</button>
+  </div>
+</div>
+
 <!-- drawer for drafted message -->
 <div class="drawer-scrim" id="drawer-scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
@@ -120,6 +132,7 @@
 
 <script>window.RO_CONFIG = { apiBase: "" };  /* set to your HF Space URL for live backend, e.g. "https://USER-recoup.hf.space" */</script>
 <script src="data.js"></script>
+<script src="recover.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
