@@ -108,6 +108,19 @@ async def vector_seed(request: Request):
     return _ok(request, **await run_in_threadpool(vector.seed))
 
 
+@app.post("/api/agent/plan")
+async def agent_plan(request: Request):
+    """ADK Gemini agent: plan a recovery for one detected charge. Amounts stay deterministic;
+    returns status pending_approval (human gate downstream)."""
+    body = await request.json()
+    charge = (body or {}).get("charge") or {}
+    if not charge:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
+    from . import adk_agent
+    res = await adk_agent.plan_charge(charge, (body or {}).get("playbook", ""))
+    return _ok(request, **res)
+
+
 # (voice TTS is browser-native Web Speech only — no server-side / non-Google TTS)
 
 
