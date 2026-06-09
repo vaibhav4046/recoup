@@ -24,7 +24,7 @@
       if (!r.ok) { msg(d.error || "Something went wrong.", "err"); return; }
       if (d.sent) msg("Check your inbox for the sign-in link.", "ok");
       else if (d.dev_link) msg('Dev mode — <a class="devlink" href="' + d.dev_link + '">click here to sign in</a>.', "ok");
-      else msg("Link sent.", "ok");
+      else msg('Magic-link email isn\'t wired on this demo yet — use <b>Continue with Google</b> or the no-account <a href="/">paste scan</a>.', "ok");
     } catch (e2) {
       msg("Backend not reachable yet — sign-in goes live once it's deployed.", "err");
     }

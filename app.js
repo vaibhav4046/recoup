@@ -90,7 +90,7 @@
   }
 
   async function boot() {
-    try { applyTheme(localStorage.getItem("ro-theme") || "dark"); } catch (e) {}
+    try { document.body.classList.remove("light"); } catch (e) {}  // dark-only design (light theme removed)
     if (API) {
       try {
         const ctrl = new AbortController();
@@ -663,8 +663,7 @@
     });
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
-    const tt = $("#theme-toggle");
-    if (tt) tt.onclick = () => { const t = document.body.classList.contains("light") ? "dark" : "light"; try { localStorage.setItem("ro-theme", t); } catch (e) {} applyTheme(t); };
+    // theme toggle removed — dark-only high-contrast design
     const sx = $("#scan-x"); if (sx) sx.onclick = closeScan;
     const ssc = $("#scan-scrim"); if (ssc) ssc.onclick = closeScan;
     const sr = $("#scan-run"); if (sr) sr.onclick = runScan;
