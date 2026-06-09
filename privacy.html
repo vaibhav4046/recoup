@@ -16,6 +16,8 @@
 .legal b{color:var(--text)}
 .legal a{color:var(--cyan)}
 .back{display:inline-block;margin-bottom:20px;color:var(--muted);text-decoration:none}
+.antiscam{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:14px 16px;margin:0 0 26px;color:var(--text);font-size:14px;line-height:1.55}
+.antiscam b{color:var(--text)}
 </style>
 </head>
 <body>
@@ -23,7 +25,9 @@
 <main class="legal">
   <a class="back" href="/">← Back to Recoup</a>
   <h1>Privacy & data handling</h1>
-  <div class="upd">Plain-English. This is how Recoup treats your data — and the limits we hold ourselves to.</div>
+  <div class="upd">Effective 9 June 2026 · Plain-English. This is how Recoup treats your data — and the limits we hold ourselves to.</div>
+
+  <div class="antiscam"><b>Recoup will never ask you for money, your password, your bank or card details, or remote access to your device.</b> Money only ever changes hands on the official government, airline, or vendor website — never inside Recoup. We never make a payment or move funds for you.</div>
 
   <h2>The paste path never leaves your device</h2>
   <p>When you <b>paste a statement</b>, the entire recovery scan runs <b>100% in your browser</b> (<code>recover.js</code>). No statement text is uploaded, logged, or sent anywhere. Close the tab and it's gone.</p>
@@ -40,8 +44,12 @@
   <h2>We never sell your data</h2>
   <p>We do not sell, rent, or share your data with advertisers or data brokers — ever. Reasoning is done by Google Gemini on the text of your findings only; amounts come from deterministic rules, not the model.</p>
 
+  <h2>Who runs Recoup &amp; how to reach us</h2>
+  <p><b>Data controller:</b> Vaibhav Lalwani — a student developer at the University of Liverpool. This is an independent student project, not a company. Send contact or data-deletion requests via an issue on the <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">GitHub repository</a>.</p>
+  <p><b>Processors (Gmail path only):</b> for the Gmail path, the sender/subject/snippet of subscription emails are processed by <b>Google Gemini</b> (reasoning) and may be held transiently in <b>MongoDB</b> (US-hosted). The <b>paste path uses none of these</b> — it never leaves your browser. Recoup's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+
   <h2>Your control</h2>
-  <p>You approve every action — nothing is sent on your behalf without your tap. You can disconnect Gmail and request deletion of your stored findings at any time by emailing the address in the repo.</p>
+  <p>You approve every action — nothing is sent on your behalf without your tap. You can disconnect Gmail and request deletion of your stored findings at any time by opening an issue on the <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">GitHub repository</a>; the in-app "Delete my data" clears server-held findings immediately.</p>
 
   <h2>Honest limits</h2>
   <p>This is a hackathon project. It is <b>not</b> yet a verified, audited, production financial service. Treat it as a tool that helps you <i>find and draft</i> claims — you file them yourself on the official portals, and you're responsible for the accuracy of anything you submit.</p>
