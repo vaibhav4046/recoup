@@ -245,7 +245,10 @@ async def mcp_ep(request: Request):
 
 # ---- auth (public demo stays open; auth powers optional account/Gmail flows) ----
 def _set_session(resp, token: str) -> None:
-    resp.set_cookie(COOKIE, token, httponly=True, max_age=7 * 24 * 3600, samesite="lax", secure=True)
+    # SameSite=None so the session survives the cross-site fetch from the static frontend to this
+    # API (CORS is a pinned allowlist with credentials, never a wildcard). On the single-origin
+    # Cloud Run deployment this is same-site anyway.
+    resp.set_cookie(COOKIE, token, httponly=True, max_age=7 * 24 * 3600, samesite="none", secure=True)
 
 
 @app.get("/api/auth/status")
@@ -309,7 +312,7 @@ async def auth_me(request: Request, ro_session: str = Cookie(default="")):
 @app.post("/api/auth/logout")
 async def auth_logout():
     resp = JSONResponse(content={"ok": True})
-    resp.delete_cookie(COOKIE, path="/", secure=True, samesite="lax", httponly=True)
+    resp.delete_cookie(COOKIE, path="/", secure=True, samesite="none", httponly=True)
     return resp
 
 
