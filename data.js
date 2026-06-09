@@ -1217,7 +1217,7 @@ window.RO_FALLBACK = {
       "tone": "warn"
     },
     {
-      "t": "Entitlement Finder → 4 found ($1,365)",
+      "t": "Entitlement Finder → 4 found (≈$1,365)",
       "tone": "warn"
     },
     {
@@ -1293,7 +1293,7 @@ window.RO_FALLBACK = {
       "actor_type": "system",
       "actor_name": "Recoup scanner",
       "event_type": "SCAN_RUN",
-      "label": "Scanned money surface — 10 items: $756/yr recurring + $1,555 one-time",
+      "label": "Scanned money surface — 10 items: $756/yr recurring + $1,305 + €250 one-time",
       "evidence_ref": "",
       "amount": 2310.76,
       "trace_id": "",
