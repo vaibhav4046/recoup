@@ -1,6 +1,14 @@
 # Recoup — QA / defect status (flawlessness pass)
 
-Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **40 of 40 fixed in code. Frontend fixes are deployed and live-verified; backend auth hardening is code-complete and tested locally, pending HF deploy because `HF_TOKEN` is not available in this workspace.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
+Generated from a 60-agent defect hunt (78 reported → 40 confirmed real) + a hard break-test. **40 of 40 fixed in code AND DEPLOYED. Frontend + backend both live and verified.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
+
+## ✅ Backend deployed + live-verified — 2026-06-09 (morning)
+The one pending blocker from the overnight pass (backend redeploy, which that session couldn't do without `HF_TOKEN`) is **DONE**. Redeployed the HF Space and verified live:
+- **`/mcp` is LIVE** (was 404) — JSON-RPC server with **4 working tools**, all execute correctly: `recoup_scan_demo` ("Found 10 recoverable actions: $756/yr + $1,555 one-time"), `recoup_get_state`, `gmail_detect_subscriptions`, `gmail_connection_status` (honest read-only disclosure). Unknown-tool returns the correct `-32601` (B6 fix verified).
+- **SHA-256 audit chain exposed + intact in `/api/health`:** `audit: {intact: true, count: 2, head: 9de2aa2…}` — judges can verify the chain.
+- **B1–B8 auth/security hardening shipped** (magic-link localhost-only, CAPTCHA fail-closed, Gmail annual/thousands parse fixes, refund-skip, MCP error codes, forget no-op for anon, logout cookie match).
+- Gemini live · MongoDB live · gemini-2.5-flash. `/api/auth/status` google:true, no secrets leaked.
+- **Frontend live re-verified against the fresh backend** (Chrome): product-led hero renders, 0 console errors, 10 cards, all chips live (incl. Backend·live), per-visitor clean state ("≈$2,311 recoverable"), no shared "$250" residue.
 
 ## Live QA + hardening pass — 2026-06-09 (autonomous overnight)
 
@@ -43,7 +51,7 @@ Full hands-on live QA of the deployed product (Vercel frontend + HF backend) via
 Backend validated locally: `compileall`, `auth_smoke`, `mcp_smoke`, and a gmail-fix unit test — all green.
 
 ### Known limitations (honest)
-- A backend redeploy (`HF_TOKEN`, owner) is required to (a) mount `/mcp` live and (b) ship B1–B8.
+- ✅ DONE (2026-06-09 morning): backend redeployed — `/mcp` is live (4 tools, verified), the audit chain is in `/api/health` (intact:true), and B1–B8 shipped. (Owner should still rotate the HF token afterward.)
 - `snapshot.py`'s `one_time`/`total` still sum a €250 EU261 figure with USD; the frontend already labels this "≈$ mixed-currency", so the deeper per-currency split was deferred to avoid breaking the live frontend's number animation unverified — tracked for the owner.
 - No verified real recovery yet → `wouldUse` is realistically capped; the recovery ledger is honest-empty.
 - Google OAuth is published but unverified → judges see an "unverified app" warning + ~100 test-user cap. The paste path needs no sign-in.
