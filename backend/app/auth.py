@@ -127,9 +127,9 @@ def _send_email(to: str, link: str) -> bool:
 def verify_captcha(token: str, ip: str = "") -> bool:
     s = get_settings()
     if not s.turnstile_secret:
-        # fail OPEN only on a localhost/dev backend; in prod an unconfigured CAPTCHA must not
-        # silently leave the magic-link endpoint unprotected — fail closed there instead.
-        return s.is_local
+        # CAPTCHA not configured -> not enforced (the frontend renders no widget, so there is no
+        # token to verify). Set TURNSTILE_SITE_KEY + TURNSTILE_SECRET to turn on real bot protection.
+        return True
     try:
         import httpx
         r = httpx.post("https://challenges.cloudflare.com/turnstile/v0/siteverify",
