@@ -1,6 +1,6 @@
 # Recoup — QA / defect status (flawlessness pass)
 
-Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **27 of 40 fixed, tested, and deployed across 5 batches.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
+Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **30 of 40 fixed, tested, and deployed across 7 batches.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
 
 ## Headline wins
 - 🎉 **Live Gemini reasoning now renders on the deployed backend** (`live: true · gemini-2.5-flash`) — it fell back all session until the defensive-parse fix.
@@ -13,8 +13,11 @@ Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after a
 **Robustness / security (5):** cold-start content-type guard (no HTML-as-data); XSS URL-scheme allowlist on claim hrefs; Gemini defensive parse (200-with-no-parts → labelled, not crash); httpx timeout classification; sha256 non-secure-context fallback.
 **Functional / honesty (3):** loadGmail stale-total fix; card entry-animation no longer re-fires on lifecycle re-render; privacy-page storage claim + README roadmap matched to actual code.
 
-## Remaining (13 — lower priority, for next session)
-**A11y polish:** #11 hide decorative emoji in card/pill accessible names; #29 richer (non-lossy) findings aria-label; #7 Tab focus-trap inside modal/drawer; #30 aria-describedby on dialogs.
+## Also fixed since (batch 6–7)
+Non-lossy findings aria-label (#29); decorative-glyph hiding on cards + provenance checks (#11, card content); Tab focus-trap in modal/drawer (#7). Dialog a11y is now complete: Esc-close + focus-return + focus-trap + rich labels.
+
+## Remaining (10 — lower priority, for next session)
+**A11y polish:** #11 remaining button glyphs (✉/↗/💰 — minor, buttons already announce their word); #30 aria-describedby on dialogs.
 **Backend auth hardening (low demo-visibility — auth path barely used):** #20 OAuth CSRF `state` validation; #21 HMAC fallback secret fail-closed (NOTE: the deployed Space HAS `APP_SECRET` set, so it is not live-vulnerable); #36 Gmail token-in-URL → fragment/short-TTL.
 **Functional minor:** #5 currency consistency ($ vs the one €250 EU261 amount); #24 demo lifecycle race (break-test shows no errors, but a hardening guard is ideal); #19 align the "endpoints require a session" comment with the intentionally-open public demo.
 
