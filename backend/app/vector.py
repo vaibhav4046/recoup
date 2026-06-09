@@ -67,16 +67,16 @@ def _coll():
     return MongoClient(s.mongodb_uri)[s.mongodb_db][COLL]
 
 
-def _ensure_index(coll) -> bool:
+def _ensure_index(coll, index_name=INDEX) -> bool:
     """Create the Atlas Vector Search index if it's missing (M0+ supports it)."""
     try:
         names = [i.get("name") for i in coll.list_search_indexes()]
-        if INDEX in names:
+        if index_name in names:
             return True
         from pymongo.operations import SearchIndexModel
         coll.create_search_index(SearchIndexModel(
             definition={"fields": [{"type": "vector", "path": "embedding", "numDimensions": DIM, "similarity": "cosine"}]},
-            name=INDEX, type="vectorSearch"))
+            name=index_name, type="vectorSearch"))
         return True
     except Exception:
         return False  # index build pending / unsupported -> cosine fallback still works
@@ -145,7 +145,83 @@ def status() -> dict:
         return {"enabled": False}
     try:
         coll = _coll()
+        pb = _pb_coll()
         return {"enabled": True, "precedents": coll.count_documents({"embedding": {"$exists": True}}),
+                "playbooks": pb.count_documents({"embedding": {"$exists": True}}),
                 "index": INDEX, "model": EMBED_MODEL, "dims": DIM}
     except Exception:
         return {"enabled": False}
+
+
+# ===== Phase 3: recovery PLAYBOOKS — action steps retrieved by Atlas Vector Search =====
+PLAYBOOK_COLL = "playbooks"
+PLAYBOOK_INDEX = "recoup_playbook_index"
+PLAYBOOKS = [
+    {"id": "pb_dead_sub", "kind": "dead_subscription", "title": "Cancel an unused subscription", "basis": "FTC Click-to-Cancel Rule; UK CRA 2015",
+     "text": "1) Open the vendor's account/billing page. 2) Use the in-app cancel flow (legally must be as easy as sign-up). 3) Ask for proration/refund of the pre-paid unused period. 4) Get written confirmation and the effective date. 5) If they stonewall, dispute the next charge with your card issuer."},
+    {"id": "pb_price_creep", "kind": "price_creep", "title": "Challenge a silent price increase", "basis": "FTC Negative Option Rule; UK CRA 2015; EU UCPD",
+     "text": "1) Find the old vs new price on two statements. 2) Email retention: cite that no clear advance notice was given. 3) Demand the prior or new-customer rate, or cancel with proration. 4) Quote the annualized delta as your ask. 5) Escalate to a chargeback if the hike was undisclosed."},
+    {"id": "pb_billing_error", "kind": "billing_error", "title": "Dispute a duplicate or wrong charge", "basis": "Fair Credit Billing Act 15 U.S.C. 1666; Reg Z",
+     "text": "1) Identify the duplicate/incorrect line and date. 2) Notify the merchant in writing within 60 days. 3) If unresolved, file a billing-error dispute with your card issuer (chargeback). 4) Keep the receipt/evidence. 5) Issuer must investigate and credit confirmed errors."},
+    {"id": "pb_eu261", "kind": "flight_comp", "title": "Claim EU261 / UK261 flight-delay cash", "basis": "Regulation (EC) 261/2004; UK261",
+     "text": "1) Confirm a 3h+ arrival delay or denied boarding on an eligible route. 2) File the claim on the airline's EU261 form, quoting the regulation. 3) Demand CASH (EUR250-600 by distance), not vouchers. 4) If refused on 'extraordinary circumstances', ask for proof. 5) Escalate to the national enforcement body (e.g. UK CAA)."},
+    {"id": "pb_refund_window", "kind": "price_drop", "title": "Claim a price-protection / refund-window refund", "basis": "Merchant price-protection; UK CRA short-term right to reject",
+     "text": "1) Check the purchase date against the refund/price-protection window. 2) Screenshot the lower current price or the policy. 3) Request the one-time difference (not annualized). 4) Cite the stated policy window. 5) If denied, dispute via the card issuer's purchase protection."},
+    {"id": "pb_unclaimed", "kind": "unclaimed", "title": "Reclaim unclaimed property", "basis": "State unclaimed-property laws; UK dormant assets",
+     "text": "1) Search the official state/government portal (e.g. MissingMoney/NAUPA) by name. 2) Verify the holder and amount. 3) File the free claim with ID + proof of address. 4) Never pay a 'finder' fee — it is free. 5) Track the claim ID to payout."},
+]
+
+
+def _pb_coll():
+    from pymongo import MongoClient
+    s = get_settings()
+    return MongoClient(s.mongodb_uri)[s.mongodb_db][PLAYBOOK_COLL]
+
+
+def seed_playbooks() -> dict:
+    """Embed + upsert the recovery playbooks and ensure their Atlas Vector Search index."""
+    s = get_settings()
+    if not (s.mongodb_ready and s.gemini_ready):
+        return {"ok": False, "reason": "needs mongodb + gemini", "embedded": 0}
+    try:
+        coll = _pb_coll()
+        n = 0
+        for p in PLAYBOOKS:
+            doc = coll.find_one({"id": p["id"]}, {"embedding": 1})
+            if doc and doc.get("embedding"):
+                continue
+            emb = _embed(f"{p['title']}. {p['text']} Basis: {p['basis']}.")
+            coll.update_one({"id": p["id"]}, {"$set": {**p, "embedding": emb}}, upsert=True)
+            n += 1
+        idx = _ensure_index(coll, PLAYBOOK_INDEX)
+        return {"ok": True, "embedded": n, "total": len(PLAYBOOKS), "atlas_index": idx}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "reason": f"{type(e).__name__}: {str(e)[:80]}", "embedded": 0}
+
+
+def retrieve_playbook(query: str) -> dict | None:
+    """Atlas $vectorSearch the single best recovery playbook for a charge (cosine fallback)."""
+    s = get_settings()
+    if not (s.mongodb_ready and s.gemini_ready):
+        return None
+    try:
+        qv = _embed(query, task="RETRIEVAL_QUERY")
+        coll = _pb_coll()
+        try:
+            cur = coll.aggregate([
+                {"$vectorSearch": {"index": PLAYBOOK_INDEX, "path": "embedding", "queryVector": qv, "numCandidates": 50, "limit": 1}},
+                {"$project": {"_id": 0, "id": 1, "title": 1, "basis": 1, "kind": 1, "text": 1, "score": {"$meta": "vectorSearchScore"}}},
+            ])
+            hits = list(cur)
+            if hits:
+                hits[0]["via"] = "atlas_vector_search"
+                return hits[0]
+        except Exception:
+            pass
+        docs = list(coll.find({"embedding": {"$exists": True}}, {"_id": 0, "id": 1, "title": 1, "basis": 1, "kind": 1, "text": 1, "embedding": 1}))
+        if not docs:
+            return None
+        best = max(docs, key=lambda d: _cosine(qv, d["embedding"]))
+        return {**{kk: best[kk] for kk in ("id", "title", "basis", "kind", "text")}, "score": round(_cosine(qv, best["embedding"]), 4), "via": "cosine_fallback"}
+    except Exception:
+        return None

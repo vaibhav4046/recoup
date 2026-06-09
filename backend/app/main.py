@@ -29,7 +29,8 @@ COOKIE = "ro_session"
 async def lifespan(app: FastAPI):
     try:
         from . import vector
-        vector.seed()  # embed the precedent corpus + ensure the Atlas Vector Search index
+        vector.seed()            # precedent corpus + Atlas Vector Search index
+        vector.seed_playbooks()  # recovery playbooks corpus + index
     except Exception:
         pass
     try:
@@ -40,7 +41,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Recoup API", version="0.3.1", lifespan=lifespan)
+app = FastAPI(title="Recoup API", version="0.4.0", lifespan=lifespan)
 _s = get_settings()
 _cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
 _cors_wild = "*" in _cors_list  # catch "*" ANYWHERE in the list, not only an exact ["*"] — a wildcard mixed with other origins still makes Starlette reflect any origin when credentials are on
@@ -119,6 +120,21 @@ async def agent_plan(request: Request):
     from . import adk_agent
     res = await adk_agent.plan_charge(charge, (body or {}).get("playbook", ""))
     return _ok(request, **res)
+
+
+@app.post("/api/agent/recover")
+async def agent_recover(request: Request):
+    """End-to-end agent spine: charge -> Atlas Vector Search retrieves the best recovery playbook ->
+    ADK Gemini drafts the recovery grounded in it -> status pending_approval (human gate downstream)."""
+    body = await request.json()
+    charge = (body or {}).get("charge") or {}
+    if not charge:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
+    from . import vector, adk_agent
+    q = f"{charge.get('merchant', '')} {charge.get('title', '')} {charge.get('kind', '')}".strip()
+    pb = await run_in_threadpool(vector.retrieve_playbook, q)
+    res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""))
+    return _ok(request, charge=charge, playbook=pb, **res)
 
 
 # (voice TTS is browser-native Web Speech only — no server-side / non-Google TTS)
