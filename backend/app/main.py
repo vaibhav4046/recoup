@@ -37,9 +37,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Recoup API", version="0.1.0", lifespan=lifespan)
 _s = get_settings()
+_cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
+_cors_wild = _cors_list == ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",")],
+    allow_origins=_cors_list,
+    # SECURITY: never combine a wildcard/reflected origin with credentials. Credentials are only
+    # allowed when the origin is a pinned allowlist (not "*"), which closes the reflect-origin hole.
+    allow_credentials=not _cors_wild,
     allow_methods=["*"], allow_headers=["*"], expose_headers=["x-trace-id"],
 )
 
