@@ -119,6 +119,8 @@
     recompute();
     renderAll(true);
     wire();
+    // premium scroll choreography for the expanded landing sections (same bulletproof reveal as results)
+    revealGroup([...document.querySelectorAll(".landing-expanded > section, #agent-timeline")]);
     // Gmail OAuth handoff: #gmail=<short-lived-token> | err. Query support remains for old callbacks.
     try {
       const gp = gmailHandoff();
@@ -530,7 +532,10 @@
   let _revealed = false;
   function setupReveal() {
     if (_revealed) return; _revealed = true;
-    const els = [...document.querySelectorAll("#results > section")];
+    revealGroup([...document.querySelectorAll("#results > section")]);
+  }
+  function revealGroup(els) {
+    if (!els.length) return;
     const showAll = () => els.forEach((e) => e.classList.add("in"));
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // reduced-motion or no IntersectionObserver -> never hide; content is fully visible, no animation

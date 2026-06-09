@@ -116,6 +116,10 @@ body{
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.reveal{opacity:1!important;transform:none!important}}
+/* premium micro-interactions: quiet lift + gold edge on hover (GPU-only props, 60fps) */
+.landing-sec{transition:transform .45s var(--ease),box-shadow .45s var(--ease),border-color .3s}
+.landing-sec:hover{transform:translateY(-4px);border-color:rgba(245,197,24,.35);box-shadow:0 30px 70px -28px rgba(0,0,0,.9),0 0 0 1px rgba(245,197,24,.12),0 18px 50px -30px rgba(245,197,24,.25)}
+@media(prefers-reduced-motion:reduce){.landing-sec,.landing-sec:hover{transform:none}}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .skip-link{position:absolute;left:-999px;top:8px;z-index:120;background:var(--cyan);color:#04121a;padding:8px 14px;border-radius:8px;font-weight:800;text-decoration:none}
 .skip-link:focus{left:8px}
