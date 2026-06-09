@@ -387,7 +387,7 @@ body.light{
   --bg:#eef1f7; --bg2:#ffffff;
   --panel:rgba(15,23,42,.045); --panel2:rgba(15,23,42,.07);
   --border:rgba(15,23,42,.11); --border2:rgba(15,23,42,.18);
-  --text:#0d1526; --muted:#586074; --dim:#5f6678;
+  --text:#0d1526; --muted:#586074; --dim:#5f6678; --cyan:#0e7490;
   --shadow:0 18px 50px -22px rgba(30,41,73,.22);
 }
 body.light #bg-field{opacity:.45}

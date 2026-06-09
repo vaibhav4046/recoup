@@ -109,7 +109,7 @@
   </section>
 
   <div id="results" class="hidden">
-    <h2 class="sr-only">Recovery results</h2>
+    <h2 class="sr-only" id="results-heading" tabindex="-1">Recovery results</h2>
 
   <!-- HERO -->
   <section class="hero glass">
@@ -151,7 +151,7 @@
   <section class="panel glass vrec" id="vrec">
     <div class="panel-head">
       <h3>Your recovery log <span class="muted">money you got back — you log it, with the confirmation</span></h3>
-      <button class="btn btn-ghost btn-sm" id="vrec-add">+ Log one I actually got</button>
+      <button class="btn btn-ghost btn-sm" id="vrec-add" aria-expanded="false" aria-controls="vrec-form">+ Log one I actually got</button>
     </div>
     <div class="vrec-list" id="vrec-list"></div>
     <form class="vrec-form hidden" id="vrec-form">
