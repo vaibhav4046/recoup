@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from . import auth
 from .config import get_settings
+from .mcp import TOOLS as MCP_TOOLS, handle_mcp
 from .state import APP
 
 COOKIE = "ro_session"
@@ -150,6 +151,22 @@ async def full_state(request: Request):
         recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0,
         audit=APP.audit.list(), auditIntegrity=APP.audit.verify(), contained=APP.contained(),
     )
+
+
+@app.get("/mcp")
+@app.get("/api/mcp")
+async def mcp_info(request: Request):
+    return _ok(request, protocol="MCP JSON-RPC over HTTP", tools=[t["name"] for t in MCP_TOOLS])
+
+
+@app.post("/mcp")
+@app.post("/api/mcp")
+async def mcp_ep(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Invalid JSON"}})
+    return JSONResponse(content=handle_mcp(body))
 
 
 # ---- auth (public demo stays open; auth powers optional account/Gmail flows) ----

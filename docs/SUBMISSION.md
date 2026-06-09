@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** https://recoup-vaibhav4046s-projects.vercel.app
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API (Hugging Face Space):** https://vaibhav3313-recoup.hf.space/api/health
-- **Built with:** Google **Gemini 2.5-flash** · FastAPI · MongoDB · Hugging Face Spaces · Vercel
+- **Built with:** Google **Gemini 2.5-flash** · FastAPI · MongoDB · MCP-compatible JSON-RPC tools · Hugging Face Spaces · Vercel
 
 ---
 
@@ -27,8 +27,8 @@ Recoup turns a messy financial footprint into recovered money through one audite
 
 ## How we built it
 
-- **Frontend:** a zero-build static app (instant load) — vanilla JS + a precompiled premium UI, light/dark mode, full accessibility (ARIA roles, focus-visible, reduced-motion), deployed on **Vercel**.
-- **Backend:** **FastAPI** on a free **Hugging Face Docker Space**. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** (called via the REST API for runtime robustness) writes the human-readable reasoning trace. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. A **MongoDB** adapter persists approved cases.
+- **Frontend:** a zero-build static app (instant load) — vanilla JS + a premium product-led UI, light/dark mode, responsive mobile layout, full accessibility (ARIA roles, focus-visible, reduced-motion), deployed on **Vercel**.
+- **Backend:** **FastAPI** on a free **Hugging Face Docker Space**. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** (called via the REST API for runtime robustness) writes the human-readable reasoning trace. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. A **MongoDB** adapter persists approved cases. The committed backend also includes an MCP-compatible JSON-RPC endpoint for `recoup_scan_demo`, `recoup_get_state`, Gmail subscription detection, and Gmail connection status tools.
 - **The swarm:** a Coordinator → specialist agents → an independent Verifier → a Drafter, each finding carrying its agent attribution + verdict.
 - **Quality:** we ran **three rounds of brutal multi-agent QA** (14 personas + hackathon-judge lenses each round), then fixed what they found — the honesty calibration (no annualized one-time payouts, eligibility caveats, "self-reported" recovered, a Verifier that says *no*) came directly out of that.
 
@@ -38,6 +38,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 |---|---|---|
 | Reasoning | **Google Gemini 2.5-flash** | free tier |
 | Store | **MongoDB** Atlas M0 | free |
+| Agent tools | MCP-compatible JSON-RPC over HTTP | free |
 | Backend host | **Hugging Face** Docker Spaces | free |
 | Frontend host | **Vercel** | free |
 
@@ -52,6 +53,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 - A **real, deployed, end-to-end** product (not a mockup) on an entirely free, no-card stack.
 - **Real data, totally private** — the in-browser scan finds your actual recurring charges without anything leaving your device.
 - An agent that is **honest by construction**: amounts from rules not the model, one-time money never annualized, eligibility caveats up front, a verifier that flags what it can't confirm.
+- A judge-friendly technical story: deterministic money rules, Gemini reasoning, human approval, SHA-256 audit, MongoDB persistence, and an MCP-compatible tool surface for agent access.
 
 ## What we learned
 
@@ -59,7 +61,7 @@ For an AI-near-money product, *checkable* beats *clever*. Showing the work — t
 
 ## What's next
 
-- Live Gmail OAuth (read-only) for one-tap subscription discovery.
+- Google OAuth verification for the read-only Gmail connector, so judges no longer see Google's unverified-app warning.
 - Closing more categories end-to-end (pre-filled claim forms, one-click cancels).
 - A "recovered to date" ledger across sessions.
 

@@ -20,4 +20,7 @@ Thumbs.db
 .vscode/
 *.log
 
+# generated QA screenshots (tracked screenshots remain tracked)
+screens/*.png
+
 .vercel

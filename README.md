@@ -9,7 +9,9 @@
 (price-drop refunds, EU261 flight-delay compensation, class-action settlements,
 unclaimed property), **drafts every claim**, and lets you **approve each one with a
 single tap** — nothing is ever sent without you. Every step writes a tamper-evident
-**SHA-256 audit chain**.
+**SHA-256 audit chain**. The backend also exposes an MCP-compatible JSON-RPC surface
+so agents can inspect Recoup state, run demo scans, and detect subscription signals
+from Gmail message metadata without exposing OAuth tokens.
 
 ### ▶ Live demo: https://recoup-vaibhav4046s-projects.vercel.app
 
@@ -81,6 +83,7 @@ recoup/
    │  ├─ state.py      # orchestration + human approval gate + split totals
    │  ├─ audit.py      # SHA-256 hash-chain audit log + verify()
    │  ├─ mongodb.py    # partner store (free Atlas M0); MCP-exposed collections
+   │  ├─ mcp.py        # MCP-compatible JSON-RPC tools for agents + Gmail detector
    │  ├─ config.py     # settings + honest integration status
    │  └─ main.py       # FastAPI endpoints + trace middleware
    ├─ Dockerfile       # python:3.12-slim, uvicorn on $PORT (7860 for HF)
@@ -103,6 +106,8 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 | `GET`  | `/api/audit` | the SHA-256 audit log + integrity |
 | `POST` | `/api/report` | full recovery report |
 | `GET`  | `/api/state` | hydration snapshot for the frontend |
+| `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata |
+| `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls |
 
 ## Free, no-card stack
 
@@ -110,6 +115,7 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 |---|---|---|
 | Reasoning | **Gemini 2.5-flash** (Google AI Studio) | free tier |
 | Store / partner MCP | **MongoDB Atlas M0** + MongoDB MCP | free |
+| Agent tool surface | MCP-compatible JSON-RPC over HTTP | free |
 | Backend host | Hugging Face **Docker Spaces** | free |
 | Frontend host | **Vercel** (static) | free |
 | Data integrity | SHA-256 hash chain | — |
@@ -132,6 +138,7 @@ cd backend
 pip install -r requirements.txt
 cp .env.example .env          # add a free GOOGLE_API_KEY (optional; falls back if absent)
 uvicorn app.main:app --reload --port 8099
+python scripts/mcp_smoke.py       # optional: validates MCP initialize/list/call
 
 # frontend (any static server)
 cd ..

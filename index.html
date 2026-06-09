@@ -12,7 +12,7 @@
 </head>
 <body>
 <a href="#results" class="skip-link">Skip to content</a>
-<div id="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+<div id="bg-field" aria-hidden="true"></div>
 
 <header class="topbar">
   <div class="brand">
@@ -31,18 +31,79 @@
 
   <!-- LANDING -->
   <section class="landing" id="landing">
-    <div class="landing-inner glass">
-      <div class="eyebrow">RECOVER WHAT'S YOURS</div>
-      <h1 class="landing-h1">Find the money you're owed.<br/>Stop the money you're losing.</h1>
-      <p class="landing-sub">An AI agent finds your forgotten subscriptions, silent price hikes, billing errors, and the refunds &amp; payouts you're owed — drafts every claim, and <b>you approve each one</b>. Nothing is ever sent without your tap.</p>
+    <div class="landing-copy">
+      <div class="eyebrow">THE MONEY-RECOVERY AGENT</div>
+      <h1 class="landing-h1">Find owed money. Stop silent leaks.</h1>
+      <p class="landing-sub">Recoup scans statements or read-only Gmail receipts, finds recoverable money, drafts the claim, and waits for your approval before anything leaves your hands.</p>
       <div class="landing-cta">
-        <button class="btn btn-primary btn-xl" id="find-money" aria-label="Find my money">💸 Find my money →</button>
+        <button class="btn btn-primary btn-xl" id="find-money" aria-label="Find my money"><span aria-hidden="true">→</span> Find my money</button>
         <button class="btn btn-ghost btn-xl" id="see-example">See a 60-second example</button>
       </div>
-      <div class="landing-trust">🔒 Read-only · never your bank login · we never sell your data · it runs in your browser</div>
+      <div class="landing-proof" aria-label="Trust and implementation proof">
+        <span>Read-only Gmail</span>
+        <span>Private paste scan</span>
+        <span>Human approval gate</span>
+        <span>SHA-256 audit</span>
+      </div>
       <div class="founder-strip">
         <span><b>Who's behind this?</b> Built by Vaibhav — a final-year Computer Science student at the University of Liverpool — as a dissertation &amp; portfolio project.</span>
         <span><b>Free because it's a student project, not a data broker.</b> The code is open-source and your data is never sold. <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">See the code →</a></span>
+      </div>
+    </div>
+    <div class="product-stage" aria-label="Recoup product preview">
+      <div class="product-window">
+        <div class="window-bar">
+          <div class="window-title">Recoup scan</div>
+          <div class="window-status">Gemini + rules verified</div>
+        </div>
+        <div class="preview-hero">
+          <div>
+            <div class="preview-label">recoverable surface</div>
+            <div class="preview-money">$1,719</div>
+            <div class="preview-caption">six actions found in a private statement scan</div>
+          </div>
+          <button class="btn btn-primary preview-scan" type="button" data-open-scan>Run my scan</button>
+        </div>
+        <div class="preview-grid">
+          <div class="preview-panel strong">
+            <div class="preview-panel-top">
+              <span>Subscription Hunter</span>
+              <b>$1,659/yr</b>
+            </div>
+            <div class="preview-bars" aria-hidden="true">
+              <span style="width:92%"></span>
+              <span style="width:66%"></span>
+              <span style="width:41%"></span>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <div class="preview-panel-top">
+              <span>Billing Auditor</span>
+              <b>$60</b>
+            </div>
+            <div class="mini-claim">
+              <span>Adobe duplicate charge</span>
+              <em>draft ready</em>
+            </div>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="claim-top">
+            <span>Challenge NETFLIX price hike</span>
+            <b>82%</b>
+          </div>
+          <div class="claim-amount">$30/yr <span>+$2.50/mo</span></div>
+          <div class="claim-copy">The price quietly went up. Ask for the old rate or cancel.</div>
+          <div class="claim-actions">
+            <button class="btn btn-approve" type="button" data-show-results><span aria-hidden="true">✓</span> Approve</button>
+            <button class="btn btn-view" type="button" data-show-results>Show work</button>
+          </div>
+        </div>
+        <div class="preview-audit">
+          <span>hash 4e9a6c2f1b</span>
+          <span>human-in-the-loop</span>
+          <span>MCP-ready Gmail intake</span>
+        </div>
       </div>
     </div>
   </section>
@@ -94,7 +155,12 @@
     </div>
     <div class="vrec-list" id="vrec-list"></div>
     <form class="vrec-form hidden" id="vrec-form">
-      <input id="vrec-amt" type="number" step="0.01" min="0" placeholder="£ amount" aria-label="Amount recovered" />
+      <select id="vrec-currency" aria-label="Recovery currency">
+        <option value="$">$</option>
+        <option value="£">£</option>
+        <option value="€">€</option>
+      </select>
+      <input id="vrec-amt" type="number" step="0.01" min="0" placeholder="Amount" aria-label="Amount recovered" />
       <input id="vrec-what" type="text" maxlength="60" placeholder="What — e.g. Cancelled Adobe" aria-label="What you recovered" />
       <input id="vrec-ref" type="text" maxlength="40" placeholder="Confirmation ref (optional)" aria-label="Confirmation reference" />
       <button class="btn btn-primary btn-sm" type="submit">Save proof</button>

@@ -17,6 +17,8 @@ a financial footprint, has **Gemini** reason over it to find money you're losing
 settlements, flight-delay compensation, unclaimed property), drafts each claim,
 and gates every action behind **human approval** — writing a tamper-evident
 sha256 audit chain. Approved cases persist to **MongoDB** (partner integration).
+It also exposes an MCP-compatible JSON-RPC tool surface for agent access to demo
+scans, current state, Gmail subscription detection, and Gmail connection status.
 
 ## Endpoints
 
@@ -30,12 +32,15 @@ sha256 audit chain. Approved cases persist to **MongoDB** (partner integration).
 | GET  | `/api/audit` | the hash-chained audit log + integrity |
 | POST | `/api/report` | full recovery report |
 | GET  | `/api/state` | hydration snapshot for the frontend |
+| GET  | `/mcp`, `/api/mcp` | MCP tool discovery metadata |
+| POST | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls |
 
 ## Run locally
 
 ```bash
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8099
+python scripts/mcp_smoke.py
 ```
 
 Gemini activates with a free [AI Studio](https://aistudio.google.com/) key in

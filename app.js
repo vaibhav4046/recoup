@@ -370,6 +370,8 @@
 
   async function forgetData() {
     try { if (API) await fetch(API + "/api/account/forget", { method: "POST" }); } catch (e) {}
+    try { localStorage.removeItem("ro-vrec"); } catch (e) {}
+    renderVrec();
     toast("Your stored data was cleared. Revoke Gmail access at myaccount.google.com/permissions.");
   }
 
@@ -379,20 +381,23 @@
     const list = $("#vrec-list"); if (!list) return;
     const v = getVrec();
     if (!v.length) { list.innerHTML = `<div class="vrec-empty">Nothing logged yet. When you actually get money back — cancel a real subscription, claim real unclaimed cash — log it here with its confirmation reference, so it's <b>checkable</b>, not a vague estimate. (You-logged, not independently audited.)</div>`; return; }
-    const total = r2(v.reduce((s, r) => s + (r.amount || 0), 0));
-    list.innerHTML = `<div class="vrec-empty">Total you've logged: <b style="color:#37d67a">£${total.toFixed(2)}</b> <span class="muted">(you-confirmed)</span></div>` +
-      v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">£${Number(r.amount).toFixed(2)}</span></div>`).join("");
+    const totals = v.reduce((acc, r) => { const c = r.currency || "$"; acc[c] = r2((acc[c] || 0) + (r.amount || 0)); return acc; }, {});
+    const totalText = Object.entries(totals).map(([c, n]) => `${c}${Number(n).toFixed(2)}`).join(" · ");
+    list.innerHTML = `<div class="vrec-empty">Total you've logged: <b style="color:#37d67a">${esc(totalText)}</b> <span class="muted">(you-confirmed)</span></div>` +
+      v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">${esc(r.currency || "$")}${Number(r.amount).toFixed(2)}</span></div>`).join("");
   }
   function addVrec() {
     const amt = parseFloat(($("#vrec-amt") || {}).value);
+    const currencyRaw = (($("#vrec-currency") || {}).value || "$").trim();
+    const currency = ["$", "£", "€"].includes(currencyRaw) ? currencyRaw : "$";
     const what = (($("#vrec-what") || {}).value || "").trim();
     if (!amt || amt <= 0 || !what) { toast("Add the amount and what you recovered"); return; }
     const v = getVrec();
-    v.unshift({ amount: r2(amt), what: what.slice(0, 60), ref: (($("#vrec-ref") || {}).value || "").trim().slice(0, 40), date: new Date().toISOString().slice(0, 10) });
+    v.unshift({ amount: r2(amt), currency, what: what.slice(0, 60), ref: (($("#vrec-ref") || {}).value || "").trim().slice(0, 40), date: new Date().toISOString().slice(0, 10) });
     setVrec(v);
     const f = $("#vrec-form"); if (f) { f.reset(); f.classList.add("hidden"); }
     renderVrec();
-    toast(`✓ Logged £${money(amt)} verified recovery`);
+    toast(`✓ Logged ${currency}${money(amt)} verified recovery`);
   }
 
   function mailtoFor(a) {
@@ -558,6 +563,10 @@
 
   function wire() {
     document.body.addEventListener("click", (ev) => {
+      const openScanBtn = ev.target.closest("[data-open-scan]");
+      if (openScanBtn) { openScan(); return; }
+      const showResultsBtn = ev.target.closest("[data-show-results]");
+      if (showResultsBtn) { showResults(); return; }
       const t = ev.target.closest("[data-approve],[data-skip],[data-view],[data-copy],[data-mail],[data-sent],[data-paid]"); if (!t) return;
       if (t.dataset.approve) approve(t.dataset.approve);
       else if (t.dataset.skip) skip(t.dataset.skip);

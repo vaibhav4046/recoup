@@ -38,7 +38,7 @@ KNOWN_SERVICES = {
     "patreon": ("Patreon", 6.00),
     "hellofresh": ("HelloFresh", 40.00),
 }
-_MONEY = re.compile(r"[£$€]\s?(\d+(?:[.,]\d{2})?)")
+_MONEY = re.compile(r"([$£€])\s?(\d+(?:[.,]\d{2})?)")
 
 
 def _match(sender: str, subject: str) -> tuple[str, float] | None:
@@ -59,13 +59,14 @@ def detect(messages: list[dict]) -> list[dict]:
         name, est = hit
         body = f"{m.get('subject','')} {m.get('snippet','')}"
         found = _MONEY.search(body)
-        amount = round(float(found.group(1).replace(",", ".")), 2) if found else est
+        amount = round(float(found.group(2).replace(",", ".")), 2) if found else est
+        currency = found.group(1) if found else "$"
         confident_amt = bool(found)
         trial = "trial" in body.lower()
         lapsing = any(w in body.lower() for w in ("cancel", "update payment", "lose access", "expired", "failed"))
         if name not in seen:
             seen[name] = {
-                "name": name, "monthly": amount, "amount_known": confident_amt,
+                "name": name, "monthly": amount, "currency": currency, "amount_known": confident_amt,
                 "trial": trial, "lapsing": lapsing, "evidence": m.get("subject", "")[:120],
             }
     return list(seen.values())
@@ -76,13 +77,14 @@ def to_findings(subs: list[dict]) -> list[dict]:
     out = []
     for i, s in enumerate(subs, 1):
         annual = round(s["monthly"] * 12, 2)
+        currency = s.get("currency", "$")
         note = "free trial — will auto-convert" if s["trial"] else "payment lapsing" if s["lapsing"] else "active recurring charge"
         conf = 0.9 if s["amount_known"] else 0.72
         out.append({
             "id": f"gm_{i}", "kind": "dead_subscription",
             "title": f"Review {s['name']} subscription",
-            "amount": annual, "cadence": "yearly", "currency": "$",
-            "amount_label": f"${annual:,.0f}/yr", "unit_note": f"${s['monthly']:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
+            "amount": annual, "cadence": "yearly", "currency": currency,
+            "amount_label": f"{currency}{annual:,.0f}/yr", "unit_note": f"{currency}{s['monthly']:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
             "evidence": f"From your Gmail: \"{s['evidence']}\" — {note}",
             "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium",
             "caveat": "Confirm you've stopped using it before cancelling." if not s["trial"] else "Cancel before the trial converts to avoid the charge.",

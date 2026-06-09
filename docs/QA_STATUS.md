@@ -21,8 +21,15 @@ Non-lossy findings aria-label (#29); decorative-glyph hiding on cards + provenan
 
 **Backend, code-complete + locally tested:** #20 one-time OAuth CSRF `state` validation for normal Google sign-in and Gmail OAuth; #21 HMAC session signing fails closed without `APP_SECRET`; #36 Gmail handoff redirects via URL fragment with a five-minute one-time token and POST lookup, with frontend compatibility fallback for the old GET endpoint while the Space awaits rebuild; #19 auth comments now match the intentionally-open public demo.
 
+## Fixed in current pass
+**Premium redesign:** replaced the centered landing card/orb treatment with a product-led first screen: sharper headline, trust proof chips, a live-looking Recoup product preview, direct "Run my scan" and "Show work" paths, and tighter responsive rules so the preview appears in the first mobile viewport without horizontal overflow.
+
+**Hackathon tech story:** added a tested MCP-compatible JSON-RPC backend surface with `initialize`, `tools/list`, `tools/call`, `recoup_scan_demo`, `recoup_get_state`, `gmail_detect_subscriptions`, and `gmail_connection_status`. The Gmail detector accepts message metadata, calls the existing Gmail rule logic, and never exposes OAuth tokens through MCP.
+
+**Data honesty/privacy polish:** the user recovery ledger now supports $, £, and € entries and totals by currency instead of forcing everything into pounds; Gmail-derived MCP findings preserve receipt currency; "Delete my data" now clears the browser recovery ledger immediately; paid cards use the real `.paid` state for the intended recovered styling.
+
 ## Remaining deployment gap
-Backend deploy was not run because no `HF_TOKEN` is available in the environment or `backend/.env`. Run `HF_TOKEN=<token> python backend/scripts/deploy_hf.py` after rotating the exposed token, then verify `/api/auth/google/start`, `/api/gmail/start`, and `/api/gmail/findings`.
+Backend deploy was not run because no `HF_TOKEN` is available in the environment or `backend/.env`. Run `HF_TOKEN=<token> python backend/scripts/deploy_hf.py` after rotating the exposed token, then verify `/api/auth/google/start`, `/api/gmail/start`, `/api/gmail/findings`, and `/mcp`.
 
 ## YOUR manual items (only you can do these)
 - 🔓 **Make the GitHub repo PUBLIC** — the "See the code" link 404s until then, and private = hackathon DQ.
@@ -31,4 +38,4 @@ Backend deploy was not run because no `HF_TOKEN` is available in the environment
 - 🎥 **Record the demo video** (`docs/VIDEO_SCRIPT.md`) + do the one real recovery to log in the recovery log.
 
 ## Honest note
-I'm turn-based — I can't self-run for 10–20 hours. This is the verified-clean state as of this session. Say "continue" and I'll take the remaining 13 in tested batches.
+This is the verified-clean state for the code paths that can be exercised without owner-owned secret rotation. The known remaining risk is external deployment/OAuth verification after the exposed secrets are rotated.
