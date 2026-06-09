@@ -20,6 +20,16 @@
 .x .ico{width:17px;height:17px;vertical-align:middle}
 .theme-toggle .ico{width:18px;height:18px}
 .btn .ico{vertical-align:-0.16em}
+/* zero-cost voice agent button (gold accent) */
+.voice-btn{position:fixed;right:22px;bottom:22px;z-index:60;width:58px;height:58px;border-radius:50%;border:1px solid rgba(245,197,24,.55);background:radial-gradient(120% 120% at 30% 20%,#1c1605,#0a0a0c);color:#f5c518;display:grid;place-items:center;cursor:pointer;box-shadow:0 12px 32px -8px rgba(0,0,0,.7),inset 0 1px 0 rgba(245,197,24,.25);transition:transform .22s var(--ease),box-shadow .3s,border-color .2s}
+.voice-btn:hover{transform:translateY(-3px) scale(1.06);border-color:#f5c518;box-shadow:0 16px 40px -8px rgba(245,197,24,.45),inset 0 1px 0 rgba(245,197,24,.4)}
+.voice-btn svg{width:25px;height:25px}
+.voice-btn.listening{border-color:#f5c518;color:#ffd84d;animation:voicePulse 1.25s infinite}
+@keyframes voicePulse{0%{box-shadow:0 0 0 0 rgba(245,197,24,.55)}70%{box-shadow:0 0 0 18px rgba(245,197,24,0)}100%{box-shadow:0 0 0 0 rgba(245,197,24,0)}}
+.voice-label{position:fixed;right:90px;bottom:34px;z-index:60;max-width:260px;background:rgba(10,10,12,.96);border:1px solid rgba(245,197,24,.3);color:var(--text);font-size:13px;font-weight:600;padding:9px 13px;border-radius:12px;opacity:0;transform:translateX(8px);pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:var(--shadow-sm)}
+.voice-label.show{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.voice-btn.listening{animation:none}}
+@media(max-width:560px){.voice-btn{width:52px;height:52px;right:16px;bottom:16px}.voice-label{display:none}}
 @keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:none}}
 @keyframes heroIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
