@@ -498,6 +498,18 @@
     if (l) l.classList.add("hidden");
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
     const h = $("#results-heading"); if (h) setTimeout(() => { try { h.focus(); } catch (e) {} }, 40); // move SR focus onto the results so the reveal is announced
+    setupReveal();
+  }
+  let _revealed = false;
+  function setupReveal() {
+    if (_revealed) return; _revealed = true;
+    const els = [...document.querySelectorAll("#results > section")];
+    els.forEach((e, i) => { e.classList.add("reveal"); e.style.transitionDelay = (Math.min(i, 6) * 0.06) + "s"; });
+    const showAll = () => els.forEach((e) => e.classList.add("in"));
+    if (!("IntersectionObserver" in window)) { showAll(); return; }
+    const io = new IntersectionObserver((ents) => { ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }); }, { threshold: 0.06, rootMargin: "0px 0px -40px 0px" });
+    els.forEach((e) => io.observe(e));
+    setTimeout(showAll, 1400); // hard safety: never leave a section hidden if the observer misfires
   }
 
   function rosterFrom(findings) {
