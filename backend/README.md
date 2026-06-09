@@ -27,7 +27,11 @@ scans, current state, Gmail subscription detection, and Gmail connection status.
 | GET  | `/api/health` | service + integration status |
 | POST | `/api/scan` | scan the money surface |
 | POST | `/api/agent/run` | Gemini drafts the plan + reasoning trace |
-| POST | `/api/actions/{id}/approve` | the human approval gate (recovers money) |
+| POST | `/api/actions/{id}/approve` | the human approval gate (readies a claim; no money movement) |
+| POST | `/api/actions/{id}/sent` | mark an approved claim as sent |
+| POST | `/api/actions/{id}/paid` | mark money as actually recovered |
+| POST | `/api/agent/plan` | ADK/Gemini recovery plan for one detected charge |
+| POST | `/api/agent/recover` | MCP probe + Atlas Vector Search playbook + recovery plan |
 | POST | `/api/actions/{id}/reject` | skip an action |
 | GET  | `/api/audit` | the hash-chained audit log + integrity |
 | POST | `/api/report` | full recovery report |

@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** https://recoup-vaibhav4046s-projects.vercel.app
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API (Hugging Face Space):** https://vaibhav3313-recoup.hf.space/api/health
-- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · FastAPI · MCP-compatible JSON-RPC tools · a zero-cost in-browser **voice agent** · Hugging Face Spaces · Vercel
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI · a zero-cost in-browser **voice agent** · Hugging Face Spaces today, Cloud Run-ready image in repo · Vercel
 
 ---
 
@@ -28,7 +28,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 ## How we built it
 
 - **Frontend:** a zero-build static app (instant load) — vanilla JS + a premium product-led UI, light/dark mode, responsive mobile layout, full accessibility (ARIA roles, focus-visible, reduced-motion), deployed on **Vercel**.
-- **Backend:** **FastAPI** on a free **Hugging Face Docker Space**. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** (called via the REST API for runtime robustness) writes the human-readable reasoning trace. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. A **MongoDB** adapter persists approved cases. The committed backend also includes an MCP-compatible JSON-RPC endpoint for `recoup_scan_demo`, `recoup_get_state`, Gmail subscription detection, and Gmail connection status tools.
+- **Backend:** **FastAPI** currently deployed on a free **Hugging Face Docker Space**, with a Cloud Run image and exact deploy command committed for the Google Cloud submission path. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** writes the human-readable plan/reasoning and degrades to deterministic fallback under free-tier rate limits. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. The agent spine registers the official **MongoDB MCP server** as an ADK toolset, while Atlas **Vector Search** stores/retrieves recovery playbook memory.
 - **The swarm:** a Coordinator → specialist agents → an independent Verifier → a Drafter, each finding carrying its agent attribution + verdict.
 - **Quality:** we ran **three rounds of brutal multi-agent QA** (14 personas + hackathon-judge lenses each round), then fixed what they found — the honesty calibration (no annualized one-time payouts, eligibility caveats, "self-reported" recovered, a Verifier that says *no*) came directly out of that.
 
@@ -39,8 +39,8 @@ Recoup turns a messy financial footprint into recovered money through one audite
 | **Vector Search** | **MongoDB Atlas Vector Search** + `gemini-embedding-001` (768d) | free (M0) |
 | Reasoning | **Google Gemini 2.5-flash** | free tier |
 | Store | **MongoDB** Atlas M0 | free |
-| Voice agent | Browser Web Speech (STT + TTS); ElevenLabs optional | free |
-| Agent tools | MCP-compatible JSON-RPC over HTTP | free |
+| Voice agent | Browser Web Speech (STT + TTS) only | free |
+| Agent tools | Google ADK + official MongoDB MCP server | free |
 | Backend host | **Hugging Face** Docker Spaces | free |
 | Frontend host | **Vercel** | free |
 
@@ -55,7 +55,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 - A **real, deployed, end-to-end** product (not a mockup) on an entirely free, no-card stack.
 - **Real data, totally private** — the in-browser scan finds your actual recurring charges without anything leaving your device.
 - An agent that is **honest by construction**: amounts from rules not the model, one-time money never annualized, eligibility caveats up front, a verifier that flags what it can't confirm.
-- A judge-friendly technical story: deterministic money rules, Gemini reasoning, human approval, SHA-256 audit, MongoDB persistence, and an MCP-compatible tool surface for agent access *(in the committed backend; live on the Space at the next redeploy)*.
+- A judge-friendly technical story: deterministic money rules, Gemini/ADK planning, human approval, SHA-256 audit, MongoDB Atlas Vector Search memory, and the official MongoDB MCP server registered as an agent toolset.
 
 ## What we learned
 

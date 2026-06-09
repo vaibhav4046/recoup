@@ -15,11 +15,10 @@ signals from Gmail message metadata without exposing OAuth tokens.
 
 ### ▶ Live demo: https://recoup-vaibhav4046s-projects.vercel.app
 
-> **Live status (honest):** the frontend (Vercel) and the FastAPI backend (Hugging Face —
-> `/api/health`, `/api/state`, Gemini + MongoDB) are **live**. The MCP routes (`/mcp`,
-> `/api/mcp`) and the latest auth/currency/Gmail hardening are **committed and locally
-> tested but not yet mounted on the public Space** — they go live the next time the Space
-> is redeployed with the current build (`HF_TOKEN=… python backend/scripts/deploy_hf.py`).
+> **Live status (honest):** the frontend (Vercel) and the FastAPI backend currently running
+> on Hugging Face are **live**: `/api/health`, `/api/state`, `/api/agent/recover`, Gemini,
+> MongoDB Atlas Vector Search, and `/mcp` all respond. A Google Cloud Run image and exact
+> deploy command are committed for the hackathon submission path.
 
 ![Recoup command center](screens/desktop.png)
 
@@ -112,8 +111,8 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 | `GET`  | `/api/audit` | the SHA-256 audit log + integrity |
 | `POST` | `/api/report` | full recovery report |
 | `GET`  | `/api/state` | hydration snapshot for the frontend |
-| `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata *(in repo; live after backend redeploy)* |
-| `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls *(in repo; live after backend redeploy)* |
+| `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata |
+| `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls |
 
 ## Agent spine — Google Cloud Rapid Agent Hackathon (MongoDB track)
 
@@ -158,8 +157,8 @@ Secrets come from environment variables — never hardcoded.
 |---|---|---|
 | Reasoning | **Gemini 2.5-flash** (Google AI Studio) | free tier |
 | Store / partner MCP | **MongoDB Atlas M0** + MongoDB MCP | free |
-| Agent tool surface | MCP-compatible JSON-RPC over HTTP | free |
-| Backend host | Hugging Face **Docker Spaces** | free |
+| Agent tool surface | Google ADK + official MongoDB MCP server; HTTP MCP compatibility route | free |
+| Backend host | Hugging Face **Docker Spaces** today; Cloud Run-ready image committed | free tier |
 | Frontend host | **Vercel** (static) | free |
 | Data integrity | SHA-256 hash chain | — |
 

@@ -41,7 +41,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Recoup API", version="0.4.1", lifespan=lifespan)
+app = FastAPI(title="Recoup API", version="0.4.2", lifespan=lifespan)
 _s = get_settings()
 _cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
 _cors_wild = "*" in _cors_list  # catch "*" ANYWHERE in the list, not only an exact ["*"] — a wildcard mixed with other origins still makes Starlette reflect any origin when credentials are on
@@ -132,9 +132,12 @@ async def agent_recover(request: Request):
         return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
     from . import vector, adk_agent
     q = f"{charge.get('merchant', '')} {charge.get('title', '')} {charge.get('kind', '')}".strip()
+    mcp = await adk_agent.mcp_probe(charge)
     pb = await run_in_threadpool(vector.retrieve_playbook, q)
-    res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""))
-    return _ok(request, charge=charge, playbook=pb, **res)
+    ts = adk_agent.mongodb_toolset()
+    tools = [ts] if ts is not None else None
+    res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""), tools=tools)
+    return _ok(request, charge=charge, mcp=mcp, playbook=pb, **res)
 
 
 # (voice TTS is browser-native Web Speech only — no server-side / non-Google TTS)
@@ -176,6 +179,8 @@ async def mark_sent(action_id: str, request: Request):
         a = APP.mark_sent(action_id, trace_id=_tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
+    except PermissionError:
+        return JSONResponse(status_code=409, content={"ok": False, "error": "approval_required", "message": "Approve the claim before marking it sent.", "trace_id": _tid(request)})
     return _ok(request, action=a, totals=APP.totals())
 
 
@@ -185,6 +190,8 @@ async def mark_paid(action_id: str, request: Request):
         a = APP.mark_paid(action_id, trace_id=_tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
+    except PermissionError:
+        return JSONResponse(status_code=409, content={"ok": False, "error": "approval_required", "message": "Approve the claim before marking it recovered.", "trace_id": _tid(request)})
     return _ok(request, action=a, totals=APP.totals())
 
 

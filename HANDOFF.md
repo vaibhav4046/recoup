@@ -13,7 +13,7 @@ Architecture: **Frontend → Cloud Run [Gemini + Google ADK] → MongoDB MCP →
 | 5 | **Cloud Run** image — root `Dockerfile` (Python + Node) + `.gcloudignore` | ✅ code; deploy = your gcloud |
 | 6 | **LICENSE** (MIT) + README architecture + this HANDOFF | ✅ |
 
-Runtime AI is **Google-only** (ElevenLabs stripped; voice = browser Web Speech). Money math deterministic; human gate intact; secrets from env.
+Runtime AI is **Google-only**; voice = browser Web Speech. Money math deterministic; human gate intact; secrets from env.
 
 ## Left (your manual steps, in order)
 1. **Prove MCP + Vector live (1 min):** in your terminal `setx MONGODB_URI "mongodb+srv://…"`, then I run `backend/scripts/adk_mcp_smoke.py` + `/api/agent/recover` (or you run them).

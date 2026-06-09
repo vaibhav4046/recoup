@@ -105,7 +105,7 @@ class AppState:
     def mark_sent(self, action_id: str, trace_id: str = "") -> dict:
         a = self._find(action_id)
         if a["approvalState"] != "approved":
-            return a  # must be approved first
+            raise PermissionError("approval_required")
         a["status"] = "sent"
         a["sentAt"] = _now_iso()
         self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_SENT",
@@ -116,7 +116,7 @@ class AppState:
     def mark_paid(self, action_id: str, trace_id: str = "") -> dict:
         a = self._find(action_id)
         if a["approvalState"] != "approved":
-            return a
+            raise PermissionError("approval_required")
         a["status"] = "paid"
         a["paidAt"] = _now_iso()
         self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_PAID",

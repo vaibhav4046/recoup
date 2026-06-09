@@ -37,6 +37,17 @@ APP.approve_action(a1)
 ax = next(x for x in APP.actions if x["id"] == a1)
 check("approve-after-reject readies claim", ax["approvalState"] == "approved" and ax["status"] == "claim_ready")
 
+# 3b. lifecycle endpoints cannot bypass the human approval gate
+a2 = APP.actions[2]["id"]
+try:
+    APP.mark_sent(a2); check("mark sent before approval rejected", False)
+except PermissionError:
+    check("mark sent before approval rejected", True)
+try:
+    APP.mark_paid(a2); check("mark paid before approval rejected", False)
+except PermissionError:
+    check("mark paid before approval rejected", True)
+
 # 4. forge the audit chain at head, middle, tail — every edit must be caught
 ev = APP.audit._events
 for pos in sorted({0, len(ev) // 2, len(ev) - 1}):

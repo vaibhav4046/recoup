@@ -50,17 +50,20 @@ def get_agent(tools=None):
 def mongodb_toolset():
     """The OFFICIAL MongoDB MCP server (`mongodb-mcp-server`) registered as an ADK MCP toolset.
     The Gemini agent queries Atlas THROUGH this tool — not hand-rolled DB calls. URI from env."""
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
     s = get_settings()
     if not s.mongodb_uri:
         return None
-    return MCPToolset(connection_params=StdioConnectionParams(
-        server_params=StdioServerParameters(
-            command="npx",
-            args=["-y", "mongodb-mcp-server", "--connectionString", s.mongodb_uri],
-        ), timeout=60))
+    try:
+        from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+        return MCPToolset(connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command="npx",
+                args=["-y", "mongodb-mcp-server", "--connectionString", s.mongodb_uri],
+            ), timeout=60))
+    except Exception:
+        return None
 
 
 def _tool_agent(tools):
@@ -78,21 +81,41 @@ def _tool_agent(tools):
 
 async def run_query(prompt: str, tools=None) -> dict:
     """Run the agent with MCP tools and report the tool calls it made + final text."""
-    from google.adk.runners import InMemoryRunner
-    from google.genai import types
-    runner = InMemoryRunner(agent=_tool_agent(tools), app_name=_APP)
-    sess = await runner.session_service.create_session(app_name=_APP, user_id="recoup")
-    content = types.Content(role="user", parts=[types.Part(text=prompt)])
-    out, calls = "", []
-    async for ev in runner.run_async(user_id="recoup", session_id=sess.id, new_message=content):
-        if ev.content and ev.content.parts:
-            for p in ev.content.parts:
-                fc = getattr(p, "function_call", None)
-                if fc:
-                    calls.append(fc.name)
-        if ev.is_final_response() and ev.content and ev.content.parts:
-            out = ev.content.parts[0].text or ""
-    return {"text": out.strip(), "tool_calls": calls}
+    try:
+        from google.adk.runners import InMemoryRunner
+        from google.genai import types
+        runner = InMemoryRunner(agent=_tool_agent(tools), app_name=_APP)
+        sess = await runner.session_service.create_session(app_name=_APP, user_id="recoup")
+        content = types.Content(role="user", parts=[types.Part(text=prompt)])
+        out, calls = "", []
+        async for ev in runner.run_async(user_id="recoup", session_id=sess.id, new_message=content):
+            if ev.content and ev.content.parts:
+                for p in ev.content.parts:
+                    fc = getattr(p, "function_call", None)
+                    if fc:
+                        calls.append(fc.name)
+            if ev.is_final_response() and ev.content and ev.content.parts:
+                out = ev.content.parts[0].text or ""
+        return {"text": out.strip(), "tool_calls": calls, "live": bool(calls)}
+    except Exception as e:  # noqa: BLE001
+        return {"text": "", "tool_calls": [], "live": False, "note": f"{type(e).__name__}"}
+
+
+async def mcp_probe(charge: dict) -> dict:
+    """Best-effort proof that the ADK agent has the official MongoDB MCP toolset registered.
+    The agent asks Atlas for playbook/precedent context through `mongodb-mcp-server`.
+    Vector Search retrieval still owns semantic memory; this call proves partner-MCP use."""
+    ts = mongodb_toolset()
+    if ts is None:
+        return {"live": False, "tool_calls": [], "note": "mongodb_mcp_toolset_unavailable"}
+    merchant = charge.get("merchant") or charge.get("title") or "unknown merchant"
+    kind = charge.get("kind") or "unknown"
+    return await run_query(
+        "Use the MongoDB tools to inspect the Recoup Atlas database. List available "
+        "collections, then look for one recovery playbook or precedent relevant to "
+        f"merchant={merchant!r}, kind={kind!r}. Return only the collection name and title.",
+        tools=[ts],
+    )
 
 
 def _deterministic_plan(charge: dict, playbook: str) -> str:
@@ -109,12 +132,12 @@ def _deterministic_plan(charge: dict, playbook: str) -> str:
 async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
     """Run the ADK Gemini agent to plan a recovery for one charge.
     Returns {plan, status:'pending_approval', model, live}."""
-    from google.adk.runners import InMemoryRunner
-    from google.genai import types
     s = get_settings()
     if not s.gemini_ready:
         return {"plan": "", "status": "pending_approval", "model": "unconfigured", "live": False}
     try:
+        from google.adk.runners import InMemoryRunner
+        from google.genai import types
         agent = get_agent(tools)
         runner = InMemoryRunner(agent=agent, app_name=_APP)
         sess = await runner.session_service.create_session(app_name=_APP, user_id="recoup")
