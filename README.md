@@ -115,6 +115,43 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 | `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata *(in repo; live after backend redeploy)* |
 | `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls *(in repo; live after backend redeploy)* |
 
+## Agent spine — Google Cloud Rapid Agent Hackathon (MongoDB track)
+
+A qualifying, **additive** agent layer (existing product behavior unchanged):
+
+```
+Frontend → Cloud Run [ Gemini + Google ADK ] → MongoDB MCP (official) → Atlas Vector Search (memory)
+```
+
+- **Google ADK + Gemini** (`app/adk_agent.py`): an ADK `LlmAgent` with Gemini as the reasoner runs a **plan → tool → act → human-gate** loop. Runtime AI is **Google-only** (no non-Google AI deps).
+- **Official MongoDB MCP toolset**: the agent queries Atlas through the official `mongodb-mcp-server` registered as an ADK `MCPToolset` (stdio / `npx`) — not hand-rolled DB calls.
+- **Atlas Vector Search as memory**: recovery **playbooks** + consumer-protection **precedents** are embedded with Google `gemini-embedding-001` (768-d) and retrieved with Atlas `$vectorSearch` (cosine fallback while an index builds).
+- **Deterministic + human gate**: every dollar amount is computed in code (never invented); every action stops at `pending_approval`.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/agent/plan` | ADK Gemini agent plans a recovery for one charge → `pending_approval` |
+| `POST` | `/api/agent/recover` | end-to-end: charge → Atlas `$vectorSearch` playbook → ADK draft → `pending_approval` |
+| `POST` | `/api/vector/seed` | embed precedents + playbooks; ensure the Atlas vector indexes |
+
+Local smoke: `python backend/scripts/adk_smoke.py` (ADK agent) · `python backend/scripts/adk_mcp_smoke.py` (MongoDB MCP tool call — needs `MONGODB_URI`).
+
+### Deploy the agent to Google Cloud Run (free tier)
+
+```bash
+# from the repo root (the root Dockerfile installs Node for the MongoDB MCP server)
+gcloud run deploy recoup-agent \
+  --source . --region us-central1 --allow-unauthenticated --memory 1Gi \
+  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE,CORS_ORIGINS=*"
+
+# gcloud prints the live URL → verify:
+curl "$URL/api/health"            # vector.precedents + vector.playbooks populated
+curl -X POST "$URL/api/agent/recover" -H 'content-type: application/json' \
+     -d '{"charge":{"merchant":"StreamMax Premium","kind":"dead_subscription","amount":240}}'
+```
+
+Secrets come from environment variables — never hardcoded.
+
 ## Free, no-card stack
 
 | Layer | Tech | Cost |
