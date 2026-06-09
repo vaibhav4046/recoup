@@ -504,12 +504,17 @@
   function setupReveal() {
     if (_revealed) return; _revealed = true;
     const els = [...document.querySelectorAll("#results > section")];
-    els.forEach((e, i) => { e.classList.add("reveal"); e.style.transitionDelay = (Math.min(i, 6) * 0.06) + "s"; });
     const showAll = () => els.forEach((e) => e.classList.add("in"));
-    if (!("IntersectionObserver" in window)) { showAll(); return; }
-    const io = new IntersectionObserver((ents) => { ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }); }, { threshold: 0.06, rootMargin: "0px 0px -40px 0px" });
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // reduced-motion or no IntersectionObserver -> never hide; content is fully visible, no animation
+    if (reduce || !("IntersectionObserver" in window)) return;
+    els.forEach((e, i) => { e.classList.add("reveal"); e.style.transitionDelay = (Math.min(i, 6) * 0.06) + "s"; });
+    const io = new IntersectionObserver((ents) => { ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }); }, { threshold: 0, rootMargin: "0px 0px 12% 0px" });
     els.forEach((e) => io.observe(e));
-    setTimeout(showAll, 1400); // hard safety: never leave a section hidden if the observer misfires
+    // BULLETPROOF: content can never stay hidden (slow device / background tab / throttled timers)
+    setTimeout(showAll, 700);
+    window.addEventListener("scroll", showAll, { once: true, passive: true });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) showAll(); }, { once: true });
   }
 
   function rosterFrom(findings) {
