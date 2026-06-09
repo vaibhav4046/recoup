@@ -6,7 +6,4 @@ __pycache__
 **/__pycache__
 *.pyc
 backend/.env
-*.png
-*.jpg
-*.jpeg
 recover-*.png

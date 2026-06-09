@@ -90,6 +90,13 @@
   }
 
   async function boot() {
+    const auditLink = $("#audit-verify-link");
+    if (auditLink && API) {
+      auditLink.href = API + "/api/health";
+      auditLink.target = "_blank";
+      auditLink.rel = "noopener";
+      auditLink.textContent = "Verify the live chain head & integrity at /api/health";
+    }
     try { document.body.classList.remove("light"); } catch (e) {}  // dark-only design (light theme removed)
     if (API) {
       try {

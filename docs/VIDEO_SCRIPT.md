@@ -1,48 +1,46 @@
-# Recoup — 3-minute demo video script
-
-Built around the ONE thing every QA round said is missing: **a real recovered pound, on camera.** Read it, hit record. Times are targets.
+# Recoup - 3-minute demo video script
 
 Setup before recording:
-- Warm the HF Space (open the live link once so it's not cold).
-- Have ONE real subscription you'll actually cancel queued up (the "real recovery" beat).
-- Light/dark: demo in dark.
+- Deploy the backend to Google Cloud Run and open `/api/health` once so it is warm.
+- Open the Cloud Run URL; it serves both the frontend and API.
+- Have one real subscription or refund example ready if you can show a real confirmation.
 
----
+## 0:00-0:18 - Cold open
 
-### [0:00–0:18] Cold open — the real recovery FIRST (don't bury it)
-*On camera, you, phone/laptop in hand.*
-> "I just found money I was quietly losing — and I'll show you it's real, right now."
+"I just found money I was quietly losing, and Recoup shows exactly how to get it back without ever moving money for me."
 
-*Screen: your real subscription cancellation confirmation.*
-> "That's a subscription I forgot I had. Recoup flagged it, I cancelled it 30 seconds ago — here's the confirmation. Real money, back in my pocket. Here's how it works."
+Show one real cancellation/refund confirmation if available. If not, show the demo claim clearly labelled as demo.
 
-*(This is the proof-of-payout the whole panel demanded. Leading with it kills the "$0 / never proven" objection in the first 18 seconds.)*
+## 0:18-0:35 - The problem
 
-### [0:18–0:35] The problem
-> "Every year people leave billions unclaimed — forgotten subscriptions, silent price hikes, refunds, flight-delay compensation, unclaimed cash sitting in government databases. The reason nobody collects it: it's scattered, tedious, and you don't trust an app near your money."
+"People leave money everywhere: forgotten subscriptions, silent price hikes, duplicate charges, flight-delay compensation, unclaimed property. The hard part is not knowing where to look, what rule applies, and what to send."
 
-### [0:35–1:05] The scan (live)
-*Open the live demo → "Find my money" → paste a real statement (or connect Gmail).*
-> "Recoup scans your money surface — here, 100% in your browser, nothing uploaded. It finds what you're losing and what you're owed. Notice every amount comes from deterministic rules — never the AI model. The AI reasons; it never invents a number."
+## 0:35-1:05 - The scan
 
-### [1:05–1:40] The swarm + show-your-work
-*Point to the swarm panel; click "show work" on one card.*
-> "A coordinator dispatched four specialist agents; an independent verifier auto-confirmed the mechanical leaks but flagged the entitlements as 'needs your eligibility sign-off' — it refuses to mark its own homework. Every claim shows the rule, the source evidence, the verifier's checks, an honest 'you might NOT qualify if…', a realistic timeline and odds, and a deep-link to the real government form."
+Open "Find my money", paste a sample statement, and run the private scan.
 
-### [1:40–2:15] The trust moat (your strongest dimension — lean in)
-*Run the approve → file → recovered lifecycle; open the audit trail.*
-> "Nothing is ever sent without my approval. Every step writes a tamper-evident SHA-256 audit chain. 'Recovered' only ever counts money I confirm — the demo walkthrough is watermarked so it can never be mistaken for a real payout. It never sees my bank login, and one click deletes my data. This is AI near money that earns trust by refusing to fake anything."
+"The paste scan runs in the browser. Amounts are deterministic. The model never invents a dollar amount."
 
-### [2:15–2:40] It's real, live, and free
-*Show the status chips: Gemini · live, MongoDB · live, Backend · live.*
-> "This isn't a mockup. A FastAPI backend on Hugging Face, Google Gemini reasoning, MongoDB, real Gmail OAuth — all live, all on a free, no-card stack."
+## 1:05-1:45 - Hackathon technical core
 
-### [2:40–3:00] Founder + close
-*Back on camera.*
-> "I'm Vaibhav, a final-year CS student at Liverpool. I built Recoup because the money's real, the help isn't, and trust is the whole game. It's open-source and live right now — link below. Recoup: get what's yours, on your terms. Thanks for watching."
+Show the Agent Run Timeline.
 
-*End card: the live URL + the repo.*
+"This is not a chatbot. The agent plans, calls tools, retrieves memory, drafts, and stops at approval. Gemini and Google ADK run the planner. The official MongoDB MCP server is registered as the tool bridge. Atlas Vector Search is the memory: it retrieves the most relevant recovery playbook with a similarity score."
 
----
+Point to the matched playbook and score.
 
-**Why this wins:** it opens with the proof-of-payout the panel said was missing, then spends the bulk on the dimension you score highest (trust/honesty, 8.0–8.5). It plays *to* the moat instead of hiding the one honest limit.
+## 1:45-2:20 - Trust and approval
+
+Open "Show work" on a claim, then approve it.
+
+"Every claim shows the rule, source evidence, verifier checks, caveats, and the official next step. Nothing sends until I approve it. Even after approval, Recoup only readies the claim; I still submit on the official vendor or government site."
+
+## 2:20-2:45 - Proof
+
+Show `/api/health` from Cloud Run.
+
+"The live backend is on Google Cloud Run. `/api/health` shows Gemini, MongoDB, Vector Search playbooks, and the SHA-256 audit chain."
+
+## 2:45-3:00 - Close
+
+"Recoup is the AI agent that gets your money back, with you in control of every dollar."

@@ -1,6 +1,6 @@
 # Recoup — the AI that gets your money back
 
-[![Live demo](https://img.shields.io/badge/live-demo-34d399?style=flat-square)](https://recoup-vaibhav4046s-projects.vercel.app)
+[![Deploy: Cloud Run](https://img.shields.io/badge/deploy-Cloud%20Run-4285f4?style=flat-square)](#deploy-the-agent-to-google-cloud-run-free-tier)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 ![Stack](https://img.shields.io/badge/Gemini%20%2B%20MongoDB%20%2B%20FastAPI-free%20tier-5eead4?style=flat-square)
 
@@ -13,12 +13,12 @@ single tap** — nothing is ever sent without you. Every step writes a tamper-ev
 (`mcp.py`) so agents can inspect Recoup state, run demo scans, and detect subscription
 signals from Gmail message metadata without exposing OAuth tokens.
 
-### ▶ Live demo: https://recoup-vaibhav4046s-projects.vercel.app
+### Deploy the live demo on Google Cloud Run
 
-> **Live status (honest):** the frontend (Vercel) and the FastAPI backend currently running
-> on Hugging Face are **live**: `/api/health`, `/api/state`, `/api/agent/recover`, Gemini,
-> MongoDB Atlas Vector Search, and `/mcp` all respond. A Google Cloud Run image and exact
-> deploy command are committed for the hackathon submission path.
+> **Live status (honest):** the full app is Cloud Run-ready. Deploy with the command
+> below and submit the Cloud Run URL as the Devpost project URL. The same URL serves
+> the frontend, Gemini/ADK backend, MongoDB MCP tool bridge, Atlas Vector Search memory,
+> and `/api/health`.
 
 ![Recoup command center](screens/desktop.png)
 
@@ -80,8 +80,7 @@ flowchart LR
 ```
 recoup/
 ├─ index.html · styles.css · app.js · data.js   # zero-build static frontend (instant load)
-├─ vercel.json                                   # static deploy config
-└─ backend/                                      # FastAPI service (Docker / HF Spaces ready)
+└─ backend/                                      # FastAPI service (Cloud Run ready)
    ├─ app/
    │  ├─ snapshot.py   # money-surface + deterministic recovery rules (cadence-tagged)
    │  ├─ agent.py      # Gemini reasoning trace + claim drafting (+ 429/503 retry)
@@ -91,7 +90,7 @@ recoup/
    │  ├─ mcp.py        # MCP-compatible JSON-RPC tools for agents + Gmail detector
    │  ├─ config.py     # settings + honest integration status
    │  └─ main.py       # FastAPI endpoints + trace middleware
-   ├─ Dockerfile       # python:3.12-slim, uvicorn on $PORT (7860 for HF)
+   ├─ Dockerfile       # python:3.12-slim, uvicorn on $PORT
    └─ requirements.txt
 ```
 
@@ -127,6 +126,15 @@ Frontend → Cloud Run [ Gemini + Google ADK ] → MongoDB MCP (official) → At
 - **Atlas Vector Search as memory**: recovery **playbooks** + consumer-protection **precedents** are embedded with Google `gemini-embedding-001` (768-d) and retrieved with Atlas `$vectorSearch` (cosine fallback while an index builds).
 - **Deterministic + human gate**: every dollar amount is computed in code (never invented); every action stops at `pending_approval`.
 
+### Hackathon tool boundary
+
+Use only the stack the hackathon rewards:
+
+- **Google:** Gemini, Google ADK / Agent Builder family, Cloud Run.
+- **Partner bucket:** official `mongodb-mcp-server` plus MongoDB Atlas Vector Search.
+- **Frontend voice:** browser Web Speech API only.
+- **Out of scope:** non-Google AI or voice vendors, non-Google backend hosting, autonomous money movement.
+
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/api/agent/plan` | ADK Gemini agent plans a recovery for one charge → `pending_approval` |
@@ -141,7 +149,11 @@ Local smoke: `python backend/scripts/adk_smoke.py` (ADK agent) · `python backen
 # from the repo root (the root Dockerfile installs Node for the MongoDB MCP server)
 gcloud run deploy recoup-agent \
   --source . --region us-central1 --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE,CORS_ORIGINS=*"
+  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+
+# Optional after gcloud prints the service URL (needed only for OAuth/Gmail redirects):
+gcloud run services update recoup-agent --region us-central1 \
+  --set-env-vars "BASE_URL=$URL,FRONTEND_URL=$URL"
 
 # gcloud prints the live URL → verify:
 curl "$URL/api/health"            # vector.precedents + vector.playbooks populated
@@ -158,8 +170,8 @@ Secrets come from environment variables — never hardcoded.
 | Reasoning | **Gemini 2.5-flash** (Google AI Studio) | free tier |
 | Store / partner MCP | **MongoDB Atlas M0** + MongoDB MCP | free |
 | Agent tool surface | Google ADK + official MongoDB MCP server; HTTP MCP compatibility route | free |
-| Backend host | Hugging Face **Docker Spaces** today; Cloud Run-ready image committed | free tier |
-| Frontend host | **Vercel** (static) | free |
+| Backend host | Google **Cloud Run** | free tier |
+| Full app host | Google **Cloud Run** | free tier |
 | Data integrity | SHA-256 hash chain | — |
 
 ## Screens
