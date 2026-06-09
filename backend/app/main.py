@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from fastapi import Cookie, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from . import auth
 from .config import get_settings
@@ -79,6 +79,50 @@ async def health(request: Request):
                recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,
                one_time=APP.scan_result["one_time"] if APP.scan_result else 0,
                recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0)
+
+
+@app.post("/api/ask")
+async def ask(request: Request):
+    """Voice agent Q&A — a concise spoken-style Gemini answer (free AI Studio key)."""
+    body = await request.json()
+    q = ((body or {}).get("question") or "").strip()
+    if not q:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "question required"})
+    ctx = ((body or {}).get("context") or "")[:400]
+    from . import agent
+    res = await run_in_threadpool(agent.voice_answer, q, ctx)
+    return _ok(request, **res)
+
+
+@app.post("/api/tts")
+async def tts(request: Request):
+    """ElevenLabs TTS proxy (key stays server-side). Returns audio/mpeg, or 204 when no key is
+    configured so the frontend falls back to the free browser voice."""
+    s = get_settings()
+    if not s.elevenlabs_api_key:
+        return Response(status_code=204)
+    body = await request.json()
+    text = ((body or {}).get("text") or "").strip()[:800]
+    if not text:
+        return Response(status_code=204)
+
+    def _call():
+        import httpx
+        return httpx.post(
+            f"https://api.elevenlabs.io/v1/text-to-speech/{s.elevenlabs_voice_id}",
+            headers={"xi-api-key": s.elevenlabs_api_key, "accept": "audio/mpeg", "content-type": "application/json"},
+            json={"text": text, "model_id": "eleven_turbo_v2_5",
+                  "voice_settings": {"stability": 0.4, "similarity_boost": 0.7}},
+            timeout=25,
+        )
+
+    try:
+        r = await run_in_threadpool(_call)
+        if r.status_code >= 300:
+            return Response(status_code=204)
+        return Response(content=r.content, media_type="audio/mpeg")
+    except Exception:
+        return Response(status_code=204)
 
 
 @app.post("/api/scan")
