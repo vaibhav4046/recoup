@@ -9,9 +9,16 @@ window.RecoupScan = (function () {
   let _uid = 0; // monotonic per-scan counter → globally-unique card ids (no merchant-truncation collisions)
 
   function norm(m) {
-    return m.toUpperCase().replace(/\s+/g, " ")
-      .replace(/\b(INC|LLC|LTD|CO|COM|PURCHASE|RECURRING|PAYMENT|AUTOPAY|POS|DEBIT|CARD|VISA|MASTERCARD)\b/g, "")
-      .replace(/[*#].*$/, "").replace(/\d{2,}/g, "").replace(/[^A-Z& ]/g, " ").replace(/\s+/g, " ").trim();
+    let s = m.toUpperCase().replace(/\s+/g, " ");
+    // payment gateways put the REAL merchant AFTER the "*": "PAYPAL *NYTIMES" -> "NYTIMES",
+    // "SQ *BLUE BOTTLE" -> "BLUE BOTTLE". Without this every PayPal/Square/Toast charge collapses
+    // into ONE bucket and fabricates phantom "price hikes". For other descriptors a trailing
+    // *REF / #REF is just a transaction id -> strip it (keep the merchant).
+    const gw = s.match(/^(?:PAYPAL|PYPL|PP|SQ|SQUARE|TST|TOAST|SP|STRIPE|SHOPIFY|WPY|CKO|EBAY|GUM)\b[\s*#]+(.+)$/);
+    if (gw) s = gw[1];
+    else s = s.replace(/\s*[*#]\s*[A-Z0-9-]+\s*$/, "");
+    return s.replace(/\b(INC|LLC|LTD|CO|COM|PURCHASE|RECURRING|PAYMENT|AUTOPAY|POS|DEBIT|CARD|VISA|MASTERCARD)\b/g, "")
+      .replace(/\d{2,}/g, "").replace(/[^A-Z& ]/g, " ").replace(/\s+/g, " ").trim();
   }
 
   function parseLine(line) {
@@ -90,11 +97,16 @@ window.RecoupScan = (function () {
       const amts = list.map((t) => t.amount), mn = Math.min(...amts), mx = Math.max(...amts);
       const monthly = round2(amts.reduce((a, b) => a + b, 0) / amts.length);
       const name = list[0].raw;
-      if (list.length >= 2 && mx - mn > 0.5 && mx > mn * 1.04) {
+      if (list.length >= 2 && mx - mn > 0.5 && mx > mn * 1.04 && mx <= mn * 1.6) {
+        // a MODEST, consistent rise = a real price hike. Reject wild scatter (mx > 1.6×mn), which is
+        // variable one-off spend at the same merchant (Amazon/Uber), not a subscription increase.
         findings.push(mk(m, name, "price_creep", round2((mx - mn) * 12), `${name}: charge rose $${mn.toFixed(2)} → $${mx.toFixed(2)} across ${list.length} charges`, 0.82, `+$${(mx - mn).toFixed(2)}/mo`));
-      } else if (list.length >= 2) {
+      } else if (list.length >= 2 && mx <= mn * 1.25) {
+        // tightly-clustered repeat charges = a genuine recurring subscription
         findings.push(mk(m, name, "dead_subscription", round2(monthly * 12), `${list.length} recurring charges of ~$${monthly.toFixed(2)} to ${name}`, 0.8, `$${monthly.toFixed(2)}/mo`));
-      } else if (!hasDates) {
+      } else if (list.length === 1 && !hasDates) {
+        // a single line explicitly pasted as a subscription (>=2 charges with wild amount scatter are
+        // intentionally NOT flagged — that's variable spend, and flagging it would inflate the total)
         findings.push(mk(m, name, "dead_subscription", round2(monthly * 12), `$${monthly.toFixed(2)}/mo to ${name} — listed as a subscription`, 0.7, `$${monthly.toFixed(2)}/mo`));
       }
       // duplicate = same amount within 3 days (NOT the normal monthly cadence)

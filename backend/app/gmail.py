@@ -37,6 +37,31 @@ KNOWN_SERVICES = {
     "googleone|google storage": ("Google One", 1.99),
     "patreon": ("Patreon", 6.00),
     "hellofresh": ("HelloFresh", 40.00),
+    "hulu": ("Hulu", 7.99), "hbo|max.com|hbomax": ("Max (HBO)", 15.99),
+    "paramount": ("Paramount+", 11.99), "peacock": ("Peacock", 7.99),
+    "primevideo|prime video": ("Prime Video", 8.99), "twitch": ("Twitch", 8.99),
+    "xbox|game pass|gamepass": ("Xbox Game Pass", 16.99), "playstation|psn|sony": ("PlayStation Plus", 13.99),
+    "nintendo": ("Nintendo Online", 3.99), "crunchyroll": ("Crunchyroll", 7.99),
+    "deezer": ("Deezer", 11.99), "tidal": ("Tidal", 10.99),
+    "grammarly": ("Grammarly", 12.00), "canva": ("Canva", 12.99),
+    "figma": ("Figma", 12.00), "zoom": ("Zoom", 13.99),
+    "1password|agilebits": ("1Password", 2.99), "lastpass": ("LastPass", 3.00),
+    "nordvpn": ("NordVPN", 12.99), "expressvpn": ("ExpressVPN", 12.95), "surfshark": ("Surfshark", 12.95),
+    "microsoft|office365|microsoft365": ("Microsoft 365", 9.99), "squarespace": ("Squarespace", 16.00),
+    "wix.com": ("Wix", 16.00), "mailchimp|intuit mailchimp": ("Mailchimp", 13.00),
+    "substack": ("Substack", 5.00), "medium.com": ("Medium", 5.00),
+    "economist": ("The Economist", 19.00), "wsj|wall street journal|dowjones": ("WSJ", 38.99),
+    "ft.com|financial times": ("Financial Times", 40.00), "bloomberg": ("Bloomberg", 34.99),
+    "puregym|pure gym": ("PureGym", 25.99), "thegymgroup|the gym group": ("The Gym Group", 22.99),
+    "peloton": ("Peloton", 12.99), "calm.com": ("Calm", 14.99), "headspace": ("Headspace", 12.99),
+    "duolingo": ("Duolingo", 12.99), "masterclass": ("MasterClass", 15.00),
+    "skillshare": ("Skillshare", 14.00), "coursera": ("Coursera", 49.00), "udemy": ("Udemy", 16.58),
+    "crunchyroll": ("Crunchyroll", 7.99), "scribd|everand": ("Everand", 11.99),
+    "doordash|dashpass": ("DashPass", 9.99), "uber one|uberone": ("Uber One", 9.99),
+    "instacart": ("Instacart+", 9.99), "chegg": ("Chegg", 15.95),
+    "norton": ("Norton", 9.99), "mcafee": ("McAfee", 9.99),
+    "ring.com|ring protect": ("Ring Protect", 4.99), "nest aware": ("Nest Aware", 8.00),
+    "evernote": ("Evernote", 14.99), "vimeo": ("Vimeo", 12.00), "shutterstock": ("Shutterstock", 29.00),
 }
 # currency symbol + amount; supports "1,200.00" thousands groups and plain "12.99"
 _MONEY = re.compile(r"([$£€])\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:[.,]\d{2})?)")
@@ -61,23 +86,70 @@ def _match(sender: str, subject: str) -> tuple[str, float] | None:
     return None
 
 
+# signals an email is about a RECURRING charge (so the generic detector catches merchants not listed above)
+_SUB_SIGNALS = (
+    "subscription", "auto-renew", "auto renew", "autorenew", "renews", "renewal", "will renew",
+    "has renewed", "your plan", "membership", "monthly plan", "annual plan", "recurring",
+    "billed monthly", "billed annually", "next payment", "next billing", "billing cycle",
+    "payment received", "receipt for", "your invoice", "thanks for subscribing", "your membership",
+    "renew your", "plan renews", "premium",
+)
+_SENDER_JUNK = {"no-reply", "noreply", "no_reply", "do-not-reply", "donotreply", "support", "billing",
+                "team", "hello", "info", "account", "accounts", "notifications", "mail", "email",
+                "help", "service", "customer", "care", "receipts", "invoices", "news", "updates"}
+
+
+def _looks_like_subscription(text: str) -> bool:
+    return any(sig in text for sig in _SUB_SIGNALS)
+
+
+def _merchant_from_sender(sender: str) -> str:
+    """A clean brand name from 'Brand <addr@domain>' (preferred) or the domain root."""
+    s = (sender or "").strip()
+    m = re.match(r'^"?([^"<]+?)"?\s*<', s)
+    name = (m.group(1).strip() if m else "")
+    if name and "@" not in name and name.lower() not in _SENDER_JUNK:
+        name = re.sub(r"\b(billing|support|team|receipts?|invoices?|notifications?|account|the)\b", "", name, flags=re.I).strip(" -|,·.")
+        if len(name) >= 2:
+            return name[:40]
+    dm = re.search(r"@([\w.-]+)", s)
+    if dm:
+        labels = [p for p in dm.group(1).lower().split(".") if p not in
+                  ("com", "co", "uk", "net", "org", "io", "www", "mail", "email", "billing",
+                   "e", "m", "t", "news", "app", "go", "info", "us", "ca", "au")]
+        if labels:
+            return max(labels, key=len).capitalize()[:40]
+    return ""
+
+
 def detect(messages: list[dict]) -> list[dict]:
     """messages: [{sender, subject, snippet}] -> deduped subscription findings."""
     seen: dict[str, dict] = {}
     for m in messages:
-        hit = _match(m.get("sender", ""), m.get("subject", ""))
-        if not hit:
-            continue
-        name, est = hit
-        body = f"{m.get('subject','')} {m.get('snippet','')}"
+        sender, subject = m.get("sender", ""), m.get("subject", "")
+        body = f"{subject} {m.get('snippet','')}"
         text = body.lower()
         # money already returned / subscription already cancelled -> not a live leak; skip it
         if any(w in text for w in ("refund", "refunded", "credited", "reversal", "cancellation confirmed", "we have cancelled", "we've cancelled", "has been cancelled")):
             continue
         found = _MONEY.search(body)
+        hit = _match(sender, subject)
+        if hit:
+            name, est, generic = hit[0], hit[1], False
+        else:
+            # GENERIC catch-all: any sender whose email signals a recurring charge AND carries a real
+            # amount (no estimate for an unknown merchant -> stays honest). Catches the long tail.
+            if not (_looks_like_subscription(text) and found):
+                continue
+            name = _merchant_from_sender(sender)
+            if len(name) < 2:
+                continue
+            est, generic = 0.0, True
         amount = _parse_amount(found.group(2)) if found else est
         if found and amount <= 0:                # unparseable figure -> fall back to a typical estimate
             amount, found = est, None
+        if amount <= 0:
+            continue
         currency = found.group(1) if found else "$"
         confident_amt = bool(found)
         # detect the billing period so an annual receipt is NOT annualized again (the ×12 bug)
@@ -92,8 +164,8 @@ def detect(messages: list[dict]) -> list[dict]:
         if name not in seen:
             seen[name] = {
                 "name": name, "amount": amount, "period": period, "currency": currency,
-                "amount_known": confident_amt, "trial": trial, "lapsing": lapsing,
-                "evidence": m.get("subject", "")[:120],
+                "amount_known": confident_amt, "trial": trial, "lapsing": lapsing, "generic": generic,
+                "evidence": subject[:120],
             }
     return list(seen.values())
 
@@ -112,19 +184,20 @@ def to_findings(subs: list[dict]) -> list[dict]:
             annual = round(amt * 12, 2)
             monthly = round(amt, 2)
         note = "free trial — will auto-convert" if s["trial"] else "payment lapsing" if s["lapsing"] else ("annual plan" if period == "year" else "active recurring charge")
-        conf = 0.9 if s["amount_known"] else 0.72
+        gen = s.get("generic", False)
+        conf = (0.6 if gen else 0.9) if s["amount_known"] else (0.5 if gen else 0.72)
         out.append({
             "id": f"gm_{i}", "kind": "dead_subscription",
             "title": f"Review {s['name']} subscription",
             "amount": annual, "cadence": "yearly", "currency": currency,
             "amount_label": f"{currency}{annual:,.0f}/yr", "unit_note": f"{currency}{monthly:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
             "evidence": f"From your Gmail: \"{s['evidence']}\" — {note}",
-            "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium",
-            "caveat": "Confirm you've stopped using it before cancelling." if not s["trial"] else "Cancel before the trial converts to avoid the charge.",
+            "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium" if conf >= 0.6 else "review",
+            "caveat": ("Confirm this is a recurring subscription you still want to cancel." if gen else "Confirm you've stopped using it before cancelling.") if not s["trial"] else "Cancel before the trial converts to avoid the charge.",
             "claim_url": None, "odds": "very likely", "timeline": "before renewal" if s["trial"] else "instant–1 cycle",
             "agent": "sub_hunter", "agent_name": "Subscription Hunter",
             "verify": {"ok": True, "checks": [
-                {"label": "matched a known subscription sender", "ok": True},
+                {"label": "email signals a recurring charge" if gen else "matched a known subscription sender", "ok": True},
                 {"label": "amount from receipt" if s["amount_known"] else "amount estimated (confirm)", "ok": s["amount_known"]},
                 {"label": "from your own Gmail", "ok": True},
             ]},
@@ -139,11 +212,12 @@ def available(token: str | None) -> bool:
     return bool(token)
 
 
-def fetch_subscription_emails(token: str, max_results: int = 60) -> list[dict]:
+def fetch_subscription_emails(token: str, max_results: int = 120) -> list[dict]:
     """Read-only Gmail API: list purchase/subscription emails -> [{sender,subject,snippet}]."""
     import httpx
     H = {"Authorization": f"Bearer {token}"}
-    q = "category:purchases OR subject:(subscription OR receipt OR renew OR invoice OR membership) newer_than:1y"
+    q = ('category:purchases OR subject:(subscription OR receipt OR renew OR renewal OR invoice OR '
+         'membership OR "auto-renew" OR "your plan" OR billing OR payment OR premium) newer_than:1y')
     base = "https://gmail.googleapis.com/gmail/v1/users/me/messages"
     ids = httpx.get(base, headers=H, params={"q": q, "maxResults": max_results}, timeout=15).json().get("messages", [])
     out = []
