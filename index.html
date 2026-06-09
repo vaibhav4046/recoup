@@ -57,8 +57,8 @@
       <div class="eyebrow">RECOVER WHAT'S YOURS · nothing happens until you approve it</div>
       <div class="hero-figures">
         <div class="figure">
-          <div class="fig-amount owed">≈$<span id="one-time">0</span></div>
-          <div class="fig-label"><b>owed to you now</b> · one-time payouts</div>
+          <div class="fig-amount owed"><span id="one-time-prefix">≈$</span><span id="one-time">0</span></div>
+          <div class="fig-label"><b>owed to you now</b> · <span id="one-time-note">one-time payouts</span></div>
         </div>
         <div class="fig-div"></div>
         <div class="figure">
@@ -70,7 +70,7 @@
       <div class="hero-actions">
         <button class="btn btn-primary" id="btn-scan"><span class="dot"></span> Run recovery scan</button>
         <button class="btn btn-ghost" id="btn-approve-all">Approve all safe wins</button>
-        <button class="btn btn-ghost" id="demo-recovery" aria-label="See a claim recovered — demo walkthrough">▶ See a claim → recovered (demo)</button>
+        <button class="btn btn-ghost" id="demo-recovery" aria-label="See a claim recovered — demo walkthrough"><span aria-hidden="true">▶</span> See a claim → recovered (demo)</button>
       </div>
       <div class="demo-note" id="demo-note">🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button></div>
     </div>
@@ -150,14 +150,14 @@
 
 <!-- scan-your-own-data modal -->
 <div class="modal-scrim" id="scan-scrim"></div>
-<div class="modal glass" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title">
+<div class="modal glass" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title" aria-describedby="scan-desc scan-gmail-note" aria-hidden="true">
   <div class="modal-head"><h3 id="scan-title">Recover your subscriptions</h3><button class="x" id="scan-x" aria-label="Close">✕</button></div>
-  <p class="modal-sub">🔒 <b>Two paths, clearly different:</b> <b>Paste</b> runs 100% in your browser — nothing is uploaded. <b>Connect Gmail</b> is read-only (subscriptions/receipts only, never your bank or card data) and processes on our server, deletable anytime. We never sell your data.</p>
+  <p class="modal-sub" id="scan-desc"><span aria-hidden="true">🔒</span> <b>Two paths, clearly different:</b> <b>Paste</b> runs 100% in your browser — nothing is uploaded. <b>Connect Gmail</b> is read-only (subscriptions/receipts only, never your bank or card data) and processes on our server, deletable anytime. We never sell your data.</p>
   <button class="btn gbtn full" id="gmail-connect" type="button">
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.8 37.9 46.5 31.8 46.5 24.5z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3.1-.8-4.9s.3-3.4.8-4.9l-7.9-6.2C1 15.6 0 19.7 0 24s1 8.4 2.6 11.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.6-4-13.5-9.6l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
     Connect your Gmail
   </button>
-  <div class="gmail-testnote">⚠ Gmail connect is in Google's <b>test mode</b> — only approved testers can sign in (else "Access blocked / 403"). The paste option below needs no sign-in at all.</div>
+  <div class="gmail-testnote" id="scan-gmail-note"><span aria-hidden="true">⚠</span> Gmail connect is in Google's <b>test mode</b> — only approved testers can sign in (else "Access blocked / 403"). The paste option below needs no sign-in at all.</div>
   <div class="divider">or paste a statement — 100% in your browser</div>
   <textarea id="scan-input" class="scan-input" spellcheck="false" aria-label="Paste your statement" placeholder="Paste a card/bank statement or subscription list — one per line:&#10;&#10;Netflix, 19.99&#10;2026-01-12, SPOTIFY, 11.99&#10;Gym membership 49.99&#10;..."></textarea>
   <div class="modal-actions">
@@ -168,13 +168,14 @@
 
 <!-- drawer for drafted message -->
 <div class="drawer-scrim" id="drawer-scrim"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-describedby="drawer-desc" aria-hidden="true">
+  <p class="sr-only" id="drawer-desc">Review the evidence, verifier checks, caveats, and drafted claim before approving or skipping this recovery action.</p>
   <div class="drawer-head"><h4 id="drawer-title">Drafted message</h4><button class="x" id="drawer-x" aria-label="Close">✕</button></div>
   <div class="drawer-meta" id="drawer-meta"></div>
   <div class="drawer-prov" id="drawer-prov"></div>
   <pre class="drawer-body" id="drawer-body"></pre>
   <div class="drawer-foot">
-    <button class="btn btn-primary" id="drawer-approve" aria-label="Approve and recover">✓ Approve &amp; recover</button>
+    <button class="btn btn-primary" id="drawer-approve" aria-label="Approve and recover"><span aria-hidden="true">✓</span> Approve &amp; recover</button>
     <button class="btn btn-ghost" id="drawer-skip">Skip</button>
   </div>
 </aside>

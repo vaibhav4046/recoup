@@ -33,6 +33,18 @@
   const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
   const money = (n) => Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 0 });
   const isLeak = (k) => LEAK.has(k);
+  const currencyOf = (a) => {
+    const c = String((a && a.currency) || "").trim();
+    if (["$", "£", "€"].includes(c)) return c;
+    const m = String((a && a.amount_label) || "").trim().match(/^([$£€])/);
+    return m ? m[1] : "$";
+  };
+  const currencySummary = (items) => {
+    const set = [...new Set((items || []).map(currencyOf).filter(Boolean))];
+    if (!set.length) return { symbol: "$", mixed: false };
+    return set.length === 1 ? { symbol: set[0], mixed: false } : { symbol: "≈$", mixed: true };
+  };
+  const moneyWithCurrency = (n, cur, suffix) => `${cur.symbol}${money(n)}${suffix || ""}`;
 
   /* real SHA-256 (Web Crypto) — 64-char hex, chained like the backend's audit.py */
   async function sha256(str) {
@@ -70,9 +82,9 @@
     recompute();
     renderAll(true);
     wire();
-    // Gmail OAuth handoff: ?gmail=<one-time-token> | ok | err
+    // Gmail OAuth handoff: #gmail=<short-lived-token> | err. Query support remains for old callbacks.
     try {
-      const gp = new URLSearchParams(location.search).get("gmail");
+      const gp = gmailHandoff();
       if (gp) {
         history.replaceState({}, "", location.pathname);
         if (gp === "err") toast("Gmail connect failed — try again, or use the paste scan");
@@ -130,6 +142,9 @@
   }
 
   function renderHero() {
+    const onceCurrency = currencySummary(S.actions.filter((a) => a.cadence === "once"));
+    setText("#one-time-prefix", onceCurrency.symbol);
+    setText("#one-time-note", onceCurrency.mixed ? "mixed-currency one-time payouts" : "one-time payouts");
     animateCount($("#one-time"), S.one_time);
     animateCount($("#recurring"), S.recurring_year);
     const owed = S.actions.filter((a) => a.cadence === "once").length;
@@ -154,8 +169,8 @@
     const paid = r2(S.actions.filter((a) => a.status === "paid").reduce((s, a) => s + a.amount, 0));
     const foot = $("#ready-foot");
     if (foot) foot.innerHTML = paid > 0
-      ? `<b>$${money(paid)}</b> recovered (you confirmed) · ${pendingN} pending`
-      : `<b>$${money(S.recoverable || 0)}</b> recoverable · approve a claim to start`;
+      ? `<b>${moneyWithCurrency(paid, currencySummary(S.actions.filter((a) => a.status === "paid")))}</b> recovered (you confirmed) · ${pendingN} pending`
+      : `<b>${moneyWithCurrency(S.recoverable || 0, currencySummary(S.actions))}</b> recoverable · approve a claim to start`;
     const frac = n ? appr.length / n : 0;
     const C = 2 * Math.PI * 52;
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
@@ -163,7 +178,7 @@
     const ringEl = document.querySelector(".ring");
     if (ringEl) ringEl.setAttribute("aria-hidden", "true");
     const rs = $("#ring-status");
-    if (rs) { const msg = `${appr.length} of ${n} claims ready; $${money(paid)} recovered`; if (rs.textContent !== msg) rs.textContent = msg; }
+    if (rs) { const msg = `${appr.length} of ${n} claims ready; ${moneyWithCurrency(paid, currencySummary(S.actions.filter((a) => a.status === "paid")))} recovered`; if (rs.textContent !== msg) rs.textContent = msg; }
   }
   function setText(sel, v) { const e = $(sel); if (e) e.textContent = v; }
 
@@ -180,12 +195,17 @@
 
   function renderBreakdown() {
     const cats = {};
-    S.actions.forEach((a) => { const k = catLabel(a.kind); cats[k] = cats[k] || { amt: 0, leak: isLeak(a.kind) }; cats[k].amt += a.amount || 0; });
+    S.actions.forEach((a) => {
+      const k = catLabel(a.kind);
+      cats[k] = cats[k] || { amt: 0, leak: isLeak(a.kind), currencies: [] };
+      cats[k].amt += a.amount || 0;
+      cats[k].currencies.push(currencyOf(a));
+    });
     const max = Math.max(1, ...Object.values(cats).map((c) => c.amt));
     const box = $("#breakdown"); box.innerHTML = "";
     Object.entries(cats).sort((a, b) => b[1].amt - a[1].amt).forEach(([k, c]) => {
       const row = el("div", "bd-row");
-      row.innerHTML = `<div class="bd-top"><span class="nm">${k}</span><span class="vl">$${money(c.amt)}${c.leak ? "/yr" : ""}</span></div><div class="bd-bar"><div class="bd-fill ${c.leak ? "leak" : ""}"></div></div>`;
+      row.innerHTML = `<div class="bd-top"><span class="nm">${k}</span><span class="vl">${moneyWithCurrency(c.amt, currencySummary(c.currencies.map((currency) => ({ currency }))), c.leak ? "/yr" : "")}</span></div><div class="bd-bar"><div class="bd-fill ${c.leak ? "leak" : ""}"></div></div>`;
       box.appendChild(row);
       requestAnimationFrame(() => { row.querySelector(".bd-fill").style.width = (c.amt / max * 100) + "%"; });
     });
@@ -207,22 +227,22 @@
     c.setAttribute("aria-label", [a.title, a.amount_label, _kindWord, a.confidence ? Math.round(a.confidence * 100) + "% confidence" : "", _stateWord].filter(Boolean).join(", "));
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
-        <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text">⧉ Copy</button>
-        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Claim form ↗</a>` : `<button class="btn btn-mail" data-mail="${a.id}">✉ Email</button>`}
+        <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text"><span aria-hidden="true">⧉</span> Copy</button>
+        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form <span aria-hidden="true">↗</span></a>` : `<button class="btn btn-mail" data-mail="${a.id}" aria-label="Email claim draft"><span aria-hidden="true">✉</span> Email</button>`}
       </div>`;
     let actions;
     if (a.approvalState === "rejected") {
-      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${a.id}">✓ Approve instead</button><button class="btn btn-view" data-view="${a.id}">Show work</button></div>`;
+      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${a.id}"><span aria-hidden="true">✓</span> Approve instead</button><button class="btn btn-view" data-view="${a.id}">Show work</button></div>`;
     } else if (!approved) {
       actions = `<div class="fc-actions">
-           <button class="btn btn-approve" data-approve="${a.id}">✓ Approve</button>
+           <button class="btn btn-approve" data-approve="${a.id}"><span aria-hidden="true">✓</span> Approve</button>
            <button class="btn btn-view" data-view="${a.id}">Show work</button>
            <button class="btn btn-skip" data-skip="${a.id}">Skip</button>
          </div>`;
     } else if (st === "paid") {
       actions = `<div class="fc-paid"><span aria-hidden="true">✓</span> Recovered ${esc(a.amount_label)}</div>`;
     } else if (st === "sent") {
-      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${a.id}">💰 Mark recovered</button>`;
+      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${a.id}"><span aria-hidden="true">💰</span> Mark recovered</button>`;
     } else {
       actions = `${sendRow}<button class="btn btn-life full" data-sent="${a.id}">Mark sent →</button>`;
     }
@@ -268,7 +288,14 @@
     S.audit.push(e);
   }
 
-  async function approve(id) {
+  function demoBlocked() {
+    if (!demoRunning || demoInternal) return false;
+    toast("Demo walkthrough is running — wait for it to finish");
+    return true;
+  }
+
+  async function approve(id, fromDemo) {
+    if (!fromDemo && demoBlocked()) return;
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState === "approved") return;
     a.approvalState = "approved"; a.status = "claim_ready"; a.claimedAt = new Date().toISOString?.() || "now";
     await appendAudit("human", "You", "ACTION_APPROVED", "Approved (claim ready): " + a.title, a.amount);
@@ -278,6 +305,7 @@
   }
 
   async function skip(id) {
+    if (demoBlocked()) return;
     const a = S.actions.find((x) => x.id === id); if (!a) return;
     a.approvalState = "rejected"; a.status = "drafted";
     await appendAudit("human", "You", "ACTION_REJECTED", "Skipped: " + a.title);
@@ -286,7 +314,8 @@
     closeDrawer();
   }
 
-  async function markSent(id) {
+  async function markSent(id, fromDemo) {
+    if (!fromDemo && demoBlocked()) return;
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
     a.status = "sent";
     await appendAudit("human", "You", "CLAIM_SENT", "Claim sent: " + a.title, a.amount);
@@ -295,7 +324,8 @@
     toast(`Marked sent — ${a.title}`);
   }
 
-  async function markPaid(id) {
+  async function markPaid(id, fromDemo) {
+    if (!fromDemo && demoBlocked()) return;
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
     a.status = "paid";
     await appendAudit("human", "You", "CLAIM_PAID", "Recovered — you confirmed: " + a.title + " (" + a.amount_label + ")", a.amount);
@@ -305,31 +335,37 @@
   }
 
   function approveAllSafe() {
+    if (demoBlocked()) return;
     const safe = S.actions.filter((a) => a.approvalState === "pending" && isLeak(a.kind));
     safe.forEach((a, i) => setTimeout(() => approve(a.id), i * 180));
   }
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let demoRunning = false;
+  let demoInternal = false;
   async function demoRecovery() {
     if (demoRunning) return; demoRunning = true;
-    showResults();
-    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const W = (ms) => wait(reduce ? 0 : ms);
-    const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
-    const pick = S.actions.find((a) => a.kind === "flight_comp" && a.approvalState === "pending")
-      || S.actions.find((a) => a.cadence === "once" && a.approvalState === "pending")
-      || S.actions.find((a) => a.approvalState === "pending");
-    if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); demoRunning = false; return; }
-    const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
-    toast(`▶ Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
-    await approve(pick.id); await W(1200);
-    toast("✉ Claim filed — nothing sent until you approved it"); await markSent(pick.id); await W(1500);
-    const ref = "RC-" + Math.floor(100000 + Math.random() * 900000);
-    toast(`📨 Acknowledged · reference #${ref} (demo)`); await W(1700);
-    await markPaid(pick.id);
-    toast(`💰 Demo complete — full loop shown: detect → approve → file → paid. Real payouts land in the timeline each card shows.`);
-    demoRunning = false;
+    try {
+      showResults();
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const W = (ms) => wait(reduce ? 0 : ms);
+      const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
+      const pick = S.actions.find((a) => a.kind === "flight_comp" && a.approvalState === "pending")
+        || S.actions.find((a) => a.cadence === "once" && a.approvalState === "pending")
+        || S.actions.find((a) => a.approvalState === "pending");
+      if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); return; }
+      const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      toast(`▶ Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
+      demoInternal = true; await approve(pick.id, true); demoInternal = false; await W(1200);
+      toast("✉ Claim filed — nothing sent until you approved it"); demoInternal = true; await markSent(pick.id, true); demoInternal = false; await W(1500);
+      const ref = "RC-" + Math.floor(100000 + Math.random() * 900000);
+      toast(`📨 Acknowledged · reference #${ref} (demo)`); await W(1700);
+      demoInternal = true; await markPaid(pick.id, true); demoInternal = false;
+      toast(`💰 Demo complete — full loop shown: detect → approve → file → paid. Real payouts land in the timeline each card shows.`);
+    } finally {
+      demoInternal = false;
+      demoRunning = false;
+    }
   }
 
   async function forgetData() {
@@ -410,14 +446,14 @@
     ab.style.display = a.approvalState === "approved" ? "none" : "";
     ab.onclick = () => { approve(id); closeDrawer(); };
     sb.onclick = () => skip(id);
-    $("#drawer").classList.add("open"); $("#drawer-scrim").classList.add("open");
+    $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); $("#drawer-scrim").classList.add("open");
     setTimeout(() => { const x = $("#drawer-x"); if (x) x.focus(); }, 60);
   }
-  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer-scrim").classList.remove("open"); restoreFocus(); }
+  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true"); $("#drawer-scrim").classList.remove("open"); restoreFocus(); }
 
   // ---- scan your own data (100% client-side) ----
-  function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
-  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); restoreFocus(); }
+  function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); $("#scan-modal").setAttribute("aria-hidden", "false"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
+  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); $("#scan-modal").setAttribute("aria-hidden", "true"); restoreFocus(); }
   function showResults() {
     const r = $("#results"), l = $("#landing");
     if (r) r.classList.remove("hidden");
@@ -460,6 +496,7 @@
   }
 
   async function runScan() {
+    if (demoBlocked()) return;
     const text = ($("#scan-input") && $("#scan-input").value) || "";
     const res = window.RecoupScan ? window.RecoupScan.scan(text) : { findings: [] };
     if (!res.findings || !res.findings.length) { toast("No recurring charges found — add more lines or try the sample"); return; }
@@ -479,7 +516,7 @@
 
   async function loadGmail(token) {
     try {
-      const d = await fetch(API + "/api/gmail/findings?token=" + encodeURIComponent(token)).then((r) => r.json());
+      const d = await gmailFindings(token);
       if (d.findings && d.findings.length) {
         const recur = r2(d.findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + (a.amount || 0), 0));
         await applyFindings(d.findings, {
@@ -497,7 +534,28 @@
     } catch (e) { toast("Couldn't load Gmail results — try again"); }
   }
 
+  async function gmailFindings(token) {
+    const r = await fetch(API + "/api/gmail/findings", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    if (r.ok) return r.json();
+    // Backward compatibility while the Space rebuilds or if only the frontend is deployed.
+    if (r.status === 404 || r.status === 405) {
+      return fetch(API + "/api/gmail/findings?token=" + encodeURIComponent(token)).then((res) => res.json());
+    }
+    throw new Error("gmail findings failed");
+  }
+
   // ---- misc ----
+  function gmailHandoff() {
+    const fromQuery = new URLSearchParams(location.search).get("gmail");
+    if (fromQuery) return fromQuery;
+    const raw = (location.hash || "").replace(/^#/, "");
+    return new URLSearchParams(raw).get("gmail");
+  }
+
   function wire() {
     document.body.addEventListener("click", (ev) => {
       const t = ev.target.closest("[data-approve],[data-skip],[data-view],[data-copy],[data-mail],[data-sent],[data-paid]"); if (!t) return;

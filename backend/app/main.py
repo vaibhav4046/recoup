@@ -8,6 +8,7 @@ activates with a free key; otherwise clearly-labelled fallback.
 from __future__ import annotations
 
 import uuid
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -151,7 +152,7 @@ async def full_state(request: Request):
     )
 
 
-# ---- auth (public demo stays open; real-data endpoints require a session) ----
+# ---- auth (public demo stays open; auth powers optional account/Gmail flows) ----
 def _set_session(resp, token: str) -> None:
     resp.set_cookie(COOKIE, token, httponly=True, max_age=7 * 24 * 3600, samesite="lax", secure=True)
 
@@ -186,14 +187,16 @@ async def magic_verify(code: str):
 
 @app.get("/api/auth/google/start")
 async def google_start():
-    url = auth.google_auth_url(state=uuid.uuid4().hex)
+    url = auth.google_auth_url(state=auth.issue_oauth_state("google"))
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured"})
     return RedirectResponse(url)
 
 
 @app.get("/api/auth/google/callback")
-async def google_cb(code: str):
+async def google_cb(code: str = "", state: str = ""):
+    if not auth.verify_oauth_state(state, "google"):
+        return RedirectResponse("/login.html?err=state")
     token = auth.google_callback(code)
     if not token:
         return RedirectResponse("/login.html?err=google")
@@ -216,39 +219,68 @@ async def auth_logout():
 
 
 # ---- Gmail subscription intake (read-only; subscriptions only, never bank data) ----
-_GMAIL_FINDINGS: dict[str, list] = {}
+_GMAIL_FINDINGS: dict[str, dict] = {}
+_GMAIL_TTL_S = 5 * 60
+
+
+def _store_gmail_findings(findings: list) -> str:
+    token = uuid.uuid4().hex
+    _GMAIL_FINDINGS[token] = {"findings": findings, "exp": time.time() + _GMAIL_TTL_S}
+    return token
+
+
+def _take_gmail_findings(key: str, pop: bool = True) -> list:
+    if not key:
+        return []
+    rec = _GMAIL_FINDINGS.pop(key, None) if pop else _GMAIL_FINDINGS.get(key)
+    if not rec or rec.get("exp", 0) < time.time():
+        _GMAIL_FINDINGS.pop(key, None)
+        return []
+    return rec.get("findings", [])
 
 
 @app.get("/api/gmail/start")
 async def gmail_start():
-    url = auth.google_auth_url(state="gmail_" + uuid.uuid4().hex[:8], gmail=True)
+    url = auth.google_auth_url(state=auth.issue_oauth_state("gmail"), gmail=True)
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured — set GOOGLE_OAUTH_CLIENT_ID"})
     return RedirectResponse(url)
 
 
 @app.get("/api/gmail/callback")
-async def gmail_cb(code: str):
+async def gmail_cb(code: str = "", state: str = ""):
     from . import gmail as gmailmod
     fe = get_settings().frontend_url.rstrip("/")
+    if not auth.verify_oauth_state(state, "gmail"):
+        return RedirectResponse(f"{fe}/#gmail=err")
     try:
         tok = auth.google_exchange(code, redirect_path="/api/gmail/callback")
         access = tok.get("access_token")
         if not access:
-            return RedirectResponse(f"{fe}/?gmail=err")
+            return RedirectResponse(f"{fe}/#gmail=err")
         msgs = gmailmod.fetch_subscription_emails(access)
         findings = gmailmod.to_findings(gmailmod.detect(msgs))
     except Exception:
-        return RedirectResponse(f"{fe}/?gmail=err")
-    token = uuid.uuid4().hex  # one-time handoff token (cookies don't cross origin)
-    _GMAIL_FINDINGS[token] = findings
-    return RedirectResponse(f"{fe}/?gmail={token}")
+        return RedirectResponse(f"{fe}/#gmail=err")
+    token = _store_gmail_findings(findings)  # one-time handoff token (cookies don't cross origin)
+    return RedirectResponse(f"{fe}/#gmail={token}")
 
 
 @app.get("/api/gmail/findings")
 async def gmail_findings(request: Request, token: str = "", ro_session: str = Cookie(default="")):
     key = token or ro_session
-    findings = _GMAIL_FINDINGS.pop(key, []) if token else _GMAIL_FINDINGS.get(key, [])
+    findings = _take_gmail_findings(key, pop=bool(token))
+    return _ok(request, findings=findings)
+
+
+@app.post("/api/gmail/findings")
+async def gmail_findings_post(request: Request, ro_session: str = Cookie(default="")):
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    token = (body or {}).get("token", "")
+    findings = _take_gmail_findings(token or ro_session, pop=bool(token))
     return _ok(request, findings=findings)
 
 

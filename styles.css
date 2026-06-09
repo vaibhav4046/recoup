@@ -208,6 +208,11 @@ body.light .fc-expect b{color:#0e7490}
 .fc-paid{display:flex;align-items:center;justify-content:center;padding:11px;border-radius:11px;background:rgba(52,211,153,.16);color:#baf5e0;font-weight:800;font-size:13.5px}
 .fcard.paid{border-color:rgba(52,211,153,.5)}
 .drawer-prov{padding:4px 20px 6px;display:flex;flex-direction:column;gap:11px;max-height:46vh;overflow:auto}
+.drawer-prov,.drawer-body,.scan-input{scrollbar-width:thin;scrollbar-color:rgba(52,211,153,.45) rgba(255,255,255,.06)}
+.drawer-prov::-webkit-scrollbar,.drawer-body::-webkit-scrollbar,.scan-input::-webkit-scrollbar{width:10px;height:10px}
+.drawer-prov::-webkit-scrollbar-track,.drawer-body::-webkit-scrollbar-track,.scan-input::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:999px}
+.drawer-prov::-webkit-scrollbar-thumb,.drawer-body::-webkit-scrollbar-thumb,.scan-input::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(52,211,153,.75),rgba(34,211,238,.65));border:2px solid rgba(7,8,12,.85);border-radius:999px}
+.drawer-prov::-webkit-scrollbar-thumb:hover,.drawer-body::-webkit-scrollbar-thumb:hover,.scan-input::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,rgba(52,211,153,.9),rgba(34,211,238,.8))}
 .prov-sec{border:1px solid var(--border);border-radius:11px;padding:12px 13px;background:var(--panel)}
 .prov-h{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .prov-by{font-weight:600;text-transform:none;letter-spacing:0;color:var(--dim)}

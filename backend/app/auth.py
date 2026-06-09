@@ -1,10 +1,10 @@
 """Recoup — authentication: magic-link email, Google OAuth, CAPTCHA, sessions.
 
-Design: the PUBLIC demo stays open (judges must be able to see it); REAL-DATA
-endpoints require a valid session, enforced server-side. Each provider activates
-as its keys are configured. Without keys it runs in dev mode (the magic link is
-returned to the page instead of emailed; CAPTCHA passes) so the whole flow is
-testable before the providers are wired. Sessions are stateless signed tokens
+Design: the public demo and browser-only scan stay open so judges can evaluate
+the product without an account. Auth exists for optional sign-in and Gmail
+handoff flows. Each provider activates as its keys are configured. Without
+provider keys it runs in dev mode for the start steps, but session signing fails
+closed unless APP_SECRET is set. Sessions are stateless signed tokens
 (HMAC-SHA256) — swap _SESSIONS for MongoDB to persist across restarts.
 """
 from __future__ import annotations
@@ -28,26 +28,36 @@ def _ub64(s: str) -> bytes:
 
 
 _MAGIC: dict[str, dict] = {}  # code -> {email, exp}
+_OAUTH_STATES: dict[str, dict] = {}  # state -> {flow, exp}
 
 
-def _secret() -> bytes:
-    return (get_settings().app_secret or "dev-secret-change-me").encode()
+def _secret() -> bytes | None:
+    secret = (get_settings().app_secret or "").strip()
+    if not secret or secret == "dev-secret-change-me":
+        return None
+    return secret.encode()
 
 
 # ---- stateless signed sessions ----
 def create_session(email: str, name: str = "") -> str:
+    secret = _secret()
+    if not secret:
+        raise RuntimeError("APP_SECRET is required for session signing")
     payload = {"email": email, "name": name or email.split("@")[0], "exp": time.time() + 7 * 24 * 3600}
     body = _b64(json.dumps(payload, separators=(",", ":")).encode())
-    sig = _b64(hmac.new(_secret(), body.encode(), hashlib.sha256).digest())
+    sig = _b64(hmac.new(secret, body.encode(), hashlib.sha256).digest())
     return f"{body}.{sig}"
 
 
 def session_user(token: str | None) -> dict | None:
     if not token or "." not in token:
         return None
+    secret = _secret()
+    if not secret:
+        return None
     try:
         body, sig = token.split(".", 1)
-        expect = _b64(hmac.new(_secret(), body.encode(), hashlib.sha256).digest())
+        expect = _b64(hmac.new(secret, body.encode(), hashlib.sha256).digest())
         if not hmac.compare_digest(sig, expect):
             return None
         data = json.loads(_ub64(body))
@@ -71,7 +81,26 @@ def verify_magic(code: str) -> str | None:
     rec = _MAGIC.pop(code, None)
     if not rec or rec["exp"] < time.time():
         return None
-    return create_session(rec["email"])
+    try:
+        return create_session(rec["email"])
+    except RuntimeError:
+        return None
+
+
+def issue_oauth_state(flow: str) -> str:
+    """Create a one-time CSRF state token for Google OAuth redirects."""
+    now = time.time()
+    for key, rec in list(_OAUTH_STATES.items()):
+        if rec.get("exp", 0) < now:
+            _OAUTH_STATES.pop(key, None)
+    state = secrets.token_urlsafe(24)
+    _OAUTH_STATES[state] = {"flow": flow, "exp": now + 10 * 60}
+    return state
+
+
+def verify_oauth_state(state: str | None, flow: str) -> bool:
+    rec = _OAUTH_STATES.pop(state or "", None)
+    return bool(rec and rec.get("flow") == flow and rec.get("exp", 0) >= time.time())
 
 
 def _send_email(to: str, link: str) -> bool:

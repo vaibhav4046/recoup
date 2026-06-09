@@ -1,6 +1,6 @@
 # Recoup — QA / defect status (flawlessness pass)
 
-Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **30 of 40 fixed, tested, and deployed across 7 batches.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
+Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **40 of 40 fixed in code. Frontend fixes are deployed and live-verified; backend auth hardening is code-complete and tested locally, pending HF deploy because `HF_TOKEN` is not available in this workspace.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
 
 ## Headline wins
 - 🎉 **Live Gemini reasoning now renders on the deployed backend** (`live: true · gemini-2.5-flash`) — it fell back all session until the defensive-parse fix.
@@ -16,10 +16,13 @@ Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after a
 ## Also fixed since (batch 6–7)
 Non-lossy findings aria-label (#29); decorative-glyph hiding on cards + provenance checks (#11, card content); Tab focus-trap in modal/drawer (#7). Dialog a11y is now complete: Esc-close + focus-return + focus-trap + rich labels.
 
-## Remaining (10 — lower priority, for next session)
-**A11y polish:** #11 remaining button glyphs (✉/↗/💰 — minor, buttons already announce their word); #30 aria-describedby on dialogs.
-**Backend auth hardening (low demo-visibility — auth path barely used):** #20 OAuth CSRF `state` validation; #21 HMAC fallback secret fail-closed (NOTE: the deployed Space HAS `APP_SECRET` set, so it is not live-vulnerable); #36 Gmail token-in-URL → fragment/short-TTL.
-**Functional minor:** #5 currency consistency ($ vs the one €250 EU261 amount); #24 demo lifecycle race (break-test shows no errors, but a hardening guard is ideal); #19 align the "endpoints require a session" comment with the intentionally-open public demo.
+## Fixed in batch 8
+**Frontend, deployed + live-verified:** #11 button glyphs hidden from accessible names for approve/copy/email/claim-form/recovered controls; #30 `aria-describedby` added to scan modal and drawer; closed dialogs now start and return to `aria-hidden="true"` so they are absent from the accessibility snapshot until opened; #5 mixed-currency one-time totals now label the fallback EU261 mix as `≈$` with a mixed-currency note and per-category currency labels; #24 demo walkthrough now locks manual lifecycle actions and always releases the lock in `finally`; the dark drawer/textarea scrollbars now match the UI instead of showing Windows default white.
+
+**Backend, code-complete + locally tested:** #20 one-time OAuth CSRF `state` validation for normal Google sign-in and Gmail OAuth; #21 HMAC session signing fails closed without `APP_SECRET`; #36 Gmail handoff redirects via URL fragment with a five-minute one-time token and POST lookup, with frontend compatibility fallback for the old GET endpoint while the Space awaits rebuild; #19 auth comments now match the intentionally-open public demo.
+
+## Remaining deployment gap
+Backend deploy was not run because no `HF_TOKEN` is available in the environment or `backend/.env`. Run `HF_TOKEN=<token> python backend/scripts/deploy_hf.py` after rotating the exposed token, then verify `/api/auth/google/start`, `/api/gmail/start`, and `/api/gmail/findings`.
 
 ## YOUR manual items (only you can do these)
 - 🔓 **Make the GitHub repo PUBLIC** — the "See the code" link 404s until then, and private = hackathon DQ.
