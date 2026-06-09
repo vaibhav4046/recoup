@@ -200,10 +200,11 @@ async def magic_start(request: Request):
 
 @app.get("/api/auth/magic/verify")
 async def magic_verify(code: str):
+    fe = get_settings().frontend_url.rstrip("/")  # redirect to the FRONTEND, not the backend host (which has no "/" route -> 404)
     token = auth.verify_magic(code)
     if not token:
-        return RedirectResponse("/login.html?err=expired")
-    resp = RedirectResponse("/?signed_in=1")
+        return RedirectResponse(f"{fe}/login.html?err=expired")
+    resp = RedirectResponse(f"{fe}/?signed_in=1")
     _set_session(resp, token)
     return resp
 
@@ -218,12 +219,13 @@ async def google_start():
 
 @app.get("/api/auth/google/callback")
 async def google_cb(code: str = "", state: str = ""):
+    fe = get_settings().frontend_url.rstrip("/")  # redirect to the FRONTEND, not the backend host (which has no "/" route -> 404)
     if not auth.verify_oauth_state(state, "google"):
-        return RedirectResponse("/login.html?err=state")
+        return RedirectResponse(f"{fe}/login.html?err=state")
     token = auth.google_callback(code)
     if not token:
-        return RedirectResponse("/login.html?err=google")
-    resp = RedirectResponse("/?signed_in=1")
+        return RedirectResponse(f"{fe}/login.html?err=google")
+    resp = RedirectResponse(f"{fe}/?signed_in=1")
     _set_session(resp, token)
     return resp
 
