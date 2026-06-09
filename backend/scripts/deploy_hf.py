@@ -61,8 +61,6 @@ secrets_to_set = {
     "EMAIL_FROM": _get("EMAIL_FROM"),
     "TURNSTILE_SITE_KEY": _get("TURNSTILE_SITE_KEY"),  # Cloudflare Turnstile CAPTCHA
     "TURNSTILE_SECRET": _get("TURNSTILE_SECRET"),
-    "ELEVENLABS_API_KEY": _get("ELEVENLABS_API_KEY"),   # premium voice (optional; free browser TTS otherwise)
-    "ELEVENLABS_VOICE_ID": _get("ELEVENLABS_VOICE_ID"),
     "CORS_ORIGINS": "https://recoup-vaibhav4046s-projects.vercel.app,http://localhost:8123,http://127.0.0.1:8123",  # pinned: never "*" (wildcard+credentials reflects any origin)
     "BASE_URL": url,
     "APP_SECRET": _get("APP_SECRET") or _secrets.token_hex(24),  # set APP_SECRET via setx to keep sessions alive across redeploys

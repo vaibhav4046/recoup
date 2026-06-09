@@ -108,35 +108,7 @@ async def vector_seed(request: Request):
     return _ok(request, **await run_in_threadpool(vector.seed))
 
 
-@app.post("/api/tts")
-async def tts(request: Request):
-    """ElevenLabs TTS proxy (key stays server-side). Returns audio/mpeg, or 204 when no key is
-    configured so the frontend falls back to the free browser voice."""
-    s = get_settings()
-    if not s.elevenlabs_api_key:
-        return Response(status_code=204)
-    body = await request.json()
-    text = ((body or {}).get("text") or "").strip()[:800]
-    if not text:
-        return Response(status_code=204)
-
-    def _call():
-        import httpx
-        return httpx.post(
-            f"https://api.elevenlabs.io/v1/text-to-speech/{s.elevenlabs_voice_id}",
-            headers={"xi-api-key": s.elevenlabs_api_key, "accept": "audio/mpeg", "content-type": "application/json"},
-            json={"text": text, "model_id": "eleven_turbo_v2_5",
-                  "voice_settings": {"stability": 0.4, "similarity_boost": 0.7}},
-            timeout=25,
-        )
-
-    try:
-        r = await run_in_threadpool(_call)
-        if r.status_code >= 300:
-            return Response(status_code=204)
-        return Response(content=r.content, media_type="audio/mpeg")
-    except Exception:
-        return Response(status_code=204)
+# (voice TTS is browser-native Web Speech only — no server-side / non-Google TTS)
 
 
 @app.post("/api/scan")

@@ -29,20 +29,7 @@
     if (!text) return;
     speaking = true; clearTimeout(restartTimer);
     try { if (rec) rec.stop(); } catch (e) {}   // pause the mic so we don't transcribe ourselves
-    let played = false;
-    if (API) {
-      try {
-        const r = await fetch(API + "/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
-        const ct = r.headers.get("content-type") || "";
-        if (r.ok && ct.includes("audio")) {
-          const url = URL.createObjectURL(await r.blob());
-          audio = new Audio(url);
-          await new Promise((res) => { audio.onended = res; audio.onerror = res; audio.play().catch(() => res()); });
-          URL.revokeObjectURL(url); played = true;
-        }
-      } catch (e) {}
-    }
-    if (!played && synth) {
+    if (synth) {  // browser-native Web Speech TTS only (no non-Google voice service)
       await new Promise((res) => { try { synth.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; u.onend = res; u.onerror = res; synth.speak(u); } catch (e) { res(); } });
     }
     speaking = false;
