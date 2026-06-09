@@ -45,6 +45,16 @@
     return set.length === 1 ? { symbol: set[0], mixed: false } : { symbol: "≈$", mixed: true };
   };
   const moneyWithCurrency = (n, cur, suffix) => `${cur.symbol}${money(n)}${suffix || ""}`;
+  // honest per-currency totals — NEVER blend $ and € into one figure
+  const perCurrency = (items) => {
+    const by = {};
+    (items || []).forEach((a) => { const c = currencyOf(a); by[c] = r2((by[c] || 0) + (a.amount || 0)); });
+    return by;
+  };
+  const fmtCurrencies = (by, suffix) => {
+    const curs = Object.keys(by).sort((x, y) => by[y] - by[x]);
+    return curs.length ? curs.map((c) => `${c}${money(by[c])}${suffix || ""}`).join(" + ") : "$0";
+  };
 
   /* real SHA-256 (Web Crypto) — 64-char hex, chained like the backend's audit.py */
   async function sha256(str) {
@@ -142,10 +152,13 @@
   }
 
   function renderHero() {
-    const onceCurrency = currencySummary(S.actions.filter((a) => a.cadence === "once"));
-    setText("#one-time-prefix", onceCurrency.symbol);
-    setText("#one-time-note", onceCurrency.mixed ? "mixed-currency one-time payouts" : "one-time payouts");
-    animateCount($("#one-time"), S.one_time);
+    const onceBy = perCurrency(S.actions.filter((a) => a.cadence === "once"));
+    const onceCurs = Object.keys(onceBy).sort((x, y) => onceBy[y] - onceBy[x]);
+    const mainCur = onceCurs[0] || "$";
+    setText("#one-time-prefix", mainCur);
+    const others = onceCurs.slice(1).map((c) => `${c}${money(onceBy[c])}`);
+    setText("#one-time-note", others.length ? `one-time · plus ${others.join(" + ")} owed` : "one-time payouts");
+    animateCount($("#one-time"), onceBy[mainCur] || 0);
     animateCount($("#recurring"), S.recurring_year);
     const owed = S.actions.filter((a) => a.cadence === "once").length;
     const leaks = S.actions.length - owed;
@@ -169,8 +182,8 @@
     const paid = r2(S.actions.filter((a) => a.status === "paid").reduce((s, a) => s + a.amount, 0));
     const foot = $("#ready-foot");
     if (foot) foot.innerHTML = paid > 0
-      ? `<b>${moneyWithCurrency(paid, currencySummary(S.actions.filter((a) => a.status === "paid")))}</b> recovered (you confirmed) · ${pendingN} pending`
-      : `<b>${moneyWithCurrency(S.recoverable || 0, currencySummary(S.actions))}</b> recoverable · approve a claim to start`;
+      ? `<b>${fmtCurrencies(perCurrency(S.actions.filter((a) => a.status === "paid")))}</b> recovered (you confirmed) · ${pendingN} pending`
+      : `<b>${fmtCurrencies(perCurrency(S.actions))}</b> recoverable · approve a claim to start`;
     const frac = n ? appr.length / n : 0;
     const C = 2 * Math.PI * 52;
     const ring = $("#ring-fg"); if (ring) ring.style.strokeDashoffset = String(C * (1 - frac));
@@ -178,7 +191,7 @@
     const ringEl = document.querySelector(".ring");
     if (ringEl) ringEl.setAttribute("aria-hidden", "true");
     const rs = $("#ring-status");
-    if (rs) { const msg = `${appr.length} of ${n} claims ready; ${moneyWithCurrency(paid, currencySummary(S.actions.filter((a) => a.status === "paid")))} recovered`; if (rs.textContent !== msg) rs.textContent = msg; }
+    if (rs) { const msg = `${appr.length} of ${n} claims ready; ${fmtCurrencies(perCurrency(S.actions.filter((a) => a.status === "paid")))} recovered`; if (rs.textContent !== msg) rs.textContent = msg; }
   }
   function setText(sel, v) { const e = $(sel); if (e) e.textContent = v; }
 

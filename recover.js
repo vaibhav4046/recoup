@@ -6,6 +6,7 @@ window.RecoupScan = (function () {
   "use strict";
   const round2 = (n) => Math.round(n * 100) / 100;
   const SEP = String.fromCharCode(1); // sentinel: protects "1,200" thousands commas from the field split
+  let _uid = 0; // monotonic per-scan counter → globally-unique card ids (no merchant-truncation collisions)
 
   function norm(m) {
     return m.toUpperCase().replace(/\s+/g, " ")
@@ -15,16 +16,23 @@ window.RecoupScan = (function () {
 
   function parseLine(line) {
     line = line.trim(); if (!line || /^(date|merchant|description|amount)/i.test(line)) return null;
-    let amount = null, date = null, nameBits = [];
+    let amount = null, date = null, nameBits = [], amtDecimal = false;
     // protect thousands separators ("1,200" is one number, not two fields) before the delimiter split
     const guarded = line.replace(/(\d),(\d{3})(?=\D|$)/g, "$1" + SEP + "$2");
     const parts = guarded.split(/[,\t;|]+/).map((s) => s.split(SEP).join(",").trim()).filter(Boolean);
     if (parts.length > 1) {
       parts.forEach((p) => {
+        // date FIRST so a 4-digit year isn't consumed as an amount
+        if (date == null && /\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}\/\d{2,4}/.test(p)) { date = p; return; }
         const clean = p.replace(/[\s$£€]/g, "");
-        if (/^-?\d[\d,]*\.?\d{0,2}$/.test(clean)) { const n = Math.abs(parseFloat(clean.replace(/,/g, ""))); if (!isNaN(n)) amount = n; }
-        else if (/\d{4}-\d{1,2}-\d{1,2}|\d{1,2}\/\d{1,2}\/\d{2,4}/.test(p)) date = p;
-        else nameBits.push(p);
+        if (/^-?\d[\d,]*\.?\d{0,2}$/.test(clean)) {
+          const n = parseFloat(clean.replace(/,/g, ""));
+          if (isNaN(n) || n < 0) return;                // negative = refund/credit, not a recoverable charge
+          const dec = clean.includes(".") || /[$£€]/.test(p);
+          if (amount == null || (dec && !amtDecimal)) { amount = n; amtDecimal = dec; } // prefer a decimal/currency amount over a bare ref number
+          return;
+        }
+        nameBits.push(p);
       });
     }
     if (amount === null) { // "Netflix 19.99" (space separated)
@@ -42,7 +50,7 @@ window.RecoupScan = (function () {
       : kind === "billing_error" ? `Dispute ${name} duplicate charge`
       : `Review ${name} subscription`;
     return {
-      id: "u_" + (id.replace(/\W/g, "").slice(0, 14) || "x") + "_" + kind,
+      id: "u_" + (++_uid) + "_" + kind,
       kind, title, amount, cadence: once ? "once" : "yearly", currency: "$",
       amount_label: once ? `$${amount.toFixed(0)}` : `$${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}/yr`,
       unit_note: unit,
@@ -71,6 +79,7 @@ window.RecoupScan = (function () {
   }
 
   function scan(text) {
+    _uid = 0;
     const txns = (text || "").split(/\r?\n/).map(parseLine).filter(Boolean);
     if (!txns.length) return { findings: [], txns: 0 };
     const hasDates = txns.filter((t) => t.date).length >= txns.length * 0.3;

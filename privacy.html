@@ -38,7 +38,7 @@
     <li><b>What we use:</b> only the <b>sender + subject + snippet</b> of subscription/receipt emails, to identify recurring services. We don't store your message bodies.</li>
     <li><b>What we store:</b> detected subscriptions are held only <b>transiently in server memory</b> for your session, then discarded; the claims you approve may be saved to our database (MongoDB). We never store your Gmail password or your full inbox.</li>
     <li><b>Revoke anytime:</b> remove Recoup's access at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">myaccount.google.com/permissions</a>. You can also disconnect in-app.</li>
-    <li><b>Current status:</b> the OAuth app is in Google <b>"testing"</b> mode — only explicitly-added test users can connect, which is why you'll see an "unverified app" screen. Full public access requires Google's formal security review.</li>
+    <li><b>Current status:</b> the OAuth app is <b>published but not yet Google-verified</b>, so you'll see Google's <b>"unverified app"</b> screen — click <b>Advanced → Continue</b> to proceed. Access is capped (~100 users) until Google's formal security review. <b>No sign-in is needed</b> — the paste path works without any account.</li>
   </ul>
 
   <h2>We never sell your data</h2>
@@ -46,10 +46,19 @@
 
   <h2>Who runs Recoup &amp; how to reach us</h2>
   <p><b>Data controller:</b> Vaibhav Lalwani — a student developer at the University of Liverpool. This is an independent student project, not a company. Send contact or data-deletion requests via an issue on the <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">GitHub repository</a>.</p>
-  <p><b>Processors (Gmail path only):</b> for the Gmail path, the sender/subject/snippet of subscription emails are processed by <b>Google Gemini</b> (reasoning) and may be held transiently in <b>MongoDB</b> (US-hosted). The <b>paste path uses none of these</b> — it never leaves your browser. Recoup's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+  <p><b>Sub-processors:</b> the site is hosted on <b>Vercel</b> (frontend) and <b>Hugging Face Spaces</b> (backend). For the Gmail path only, the sender/subject/snippet of subscription emails are processed by <b>Google Gemini</b> (reasoning) and may be held transiently in <b>MongoDB</b> (US-hosted). Every API response carries a short random <code>trace_id</code> for debugging, and standard server access logs may record request metadata (never your statement text, which stays in your browser on the paste path). Recoup's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
 
   <h2>Your control</h2>
   <p>You approve every action — nothing is sent on your behalf without your tap. You can disconnect Gmail and request deletion of your stored findings at any time by opening an issue on the <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">GitHub repository</a>; the in-app "Delete my data" clears server-held findings immediately.</p>
+
+  <h2>Legal basis, retention &amp; your rights (UK/EU GDPR)</h2>
+  <ul>
+    <li><b>Legal basis:</b> the <b>paste path processes no personal data on our servers</b> (it runs entirely in your browser). For the <b>Gmail path</b>, our basis is your explicit <b>consent</b> (Art. 6(1)(a)), which you can withdraw at any time.</li>
+    <li><b>Retention:</b> Gmail-derived findings are discarded within <b>5 minutes</b> (or immediately when you use "Delete my data"); any claim you explicitly approve is retained only until you request its deletion.</li>
+    <li><b>Your rights:</b> access, rectification, erasure, restriction, portability, and objection. You can erase Gmail-derived data yourself in-app ("Delete my data") — no request needed.</li>
+    <li><b>Complain:</b> you may lodge a complaint with the UK <a href="https://ico.org.uk/" target="_blank" rel="noopener">ICO</a> (or your local EU supervisory authority) if you believe your data has been mishandled.</li>
+    <li><b>No children / special category:</b> Recoup is not intended for anyone under 16. Receipt snippets are read only to identify a service — please don't paste special-category data.</li>
+  </ul>
 
   <h2>Honest limits</h2>
   <p>This is a hackathon project. It is <b>not</b> yet a verified, audited, production financial service. Treat it as a tool that helps you <i>find and draft</i> claims — you file them yourself on the official portals, and you're responsible for the accuracy of anything you submit.</p>
