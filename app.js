@@ -516,7 +516,18 @@
     const fd = $("#forget-data"); if (fd) fd.onclick = (e) => { e.preventDefault(); forgetData(); };
     const va = $("#vrec-add"); if (va) va.onclick = () => { const f = $("#vrec-form"); if (f) f.classList.toggle("hidden"); };
     const vf = $("#vrec-form"); if (vf) vf.onsubmit = (e) => { e.preventDefault(); addVrec(); };
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drawer").classList.contains("open")) closeDrawer(); else if ($("#scan-modal").classList.contains("open")) closeScan(); } });
+    document.addEventListener("keydown", (e) => {
+      const dlg = $("#drawer").classList.contains("open") ? $("#drawer") : ($("#scan-modal").classList.contains("open") ? $("#scan-modal") : null);
+      if (!dlg) return;
+      if (e.key === "Escape") { dlg.id === "drawer" ? closeDrawer() : closeScan(); return; }
+      if (e.key === "Tab") {
+        const vis = [...dlg.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null && !el.disabled);
+        if (!vis.length) return;
+        const first = vis[0], last = vis[vis.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
     $("#drawer-x").onclick = closeDrawer;
     $("#drawer-scrim").onclick = closeDrawer;
     const tt = $("#theme-toggle");
