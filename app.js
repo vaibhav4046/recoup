@@ -121,6 +121,7 @@
     wire();
     // premium scroll choreography for the expanded landing sections (same bulletproof reveal as results)
     revealGroup([...document.querySelectorAll(".landing-expanded > section, #agent-timeline")]);
+    checkAuth(); // signed-in session -> personalized topbar + land in the command center
     // Gmail OAuth handoff: #gmail=<short-lived-token> | err. Query support remains for old callbacks.
     try {
       const gp = gmailHandoff();
@@ -521,6 +522,30 @@
   // ---- scan your own data (100% client-side) ----
   function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); $("#scan-modal").setAttribute("aria-hidden", "false"); syncDialogBackground(); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
   function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); $("#scan-modal").setAttribute("aria-hidden", "true"); syncDialogBackground(); restoreFocus(); }
+  async function checkAuth() {
+    if (!API) return;
+    try {
+      const r = await fetch(API + "/api/auth/me", { credentials: "include" });
+      const d = await r.json();
+      if (d && d.authenticated && d.user) signedInUI(d.user);
+    } catch (e) { /* backend cold / signed out — public demo stays untouched */ }
+  }
+  function signedInUI(u) {
+    const who = u.name || (u.email || "account").split("@")[0];
+    const link = $(".signin-link");
+    if (link) {
+      link.innerHTML = esc(who) + " &middot; Sign out";
+      link.href = "#";
+      link.setAttribute("aria-label", "Signed in as " + (u.email || who) + " — sign out");
+      link.onclick = async (e) => {
+        e.preventDefault();
+        try { await fetch(API + "/api/auth/logout", { method: "POST", credentials: "include" }); } catch (e2) {}
+        location.reload();
+      };
+    }
+    toast("Signed in as " + (u.email || who));
+    showResults(); // the command center IS the signed-in dashboard — land there, not on the marketing page
+  }
   function showResults() {
     const r = $("#results"), l = $("#landing");
     if (r) r.classList.remove("hidden");
