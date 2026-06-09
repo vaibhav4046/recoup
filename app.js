@@ -199,7 +199,9 @@
     const c = el("div", "fcard" + (approved ? " claim-ready" : a.approvalState === "rejected" ? " skipped" : "") + (once ? " fc-onetime" : "") + (st === "paid" ? " paid" : ""));
     c.id = "card-" + a.id;
     c.setAttribute("role", "listitem");
-    c.setAttribute("aria-label", `${a.title}, ${a.amount_label}, ${a.confidence ? Math.round(a.confidence * 100) + "% confidence" : ""}`);
+    const _kindWord = leak ? "money you're losing" : "money you're owed";
+    const _stateWord = st === "paid" ? "recovered" : st === "sent" ? "claim sent" : approved ? "claim ready" : "needs your review";
+    c.setAttribute("aria-label", [a.title, a.amount_label, _kindWord, a.confidence ? Math.round(a.confidence * 100) + "% confidence" : "", _stateWord].filter(Boolean).join(", "));
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
         <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text">⧉ Copy</button>
@@ -215,14 +217,14 @@
            <button class="btn btn-skip" data-skip="${a.id}">Skip</button>
          </div>`;
     } else if (st === "paid") {
-      actions = `<div class="fc-paid">✓ Recovered ${esc(a.amount_label)}</div>`;
+      actions = `<div class="fc-paid"><span aria-hidden="true">✓</span> Recovered ${esc(a.amount_label)}</div>`;
     } else if (st === "sent") {
       actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${a.id}">💰 Mark recovered</button>`;
     } else {
       actions = `${sendRow}<button class="btn btn-life full" data-sent="${a.id}">Mark sent →</button>`;
     }
     const tag = approved
-      ? `<span class="fc-kind ready">${st === "paid" ? "✓ paid" : st === "sent" ? "sent" : "✓ ready"}</span>`
+      ? `<span class="fc-kind ready">${st === "paid" ? '<span aria-hidden="true">✓</span> paid' : st === "sent" ? "sent" : '<span aria-hidden="true">✓</span> ready'}</span>`
       : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed" : "leak"}</span>`;
     c.innerHTML = `
       <div class="fc-top">
@@ -235,8 +237,8 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
-      ${a.timeline ? `<div class="fc-expect">⏱ ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
-      ${a.agent_name ? `<div class="fc-agent">◆ ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm">⚠ confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
+      ${a.timeline ? `<div class="fc-expect"><span aria-hidden="true">⏱</span> ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
@@ -398,7 +400,7 @@
       `<div class="prov-rule">${esc(RULES[a.rule] || a.rule)}</div>` +
       `<div class="prov-ev">Source — ${esc(a.evidence)}</div></div>` +
       `<div class="prov-sec"><div class="prov-h">Verifier checks <span class="prov-by">· independent agent</span></div>` +
-      (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"} ${esc(c.label)}</div>`).join("") : `<div class="prov-check ok">✓ verified</div>`) +
+      (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}"><span aria-hidden="true">${c.ok ? "✓" : "✗"}</span><span class="sr-only">${c.ok ? "Passed" : "Failed"}: </span>${esc(c.label)}</div>`).join("") : `<div class="prov-check ok"><span aria-hidden="true">✓</span> verified</div>`) +
       `</div>` +
       (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">⚠ You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
       (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">⏱ Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
