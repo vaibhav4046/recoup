@@ -73,8 +73,10 @@ def start_magic(email: str) -> dict:
     s = get_settings()
     link = f"{s.base_url.rstrip('/')}/api/auth/magic/verify?code={code}"
     sent = _send_email(email, link) if s.email_ready else False
-    # dev mode: surface the link so the flow is testable before email is wired
-    return {"sent": sent, "dev_link": None if sent else link, "expires_s": 900}
+    # dev ONLY: surface the link so the flow is testable before email is wired.
+    # NEVER return a working sign-in link from a public (non-localhost) backend.
+    dev_link = link if (not sent and s.is_local) else None
+    return {"sent": sent, "dev_link": dev_link, "expires_s": 900}
 
 
 def verify_magic(code: str) -> str | None:
@@ -125,7 +127,9 @@ def _send_email(to: str, link: str) -> bool:
 def verify_captcha(token: str, ip: str = "") -> bool:
     s = get_settings()
     if not s.turnstile_secret:
-        return True  # not configured -> don't block in dev
+        # fail OPEN only on a localhost/dev backend; in prod an unconfigured CAPTCHA must not
+        # silently leave the magic-link endpoint unprotected — fail closed there instead.
+        return s.is_local
     try:
         import httpx
         r = httpx.post("https://challenges.cloudflare.com/turnstile/v0/siteverify",

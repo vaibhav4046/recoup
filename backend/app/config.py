@@ -64,6 +64,12 @@ class Settings(BaseSettings):
     def mode(self) -> str:
         return "live" if all(v == "live" for v in self.integration_status().values()) else "partial"
 
+    @property
+    def is_local(self) -> bool:
+        """True only for a localhost/dev backend — gates dev-only affordances (e.g. the magic-link dev_link)."""
+        b = (self.base_url or "").lower()
+        return "localhost" in b or "127.0.0.1" in b
+
 
 @lru_cache
 def get_settings() -> Settings:
