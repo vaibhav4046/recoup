@@ -325,7 +325,7 @@
     await appendAudit("human", "You", "ACTION_REJECTED", "Skipped: " + a.title);
     recompute(); renderHero(); renderBreakdown(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
-    closeDrawer();
+    if ($("#drawer").classList.contains("open")) closeDrawer();
   }
 
   async function markSent(id, fromDemo) {
@@ -333,7 +333,7 @@
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
     a.status = "sent";
     await appendAudit("human", "You", "CLAIM_SENT", "Claim sent: " + a.title, a.amount);
-    renderAudit();
+    recompute(); renderHero(); renderBreakdown(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`Marked sent — ${a.title}`);
   }
@@ -343,7 +343,7 @@
     const a = S.actions.find((x) => x.id === id); if (!a || a.approvalState !== "approved") return;
     a.status = "paid";
     await appendAudit("human", "You", "CLAIM_PAID", "Recovered — you confirmed: " + a.title + " (" + a.amount_label + ")", a.amount);
-    updateReadyUI(); renderAudit();
+    recompute(); renderHero(); renderBreakdown(); updateReadyUI(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`💰 Recovered ${a.amount_label} — ${a.title}`);
   }
@@ -363,11 +363,11 @@
       showResults();
       const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const W = (ms) => wait(reduce ? 0 : ms);
-      const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
       const pick = S.actions.find((a) => a.kind === "flight_comp" && a.approvalState === "pending")
         || S.actions.find((a) => a.cadence === "once" && a.approvalState === "pending")
         || S.actions.find((a) => a.approvalState === "pending");
       if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); return; }
+      const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
       const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
       toast(`▶ Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
       demoInternal = true; await approve(pick.id, true); demoInternal = false; await W(1200);
@@ -401,17 +401,17 @@
       v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">${esc(r.currency || "$")}${Number(r.amount).toFixed(2)}</span></div>`).join("");
   }
   function addVrec() {
-    const amt = parseFloat(($("#vrec-amt") || {}).value);
+    const amt = r2(parseFloat(($("#vrec-amt") || {}).value));
     const currencyRaw = (($("#vrec-currency") || {}).value || "$").trim();
     const currency = ["$", "£", "€"].includes(currencyRaw) ? currencyRaw : "$";
     const what = (($("#vrec-what") || {}).value || "").trim();
-    if (!amt || amt <= 0 || !what) { toast("Add the amount and what you recovered"); return; }
+    if (!(amt > 0) || !what) { toast("Add a valid amount (at least 0.01) and what you recovered"); return; }
     const v = getVrec();
-    v.unshift({ amount: r2(amt), currency, what: what.slice(0, 60), ref: (($("#vrec-ref") || {}).value || "").trim().slice(0, 40), date: new Date().toISOString().slice(0, 10) });
+    v.unshift({ amount: amt, currency, what: what.slice(0, 60), ref: (($("#vrec-ref") || {}).value || "").trim().slice(0, 40), date: new Date().toISOString().slice(0, 10) });
     setVrec(v);
     const f = $("#vrec-form"); if (f) { f.reset(); f.classList.add("hidden"); }
     renderVrec();
-    toast(`✓ Logged ${currency}${money(amt)} verified recovery`);
+    toast(`✓ Logged ${currency}${amt.toFixed(2)} recovery`);
   }
 
   function mailtoFor(a) {
