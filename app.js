@@ -124,10 +124,12 @@
     roster.forEach((a) => {
       const c = el("div", "agent-card" + (a.count ? " active" : ""));
       c.setAttribute("role", "listitem");
-      c.setAttribute("aria-label", `${a.name}: ${a.count} found, $${money(a.amount)} recoverable`);
+      const cur = currencySummary(S.actions.filter((x) => x.agent_name === a.name)); // ≈$ if this agent aggregates >1 currency
+      const stat = moneyWithCurrency(a.amount, cur);
+      c.setAttribute("aria-label", `${a.name}: ${a.count} found, ${stat} recoverable`);
       c.innerHTML = `<div class="ag-top"><span class="ag-dot"></span><span class="ag-name">${esc(a.name)}</span><span class="ag-count">${a.count}</span></div>
         <div class="ag-mandate">${esc(a.mandate)}</div>
-        <div class="ag-stat">$${money(a.amount)} recoverable</div>`;
+        <div class="ag-stat">${stat} recoverable</div>`;
       box.appendChild(c);
     });
   }
@@ -143,7 +145,7 @@
       return;
     }
     const live = S.integrations || {};
-    const gem = (live.gemini || "fallback") === "live";
+    const gem = (live.gemini || "fallback") === "live" && S._live && !!(S.run && S.run.live); // only claim "live" if the run actually used Gemini (not a 429 fallback)
     const mon = (live.mongodb || "fallback") === "live";
     box.appendChild(chip(gem ? "Gemini · live" : "AI reasoning · on", gem ? "live" : ""));
     box.appendChild(chip(mon ? "MongoDB · live" : "Storage · local", mon ? "live" : ""));
@@ -295,11 +297,19 @@
   }
 
   // ---- actions ----
-  async function appendAudit(actor_type, actor_name, event_type, label, amount) {
-    const prev = S.audit.length ? S.audit[S.audit.length - 1].hash : "0".repeat(64);
-    const e = { event_id: "au_" + String(S.audit.length + 1).padStart(4, "0"), actor_type, actor_name, event_type, label, amount: amount || 0, prev_hash: prev };
-    e.hash = await sha256(prev + JSON.stringify(e));
-    S.audit.push(e);
+  // serialize audit appends so rapid/concurrent clicks on different cards can't interleave at
+  // the await and corrupt the SHA-256 chain (duplicate event_id / wrong prev_hash). Each append
+  // reads prev_hash + event_id INSIDE the queued continuation, after the previous one has pushed.
+  let _auditQ = Promise.resolve();
+  function appendAudit(actor_type, actor_name, event_type, label, amount) {
+    const run = async () => {
+      const prev = S.audit.length ? S.audit[S.audit.length - 1].hash : "0".repeat(64);
+      const e = { event_id: "au_" + String(S.audit.length + 1).padStart(4, "0"), actor_type, actor_name, event_type, label, amount: amount || 0, prev_hash: prev };
+      e.hash = await sha256(prev + JSON.stringify(e));
+      S.audit.push(e);
+    };
+    _auditQ = _auditQ.then(run, run); // run regardless of a prior rejection so the queue never poisons
+    return _auditQ;
   }
 
   function demoBlocked() {
@@ -487,6 +497,7 @@
     if (r) r.classList.remove("hidden");
     if (l) l.classList.add("hidden");
     try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+    const h = $("#results-heading"); if (h) setTimeout(() => { try { h.focus(); } catch (e) {} }, 40); // move SR focus onto the results so the reveal is announced
   }
 
   function rosterFrom(findings) {
@@ -603,7 +614,7 @@
     $("#btn-approve-all").onclick = approveAllSafe;
     const dr = $("#demo-recovery"); if (dr) dr.onclick = demoRecovery;
     const fd = $("#forget-data"); if (fd) fd.onclick = (e) => { e.preventDefault(); forgetData(); };
-    const va = $("#vrec-add"); if (va) va.onclick = () => { const f = $("#vrec-form"); if (f) f.classList.toggle("hidden"); };
+    const va = $("#vrec-add"); if (va) va.onclick = () => { const f = $("#vrec-form"); if (f) { f.classList.toggle("hidden"); const open = !f.classList.contains("hidden"); va.setAttribute("aria-expanded", String(open)); if (open) { const amt = $("#vrec-amt"); if (amt) amt.focus(); } } };
     const vf = $("#vrec-form"); if (vf) vf.onsubmit = (e) => { e.preventDefault(); addVrec(); };
     document.addEventListener("keydown", (e) => {
       const dlg = $("#drawer").classList.contains("open") ? $("#drawer") : ($("#scan-modal").classList.contains("open") ? $("#scan-modal") : null);
