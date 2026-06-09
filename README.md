@@ -149,7 +149,7 @@ Local smoke: `python backend/scripts/adk_smoke.py` (ADK agent) · `python backen
 # from the repo root (the root Dockerfile installs Node for the MongoDB MCP server)
 gcloud run deploy recoup-agent \
   --source . --region us-central1 --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-3-flash-preview,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
 
 # Optional after gcloud prints the service URL (needed only for OAuth/Gmail redirects):
 gcloud run services update recoup-agent --region us-central1 \
@@ -167,7 +167,7 @@ Secrets come from environment variables — never hardcoded.
 
 | Layer | Tech | Cost |
 |---|---|---|
-| Reasoning | **Gemini 2.5-flash** (Google AI Studio) | free tier |
+| Reasoning | **Gemini 3 (gemini-3-flash-preview)** (Google AI Studio) | free tier |
 | Store / partner MCP | **MongoDB Atlas M0** + MongoDB MCP | free |
 | Agent tool surface | Google ADK + official MongoDB MCP server; HTTP MCP compatibility route | free |
 | Backend host | Google **Cloud Run** | free tier |

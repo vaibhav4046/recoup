@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** Google Cloud Run URL after deploy
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API:** Google Cloud Run `/api/health` after deploy
-- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · a zero-cost in-browser **voice agent**
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 3 (gemini-3-flash-preview)** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · a zero-cost in-browser **voice agent**
 
 ---
 
@@ -28,7 +28,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 ## How we built it
 
 - **Frontend:** a zero-build static app (instant load) — vanilla JS + a premium product-led UI, responsive mobile layout, full accessibility (ARIA roles, focus-visible, reduced-motion), served by the same **Cloud Run** service as the API.
-- **Backend:** **FastAPI** on **Google Cloud Run**. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** writes the human-readable plan/reasoning and degrades to deterministic fallback under free-tier rate limits. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. The agent spine registers the official **MongoDB MCP server** as an ADK toolset, while Atlas **Vector Search** stores/retrieves recovery playbook memory.
+- **Backend:** **FastAPI** on **Google Cloud Run**. A deterministic rule engine owns every dollar amount; **Gemini 3 (gemini-3-flash-preview)** writes the human-readable plan/reasoning and degrades to deterministic fallback under free-tier rate limits. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. The agent spine registers the official **MongoDB MCP server** as an ADK toolset, while Atlas **Vector Search** stores/retrieves recovery playbook memory.
 - **The swarm:** a Coordinator → specialist agents → an independent Verifier → a Drafter, each finding carrying its agent attribution + verdict.
 - **Quality:** we ran **three rounds of brutal multi-agent QA** (14 personas + hackathon-judge lenses each round), then fixed what they found — the honesty calibration (no annualized one-time payouts, eligibility caveats, "self-reported" recovered, a Verifier that says *no*) came directly out of that.
 
@@ -37,7 +37,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 | Layer | Tech | Cost |
 |---|---|---|
 | **Vector Search** | **MongoDB Atlas Vector Search** + `gemini-embedding-001` (768d) | free (M0) |
-| Reasoning | **Google Gemini 2.5-flash** | free tier |
+| Reasoning | **Google Gemini 3 (gemini-3-flash-preview)** | free tier |
 | Store | **MongoDB** Atlas M0 | free |
 | Voice agent | Browser Web Speech (STT + TTS) only | free |
 | Agent tools | Google ADK + official MongoDB MCP server | free |
