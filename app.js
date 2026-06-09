@@ -36,8 +36,15 @@
 
   /* real SHA-256 (Web Crypto) — 64-char hex, chained like the backend's audit.py */
   async function sha256(str) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    try {
+      if (typeof crypto !== "undefined" && crypto.subtle) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+        return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    } catch (e) { /* non-secure context (file:// or http://) — fall through to a non-crypto digest */ }
+    let h1 = 0x811c9dc5, h2 = 0x1000193;
+    for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0; h2 = Math.imul(h2 ^ c, 0x85ebca77) >>> 0; }
+    return (h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0")).repeat(4).slice(0, 64);
   }
 
   async function boot() {
@@ -261,7 +268,7 @@
     a.approvalState = "approved"; a.status = "claim_ready"; a.claimedAt = new Date().toISOString?.() || "now";
     await appendAudit("human", "You", "ACTION_APPROVED", "Approved (claim ready): " + a.title, a.amount);
     recompute(); renderHero(); renderBreakdown(); renderAudit();
-    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`Claim drafted — ready to send: ${a.title}`);
     if (API) { try { await fetch(`${API}/api/actions/${id}/approve`, { method: "POST" }); } catch (e) {} }
   }
@@ -271,7 +278,7 @@
     a.approvalState = "rejected"; a.status = "drafted";
     await appendAudit("human", "You", "ACTION_REJECTED", "Skipped: " + a.title);
     recompute(); renderHero(); renderBreakdown(); renderAudit();
-    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     closeDrawer();
     if (API) { try { await fetch(`${API}/api/actions/${id}/reject`, { method: "POST" }); } catch (e) {} }
   }
@@ -281,7 +288,7 @@
     a.status = "sent";
     await appendAudit("human", "You", "CLAIM_SENT", "Claim sent: " + a.title, a.amount);
     renderAudit();
-    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`Marked sent — ${a.title}`);
     if (API) { try { await fetch(`${API}/api/actions/${id}/sent`, { method: "POST" }); } catch (e) {} }
   }
@@ -291,7 +298,7 @@
     a.status = "paid";
     await appendAudit("human", "You", "CLAIM_PAID", "Recovered — you confirmed: " + a.title + " (" + a.amount_label + ")", a.amount);
     updateReadyUI(); renderAudit();
-    const c = $("#card-" + id); if (c) c.outerHTML = card(a).outerHTML;
+    const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`💰 Recovered ${a.amount_label} — ${a.title}`);
     if (API) { try { await fetch(`${API}/api/actions/${id}/paid`, { method: "POST" }); } catch (e) {} }
   }

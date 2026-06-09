@@ -140,10 +140,10 @@ python -m http.server 8123    # open http://localhost:8123
 
 ## Roadmap
 
-- **Live Gmail intake** — read receipt/subscription emails to populate the money surface from a real inbox.
-- **MongoDB MCP** — agent reads/writes cases through the partner MCP server.
 - **More recovery rules** — warranty claims, medical-bill errors, deposit returns, FX/foreign-transaction refunds.
-- **Specialised sub-agents** — a coordinator dispatching hunter/auditor/claimant agents per category.
+- **One-click filing** — pre-fill the official portals where their forms allow, instead of only deep-linking.
+- **Confirmation-backed recoveries** — attach a receipt/reference to each recovery-log entry so it's evidenced, not self-reported.
+- **Google OAuth verification** — move Gmail connect from test mode to verified production access.
 
 ## License
 
