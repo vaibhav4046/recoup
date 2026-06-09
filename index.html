@@ -312,63 +312,63 @@
       <!-- Brutal QA & User Persona Audit -->
       <section class="landing-sec qa-sec glass">
         <div class="sec-head">
-          <div class="sec-eyebrow">BRUTAL QA AUDIT</div>
-          <h2>User Persona Verification</h2>
-          <p class="sec-desc">Recoup has been stress-tested across multiple user personas to ensure a robust, high-fidelity experience with 10/10 ratings.</p>
+          <div class="sec-eyebrow">ADVERSARIAL AI QA — 3 ROUNDS</div>
+          <h2>Brutally tested by simulated personas</h2>
+          <p class="sec-desc">Recoup was attacked by panels of adversarial <b>AI test personas</b> (12–30 per round, three rounds) plus automated multi-viewport sweeps. These are real findings from that process — simulated testers, not customer testimonials. What they flagged, we fixed and re-verified live.</p>
         </div>
         <div class="qa-grid">
           <div class="persona-card">
             <div class="p-header">
-              <div class="p-avatar">SK</div>
+              <div class="p-avatar">SP</div>
               <div class="p-meta">
-                <span class="p-name">Sarah K.</span>
-                <span class="p-role">Busy Mother of Three</span>
+                <span class="p-name">The Scam-Wary Pensioner</span>
+                <span class="p-role">simulated persona · round 1</span>
               </div>
-              <div class="p-rating">10/10</div>
+              <div class="p-rating">FLAGGED → FIXED</div>
             </div>
-            <p>"I was terrified this would email companies without my knowing. The human-in-the-loop gate is brilliant. I approved a cancellation for an unused gym membership myself, and got a $150 credit back!"</p>
+            <p>Flagged: "Looks like every scam that promises me money." Shipped: an above-the-fold promise — Recoup never asks for your money, password, or bank details — and money only ever moves on the official vendor/government site.</p>
           </div>
           <div class="persona-card">
             <div class="p-header">
-              <div class="p-avatar">LT</div>
+              <div class="p-avatar">SE</div>
               <div class="p-meta">
-                <span class="p-name">Liam T.</span>
-                <span class="p-role">Freelance Designer</span>
+                <span class="p-name">The Privacy-Paranoid Engineer</span>
+                <span class="p-role">simulated persona · round 2</span>
               </div>
-              <div class="p-rating">10/10</div>
+              <div class="p-rating">FLAGGED → FIXED</div>
             </div>
-            <p>"The voice command 'Find my money' scanned my pasted statement and instantly found a duplicate Adobe charge and a silent price hike. The voice assistant speaks back cleanly."</p>
+            <p>Flagged a CORS misconfiguration and a self-certifying audit chain. Shipped: a pinned origin allowlist, a thread-safe SHA-256 chain (verified under concurrent approvals), and a public /api/health integrity check anyone can curl.</p>
           </div>
           <div class="persona-card">
             <div class="p-header">
-              <div class="p-avatar">DM</div>
+              <div class="p-avatar">HJ</div>
               <div class="p-meta">
-                <span class="p-name">David M.</span>
-                <span class="p-role">Retired Veteran</span>
+                <span class="p-name">The Hackathon Judge</span>
+                <span class="p-role">simulated persona · round 3</span>
               </div>
-              <div class="p-rating">10/10</div>
+              <div class="p-rating">FLAGGED → FIXED</div>
             </div>
-            <p>"I checked the unclaimed property portal through Recoup's links and found $340 from an old utility deposit. I appreciated that Recoup doesn't ask for my bank credentials."</p>
+            <p>Flagged: "The engine fabricates price hikes from variable spend — PAYPAL *NYTIMES and PAYPAL *SPOTIFY collapse into one merchant." Shipped: gateway-descriptor parsing and a hike test that rejects scatter — verified with the exact failing inputs.</p>
           </div>
           <div class="persona-card">
             <div class="p-header">
-              <div class="p-avatar">CV</div>
+              <div class="p-avatar">MU</div>
               <div class="p-meta">
-                <span class="p-name">Chloe V.</span>
-                <span class="p-role">University Student</span>
+                <span class="p-name">The Impatient Mobile User</span>
+                <span class="p-role">simulated persona · rounds 1–3</span>
               </div>
-              <div class="p-rating">10/10</div>
+              <div class="p-rating">FLAGGED → FIXED</div>
             </div>
-            <p>"It's beautiful, extremely fast, and the black-and-gold design is stunning. The SHA-256 ledger verifies my actions on-screen, which gives me massive confidence in its safety."</p>
+            <p>Flagged overlapping cards and a black-screen reveal on mobile. Shipped: a rebuilt reveal with a can't-stay-hidden failsafe and clean layouts — re-certified at 390, 768, 1280 and 1440px with zero console errors.</p>
           </div>
         </div>
         <div class="qa-checklist">
-          <h3>QA Stress Testing Checklist</h3>
+          <h3>Verified in testing — every claim reproducible</h3>
           <div class="chk-grid">
-            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Security Audit: CORS allowlist secure, no credential leaks</div>
-            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Rate Limit: 100% resilient under 100 req/sec loading</div>
-            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Voice: continuous listening noise cancellation verified</div>
-            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Storage: MongoDB Atlas MCP data operations validated</div>
+            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> CORS pinned to an origin allowlist — no wildcard with credentials</div>
+            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Audit chain race-safe — concurrent approvals keep the SHA-256 chain intact</div>
+            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> 5,000-line statement parsed in-browser in ~25ms — nothing uploaded</div>
+            <div class="chk-item"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#f5c518" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg> Money math deterministic — gateway descriptors split, one-time payouts never annualized</div>
           </div>
         </div>
       </section>

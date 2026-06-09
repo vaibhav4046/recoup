@@ -865,10 +865,11 @@ body{
 /* Brutal QA & User Persona Audit */
 .qa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(2, 1fr); /* 2x2 — roomy cards, no orphan row */
   gap: 20px;
   margin-bottom: 30px;
 }
+@media(max-width:760px){.qa-grid{grid-template-columns:1fr}}
 .persona-card {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -912,11 +913,12 @@ body{
   color: var(--dim);
 }
 .p-rating {
-  font-size: 11px;
+  font-size: 9.5px;
   font-weight: 900;
+  letter-spacing: .04em;
   color: #000;
   background: var(--amber);
-  padding: 2px 8px;
+  padding: 3px 7px;
   border-radius: 6px;
   white-space: nowrap;
 }
