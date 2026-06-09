@@ -113,7 +113,7 @@ def _call_tool(name: str, args: dict) -> dict:
                 f"${scan['recurring_year']:,.0f}/yr recurring leaks + "
                 f"{once_sym}{scan['one_time']:,.0f} one-time payouts."
             ),
-            "structuredContent": {"findings": findings, "recurring_year": scan.get("recurring_year"), "one_time": scan.get("one_time"), "total": scan.get("total")},
+            "structuredContent": {"findings": findings, "recurring_year": scan.get("recurring_year"), "one_time": scan.get("one_time"), "total": scan.get("total_recoverable")},
         }
     if name == "recoup_get_state":
         if not APP.actions:

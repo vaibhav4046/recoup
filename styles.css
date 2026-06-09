@@ -270,7 +270,7 @@ body.light .fc-expect b{color:#0e7490}
 .prov-sec.caveat div:not(.prov-h){font-size:13px;color:#fde6a8}
 
 /* findings */
-.findings{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.findings{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px}
 .fcard{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--panel);display:flex;flex-direction:column;gap:11px;transition:transform .3s var(--ease),border-color .25s,box-shadow .3s var(--ease);position:relative;overflow:hidden;animation:cardIn .5s var(--ease) both}
 .fcard:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--shadow-sm)}
 .fcard.paid{border-color:rgba(52,211,153,.4);background:linear-gradient(180deg,rgba(52,211,153,.09),var(--panel))}
@@ -402,6 +402,9 @@ body.light{
 body.light #bg-field{opacity:.45}
 body.light .topbar{background:rgba(255,255,255,.8)}
 body.light .fig-amount.leak{color:#b45309}
+body.light .fig-amount.owed{background:none;-webkit-text-fill-color:#047857;color:#047857}
+body.light .product-window{background:linear-gradient(180deg,#0c0e16,#080a11);border-color:rgba(255,255,255,.12);box-shadow:0 30px 70px -34px rgba(30,41,73,.45)}
+body.light .landing-sub{color:#515a6b}
 body.light .trace .line.cyan .t{color:#0e7490}
 body.light .trace .line.ok .t{color:#047857}
 body.light .trace .line.warn .t{color:#b45309}
