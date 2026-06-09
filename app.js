@@ -621,7 +621,7 @@
       if (!dlg) return;
       if (e.key === "Escape") { dlg.id === "drawer" ? closeDrawer() : closeScan(); return; }
       if (e.key === "Tab") {
-        const vis = [...dlg.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null && !el.disabled);
+        const vis = [...dlg.querySelectorAll('button, [href], input, textarea, select, summary, [tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null && !el.disabled);
         if (!vis.length) return;
         const first = vis[0], last = vis[vis.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
