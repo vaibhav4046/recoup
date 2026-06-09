@@ -90,7 +90,16 @@ def verify_magic(code: str) -> str | None:
 
 
 def issue_oauth_state(flow: str) -> str:
-    """Create a one-time CSRF state token for Google OAuth redirects."""
+    """CSRF state for Google OAuth redirects. STATELESS: HMAC-signed + time-boxed so it
+    survives server restarts/replica swaps mid-flow (an in-memory dict loses the state if
+    the container recycles between /start and the callback — observed live on Spaces).
+    Falls back to the in-memory dict only when APP_SECRET isn't configured."""
+    secret = _secret()
+    if secret:
+        body = _b64(json.dumps({"f": flow, "exp": time.time() + 600, "n": secrets.token_urlsafe(8)},
+                               separators=(",", ":")).encode())
+        sig = _b64(hmac.new(secret, body.encode(), hashlib.sha256).digest())
+        return f"{body}.{sig}"
     now = time.time()
     for key, rec in list(_OAUTH_STATES.items()):
         if rec.get("exp", 0) < now:
@@ -101,7 +110,20 @@ def issue_oauth_state(flow: str) -> str:
 
 
 def verify_oauth_state(state: str | None, flow: str) -> bool:
-    rec = _OAUTH_STATES.pop(state or "", None)
+    if not state:
+        return False
+    secret = _secret()
+    if secret and "." in state:
+        try:
+            body, sig = state.split(".", 1)
+            expect = _b64(hmac.new(secret, body.encode(), hashlib.sha256).digest())
+            if not hmac.compare_digest(sig, expect):
+                return False
+            data = json.loads(_ub64(body))
+            return data.get("f") == flow and data.get("exp", 0) >= time.time()
+        except Exception:
+            return False
+    rec = _OAUTH_STATES.pop(state, None)
     return bool(rec and rec.get("flow") == flow and rec.get("exp", 0) >= time.time())
 
 
