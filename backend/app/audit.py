@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 from datetime import datetime, timezone
 
 
@@ -29,29 +30,34 @@ class AuditLog:
 
     def __init__(self) -> None:
         self._events: list[dict] = []
+        self._lock = threading.Lock()  # serialize read-modify-append across run_in_threadpool threads
 
     def append(self, *, actor_type: str, actor_name: str, event_type: str,
                label: str, evidence_ref: str = "", amount: float = 0.0,
                trace_id: str = "") -> dict:
-        prev = self._events[-1]["hash"] if self._events else self.GENESIS
-        evt = {
-            "event_id": f"au_{len(self._events) + 1:04d}",
-            "actor_type": actor_type, "actor_name": actor_name,
-            "event_type": event_type, "label": label,
-            "evidence_ref": evidence_ref, "amount": amount,
-            "trace_id": trace_id, "timestamp": _now_iso(), "prev_hash": prev,
-        }
-        evt["hash"] = event_hash(prev, evt)
-        self._events.append(evt)
-        return evt
+        with self._lock:  # prevent interleaved read-modify-append from forking the SHA-256 chain
+            prev = self._events[-1]["hash"] if self._events else self.GENESIS
+            evt = {
+                "event_id": f"au_{len(self._events) + 1:04d}",
+                "actor_type": actor_type, "actor_name": actor_name,
+                "event_type": event_type, "label": label,
+                "evidence_ref": evidence_ref, "amount": amount,
+                "trace_id": trace_id, "timestamp": _now_iso(), "prev_hash": prev,
+            }
+            evt["hash"] = event_hash(prev, evt)
+            self._events.append(evt)
+            return evt
 
     def list(self) -> list[dict]:
-        return list(self._events)
+        with self._lock:
+            return list(self._events)
 
     def verify(self) -> dict:
+        with self._lock:
+            events = list(self._events)
         prev = self.GENESIS
-        for i, e in enumerate(self._events):
+        for i, e in enumerate(events):
             if e["prev_hash"] != prev or event_hash(prev, e) != e["hash"]:
                 return {"intact": False, "broken_at": i, "event_id": e.get("event_id")}
             prev = e["hash"]
-        return {"intact": True, "count": len(self._events), "head": prev}
+        return {"intact": True, "count": len(events), "head": prev}
