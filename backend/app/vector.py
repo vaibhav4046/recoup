@@ -157,18 +157,18 @@ def status() -> dict:
 PLAYBOOK_COLL = "playbooks"
 PLAYBOOK_INDEX = "recoup_playbook_index"
 PLAYBOOKS = [
-    {"id": "pb_dead_sub", "kind": "dead_subscription", "title": "Cancel an unused subscription", "basis": "FTC Click-to-Cancel Rule; UK CRA 2015",
-     "text": "1) Open the vendor's account/billing page. 2) Use the in-app cancel flow (legally must be as easy as sign-up). 3) Ask for proration/refund of the pre-paid unused period. 4) Get written confirmation and the effective date. 5) If they stonewall, dispute the next charge with your card issuer."},
-    {"id": "pb_price_creep", "kind": "price_creep", "title": "Challenge a silent price increase", "basis": "FTC Negative Option Rule; UK CRA 2015; EU UCPD",
-     "text": "1) Find the old vs new price on two statements. 2) Email retention: cite that no clear advance notice was given. 3) Demand the prior or new-customer rate, or cancel with proration. 4) Quote the annualized delta as your ask. 5) Escalate to a chargeback if the hike was undisclosed."},
-    {"id": "pb_billing_error", "kind": "billing_error", "title": "Dispute a duplicate or wrong charge", "basis": "Fair Credit Billing Act 15 U.S.C. 1666; Reg Z",
-     "text": "1) Identify the duplicate/incorrect line and date. 2) Notify the merchant in writing within 60 days. 3) If unresolved, file a billing-error dispute with your card issuer (chargeback). 4) Keep the receipt/evidence. 5) Issuer must investigate and credit confirmed errors."},
+    {"id": "pb_gym_cancel", "kind": "dead_subscription", "title": "Cancel a gym / fitness membership", "basis": "FTC Click-to-Cancel Rule; UK CRA 2015; state cooling-off laws",
+     "text": "1) Check the contract for the notice period and cancellation clause. 2) Send written cancellation (email + recorded letter) — many gyms refuse phone-only cancels. 3) Cite the click-to-cancel / negative-option rule if they obstruct. 4) Demand proration/refund of pre-paid unused months. 5) Revoke the card mandate as backup and dispute further charges."},
+    {"id": "pb_stream_cancel", "kind": "dead_subscription", "title": "Cancel an unused streaming subscription", "basis": "FTC Click-to-Cancel Rule; UK CRA 2015 auto-renewal",
+     "text": "1) Open the streaming account's billing page. 2) Use the in-app cancel flow (legally must be as easy as sign-up). 3) Turn off auto-renew and confirm the end date in writing. 4) Ask for a refund of the current unused period if it just renewed. 5) If blocked, dispute the latest charge with your card issuer."},
     {"id": "pb_eu261", "kind": "flight_comp", "title": "Claim EU261 / UK261 flight-delay cash", "basis": "Regulation (EC) 261/2004; UK261",
-     "text": "1) Confirm a 3h+ arrival delay or denied boarding on an eligible route. 2) File the claim on the airline's EU261 form, quoting the regulation. 3) Demand CASH (EUR250-600 by distance), not vouchers. 4) If refused on 'extraordinary circumstances', ask for proof. 5) Escalate to the national enforcement body (e.g. UK CAA)."},
-    {"id": "pb_refund_window", "kind": "price_drop", "title": "Claim a price-protection / refund-window refund", "basis": "Merchant price-protection; UK CRA short-term right to reject",
-     "text": "1) Check the purchase date against the refund/price-protection window. 2) Screenshot the lower current price or the policy. 3) Request the one-time difference (not annualized). 4) Cite the stated policy window. 5) If denied, dispute via the card issuer's purchase protection."},
-    {"id": "pb_unclaimed", "kind": "unclaimed", "title": "Reclaim unclaimed property", "basis": "State unclaimed-property laws; UK dormant assets",
-     "text": "1) Search the official state/government portal (e.g. MissingMoney/NAUPA) by name. 2) Verify the holder and amount. 3) File the free claim with ID + proof of address. 4) Never pay a 'finder' fee — it is free. 5) Track the claim ID to payout."},
+     "text": "1) Confirm a 3h+ arrival delay or denied boarding on an eligible route. 2) File the airline's EU261 form quoting the regulation. 3) Demand CASH (EUR250-600 by distance), not vouchers. 4) If refused on 'extraordinary circumstances', request proof. 5) Escalate to the national enforcement body (e.g. UK CAA)."},
+    {"id": "pb_dup_charge", "kind": "billing_error", "title": "Dispute a duplicate or wrong charge", "basis": "Fair Credit Billing Act 15 U.S.C. 1666; Reg Z",
+     "text": "1) Identify the duplicate/incorrect line and date. 2) Notify the merchant in writing within 60 days. 3) If unresolved, file a billing-error dispute (chargeback) with your card issuer. 4) Attach the receipt/evidence. 5) The issuer must investigate and credit confirmed errors."},
+    {"id": "pb_trial_refund", "kind": "free_trial", "title": "Refund a free trial that auto-converted", "basis": "FTC Negative Option / ROSCA; UK CRA 2015",
+     "text": "1) Find the date the trial converted to a paid charge. 2) Email within the window: you did not intend to continue and consent was unclear. 3) Demand a full refund of the first charge + immediate cancellation. 4) Cite ROSCA / negative-option clear-consent rules. 5) If refused, dispute it as an unauthorized recurring charge."},
+    {"id": "pb_utility_overpay", "kind": "overpayment", "title": "Reclaim an overpaid / credit-balance utility bill", "basis": "Utility regulator rules (Ofgem/PUC); credit-balance refund rights",
+     "text": "1) Check the utility account for a credit balance or estimated-vs-actual overbilling. 2) Submit an up-to-date meter reading to correct estimates. 3) Request the credit balance back as CASH, not 'rolled forward'. 4) Cite the regulator's credit-balance refund rule. 5) Escalate to the energy/utility ombudsman if not refunded in their window."},
 ]
 
 
