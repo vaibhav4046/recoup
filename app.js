@@ -120,7 +120,7 @@
     const box = $("#swarm"); if (!box) return; box.innerHTML = "";
     const roster = S.swarm || [];
     const meta = $("#swarm-meta");
-    if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0} auto-verified${S.needs_confirm ? " · " + S.needs_confirm + " need sign-off" : ""}` : "—";
+    if (meta) meta.textContent = roster.length ? `${roster.length} agents · ${S.verified || 0} rule-checked${S.needs_confirm ? " · " + S.needs_confirm + " need sign-off" : ""}` : "—";
     roster.forEach((a) => {
       const c = el("div", "agent-card" + (a.count ? " active" : ""));
       c.setAttribute("role", "listitem");
@@ -277,7 +277,7 @@
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
       ${a.timeline ? `<div class="fc-expect"><span aria-hidden="true">⏱</span> ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
-      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · rule-checked" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
