@@ -14,7 +14,7 @@ import math
 
 from .config import get_settings
 
-EMBED_MODEL = "text-embedding-004"
+EMBED_MODEL = "gemini-embedding-001"
 DIM = 768
 INDEX = "recoup_vector_index"
 COLL = "precedents"
@@ -55,7 +55,7 @@ def _embed(text: str, task: str = "RETRIEVAL_DOCUMENT") -> list[float]:
     import httpx
     s = get_settings()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{EMBED_MODEL}:embedContent"
-    body = {"model": f"models/{EMBED_MODEL}", "content": {"parts": [{"text": text[:2000]}]}, "taskType": task}
+    body = {"model": f"models/{EMBED_MODEL}", "content": {"parts": [{"text": text[:2000]}]}, "taskType": task, "outputDimensionality": DIM}
     r = httpx.post(url, params={"key": s.google_api_key}, json=body, timeout=20)
     r.raise_for_status()
     return r.json()["embedding"]["values"]
