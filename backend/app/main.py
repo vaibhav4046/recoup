@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Recoup API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Recoup API", version="0.2.3", lifespan=lifespan)
 _s = get_settings()
 _cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
 _cors_wild = "*" in _cors_list  # catch "*" ANYWHERE in the list, not only an exact ["*"] — a wildcard mixed with other origins still makes Starlette reflect any origin when credentials are on
