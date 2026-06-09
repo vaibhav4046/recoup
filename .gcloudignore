@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+screens
+__pycache__
+**/__pycache__
+*.pyc
+backend/.env
+*.png
+*.jpg
+*.jpeg
+recover-*.png
