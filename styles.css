@@ -3,7 +3,7 @@
   --bg:#07080c; --bg2:#0b0d14;
   --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.05);
   --border:rgba(255,255,255,.09); --border2:rgba(255,255,255,.14);
-  --text:#eef1f7; --muted:#8b93a7; --dim:#7c849a;
+  --text:#eef1f7; --muted:#9aa2b6; --dim:#9aa1b4;
   --emerald:#34d399; --cyan:#22d3ee; --amber:#fbbf24; --rose:#fb7185; --violet:#a78bfa;
   --grad:linear-gradient(135deg,#34d399,#22d3ee);
   --grad-money:linear-gradient(135deg,#5eead4,#34d399 45%,#22d3ee);

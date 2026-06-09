@@ -220,31 +220,32 @@
     const leak = isLeak(a.kind), once = a.cadence === "once";
     const st = a.status, approved = a.approvalState === "approved";
     const c = el("div", "fcard" + (approved ? " claim-ready" : a.approvalState === "rejected" ? " skipped" : "") + (once ? " fc-onetime" : "") + (st === "paid" ? " paid" : ""));
-    c.id = "card-" + a.id;
+    const aid = esc(a.id);
+    c.id = "card-" + aid;
     c.setAttribute("role", "listitem");
     const _kindWord = leak ? "money you're losing" : "money you're owed";
     const _stateWord = st === "paid" ? "recovered" : st === "sent" ? "claim sent" : approved ? "claim ready" : "needs your review";
     c.setAttribute("aria-label", [a.title, a.amount_label, _kindWord, a.confidence ? Math.round(a.confidence * 100) + "% confidence" : "", _stateWord].filter(Boolean).join(", "));
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
-        <button class="btn btn-copy" data-copy="${a.id}" aria-label="Copy claim text"><span aria-hidden="true">⧉</span> Copy</button>
-        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form <span aria-hidden="true">↗</span></a>` : `<button class="btn btn-mail" data-mail="${a.id}" aria-label="Email claim draft"><span aria-hidden="true">✉</span> Email</button>`}
+        <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text"><span aria-hidden="true">⧉</span> Copy</button>
+        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form <span aria-hidden="true">↗</span></a>` : `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft"><span aria-hidden="true">✉</span> Email</button>`}
       </div>`;
     let actions;
     if (a.approvalState === "rejected") {
-      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${a.id}"><span aria-hidden="true">✓</span> Approve instead</button><button class="btn btn-view" data-view="${a.id}">Show work</button></div>`;
+      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${aid}"><span aria-hidden="true">✓</span> Approve instead</button><button class="btn btn-view" data-view="${aid}">Show work</button></div>`;
     } else if (!approved) {
       actions = `<div class="fc-actions">
-           <button class="btn btn-approve" data-approve="${a.id}"><span aria-hidden="true">✓</span> Approve</button>
-           <button class="btn btn-view" data-view="${a.id}">Show work</button>
-           <button class="btn btn-skip" data-skip="${a.id}">Skip</button>
+           <button class="btn btn-approve" data-approve="${aid}"><span aria-hidden="true">✓</span> Approve</button>
+           <button class="btn btn-view" data-view="${aid}">Show work</button>
+           <button class="btn btn-skip" data-skip="${aid}">Skip</button>
          </div>`;
     } else if (st === "paid") {
       actions = `<div class="fc-paid"><span aria-hidden="true">✓</span> Recovered ${esc(a.amount_label)}</div>`;
     } else if (st === "sent") {
-      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${a.id}"><span aria-hidden="true">💰</span> Mark recovered</button>`;
+      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${aid}"><span aria-hidden="true">💰</span> Mark recovered</button>`;
     } else {
-      actions = `${sendRow}<button class="btn btn-life full" data-sent="${a.id}">Mark sent →</button>`;
+      actions = `${sendRow}<button class="btn btn-life full" data-sent="${aid}">Mark sent →</button>`;
     }
     const tag = approved
       ? `<span class="fc-kind ready">${st === "paid" ? '<span aria-hidden="true">✓</span> paid' : st === "sent" ? "sent" : '<span aria-hidden="true">✓</span> ready'}</span>`
@@ -261,7 +262,7 @@
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
       ${a.timeline ? `<div class="fc-expect"><span aria-hidden="true">⏱</span> ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
-      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${a.id}">show work</button></div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · verified" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
@@ -422,6 +423,15 @@
 
   // ---- drawer ----
   let _invoker = null;
+  // a11y: while a dialog is open, take the rest of the page out of the AT tree + tab order
+  // (inert blocks the screen-reader virtual cursor too, not just Tab — complements the focus trap)
+  function syncDialogBackground() {
+    const open = ($("#scan-modal") && $("#scan-modal").classList.contains("open")) || ($("#drawer") && $("#drawer").classList.contains("open"));
+    document.querySelectorAll("#bg-field, .topbar, #main").forEach((e) => {
+      if (open) { e.setAttribute("inert", ""); e.setAttribute("aria-hidden", "true"); }
+      else { e.removeAttribute("inert"); e.removeAttribute("aria-hidden"); }
+    });
+  }
   function restoreFocus() { if (_invoker && _invoker.focus && document.contains(_invoker)) { try { _invoker.focus(); } catch (e) {} } _invoker = null; }
   function openDrawer(id) {
     const a = S.actions.find((x) => x.id === id); if (!a) return;
@@ -451,14 +461,14 @@
     ab.style.display = a.approvalState === "approved" ? "none" : "";
     ab.onclick = () => { approve(id); closeDrawer(); };
     sb.onclick = () => skip(id);
-    $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); $("#drawer-scrim").classList.add("open");
+    $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false"); $("#drawer-scrim").classList.add("open"); syncDialogBackground();
     setTimeout(() => { const x = $("#drawer-x"); if (x) x.focus(); }, 60);
   }
-  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true"); $("#drawer-scrim").classList.remove("open"); restoreFocus(); }
+  function closeDrawer() { $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true"); $("#drawer-scrim").classList.remove("open"); syncDialogBackground(); restoreFocus(); }
 
   // ---- scan your own data (100% client-side) ----
-  function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); $("#scan-modal").setAttribute("aria-hidden", "false"); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
-  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); $("#scan-modal").setAttribute("aria-hidden", "true"); restoreFocus(); }
+  function openScan() { _invoker = document.activeElement; $("#scan-scrim").classList.add("open"); $("#scan-modal").classList.add("open"); $("#scan-modal").setAttribute("aria-hidden", "false"); syncDialogBackground(); const i = $("#scan-input"); if (i) setTimeout(() => i.focus(), 50); }
+  function closeScan() { $("#scan-scrim").classList.remove("open"); $("#scan-modal").classList.remove("open"); $("#scan-modal").setAttribute("aria-hidden", "true"); syncDialogBackground(); restoreFocus(); }
   function showResults() {
     const r = $("#results"), l = $("#landing");
     if (r) r.classList.remove("hidden");
@@ -617,7 +627,7 @@
 
   function applyTheme(t) {
     document.body.classList.toggle("light", t === "light");
-    const b = document.querySelector("#theme-toggle"); if (b) b.textContent = t === "light" ? "☀" : "◐";
+    const b = document.querySelector("#theme-toggle"); if (b) { b.textContent = t === "light" ? "☀" : "◐"; b.setAttribute("aria-pressed", String(t === "light")); }
   }
 
   let toastT;

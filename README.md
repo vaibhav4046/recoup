@@ -9,11 +9,17 @@
 (price-drop refunds, EU261 flight-delay compensation, class-action settlements,
 unclaimed property), **drafts every claim**, and lets you **approve each one with a
 single tap** — nothing is ever sent without you. Every step writes a tamper-evident
-**SHA-256 audit chain**. The backend also exposes an MCP-compatible JSON-RPC surface
-so agents can inspect Recoup state, run demo scans, and detect subscription signals
-from Gmail message metadata without exposing OAuth tokens.
+**SHA-256 audit chain**. The backend also ships an MCP-compatible JSON-RPC surface
+(`mcp.py`) so agents can inspect Recoup state, run demo scans, and detect subscription
+signals from Gmail message metadata without exposing OAuth tokens.
 
 ### ▶ Live demo: https://recoup-vaibhav4046s-projects.vercel.app
+
+> **Live status (honest):** the frontend (Vercel) and the FastAPI backend (Hugging Face —
+> `/api/health`, `/api/state`, Gemini + MongoDB) are **live**. The MCP routes (`/mcp`,
+> `/api/mcp`) and the latest auth/currency/Gmail hardening are **committed and locally
+> tested but not yet mounted on the public Space** — they go live the next time the Space
+> is redeployed with the current build (`HF_TOKEN=… python backend/scripts/deploy_hf.py`).
 
 ![Recoup command center](screens/desktop.png)
 
@@ -82,7 +88,7 @@ recoup/
    │  ├─ agent.py      # Gemini reasoning trace + claim drafting (+ 429/503 retry)
    │  ├─ state.py      # orchestration + human approval gate + split totals
    │  ├─ audit.py      # SHA-256 hash-chain audit log + verify()
-   │  ├─ mongodb.py    # partner store (free Atlas M0); MCP-exposed collections
+   │  ├─ mongodb.py    # partner store (free Atlas M0) for approved cases
    │  ├─ mcp.py        # MCP-compatible JSON-RPC tools for agents + Gmail detector
    │  ├─ config.py     # settings + honest integration status
    │  └─ main.py       # FastAPI endpoints + trace middleware
@@ -106,8 +112,8 @@ deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
 | `GET`  | `/api/audit` | the SHA-256 audit log + integrity |
 | `POST` | `/api/report` | full recovery report |
 | `GET`  | `/api/state` | hydration snapshot for the frontend |
-| `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata |
-| `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls |
+| `GET`  | `/mcp`, `/api/mcp` | MCP tool discovery metadata *(in repo; live after backend redeploy)* |
+| `POST` | `/mcp`, `/api/mcp` | MCP-compatible JSON-RPC tool calls *(in repo; live after backend redeploy)* |
 
 ## Free, no-card stack
 
