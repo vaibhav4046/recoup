@@ -97,7 +97,7 @@
       auditLink.rel = "noopener";
       auditLink.textContent = "Verify the live chain head & integrity at /api/health";
     }
-    try { document.body.classList.remove("light"); } catch (e) {}  // dark-only design (light theme removed)
+    // dark-only design
     if (API) {
       try {
         const ctrl = new AbortController();
@@ -700,10 +700,7 @@
     if (ctaBtn) ctaBtn.onclick = openScan;
   }
 
-  function applyTheme(t) {
-    document.body.classList.toggle("light", t === "light");
-    const b = document.querySelector("#theme-toggle"); if (b) { b.innerHTML = t === "light" ? icon('sun') : icon('moon'); b.setAttribute("aria-pressed", String(t === "light")); }
-  }
+  // dark-only — theme toggle removed
 
   let toastT;
   function toast(msg) {
