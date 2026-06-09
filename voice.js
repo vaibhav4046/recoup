@@ -1,6 +1,6 @@
 /* Recoup — voice agent. Browser-native Web Speech (free, low-latency) for listening;
-   answers come from Gemini (free) for anything that isn't a direct command; speech is
-   ElevenLabs (if a key is configured server-side) else the free browser voice.
+   answers come from Gemini for anything that isn't a direct command; speech is
+   browser-native Web Speech TTS only (no non-Google voice service).
    Continuous listen with start/stop, interim transcript, and mic-pause while it talks
    (so it never hears itself). Falls back gracefully off-Chrome. */
 (function () {
@@ -24,7 +24,7 @@
 
   let rec = null, active = false, speaking = false, processing = false, idleTimer = null, restartTimer = null, audio = null;
 
-  // ---- speak: ElevenLabs via the server proxy if available, else free browser TTS ----
+  // ---- speak: free browser TTS only ----
   async function speak(text) {
     if (!text) return;
     speaking = true; clearTimeout(restartTimer);
