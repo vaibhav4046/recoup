@@ -48,7 +48,9 @@ secrets_to_set = {
     "USE_VERTEX": env.get("USE_VERTEX", "false"),
     "GEMINI_MODEL": env.get("GEMINI_MODEL", "gemini-2.5-flash"),
     "GOOGLE_CLOUD_PROJECT": env.get("GOOGLE_CLOUD_PROJECT", ""),
-    "CORS_ORIGINS": "*",
+    "MONGODB_URI": env.get("MONGODB_URI", ""),
+    "MONGODB_DB": env.get("MONGODB_DB", ""),
+    "CORS_ORIGINS": "https://recoup-vaibhav4046s-projects.vercel.app,http://localhost:8123,http://127.0.0.1:8123",  # pinned: never "*" (wildcard+credentials reflects any origin)
     "BASE_URL": url,
     "APP_SECRET": _secrets.token_hex(24),
 }
