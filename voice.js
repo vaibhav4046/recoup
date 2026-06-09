@@ -1,56 +1,117 @@
-/* Recoup — zero-cost voice agent. Uses the browser-native Web Speech API
-   (SpeechRecognition + SpeechSynthesis) — no keys, no paid service, low latency.
-   Speak a command; Recoup acts and talks back. Falls back gracefully off-Chrome. */
+/* Recoup — voice agent. Browser-native Web Speech (free, low-latency) for listening;
+   answers come from Gemini (free) for anything that isn't a direct command; speech is
+   ElevenLabs (if a key is configured server-side) else the free browser voice.
+   Continuous listen with start/stop, interim transcript, and mic-pause while it talks
+   (so it never hears itself). Falls back gracefully off-Chrome. */
 (function () {
   "use strict";
+  const cfg = window.RO_CONFIG || {};
+  const API = (cfg.apiBase || "").replace(/\/+$/, "");
   const btn = document.getElementById("voice-btn");
   if (!btn) return;
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const synth = window.speechSynthesis;
   const label = document.getElementById("voice-label");
 
-  const flash = (t) => { if (label) { label.textContent = t; label.classList.add("show"); clearTimeout(flash._t); flash._t = setTimeout(() => label.classList.remove("show"), 3200); } };
-  const say = (t) => { try { if (!synth) return; synth.cancel(); const u = new SpeechSynthesisUtterance(t); u.rate = 1.06; u.pitch = 1; u.volume = 1; synth.speak(u); } catch (e) {} };
-  const click = (sel) => { const e = document.querySelector(sel); if (e) { e.click(); return true; } return false; };
+  const flash = (t, hold) => {
+    if (!label) return;
+    label.textContent = t; label.classList.add("show");
+    clearTimeout(flash._t);
+    if (hold !== true) flash._t = setTimeout(() => label.classList.remove("show"), 3800);
+  };
 
-  if (!SR || !synth) {
-    btn.title = "Voice commands need Chrome or Edge";
-    btn.addEventListener("click", () => flash("Voice needs Chrome or Edge"));
-    return;
+  if (!SR) { btn.title = "Voice needs Chrome or Edge"; btn.addEventListener("click", () => flash("Voice commands need Chrome or Edge")); return; }
+
+  let rec = null, active = false, speaking = false, processing = false, idleTimer = null, restartTimer = null, audio = null;
+
+  // ---- speak: ElevenLabs via the server proxy if available, else free browser TTS ----
+  async function speak(text) {
+    if (!text) return;
+    speaking = true; clearTimeout(restartTimer);
+    try { if (rec) rec.stop(); } catch (e) {}   // pause the mic so we don't transcribe ourselves
+    let played = false;
+    if (API) {
+      try {
+        const r = await fetch(API + "/api/tts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+        const ct = r.headers.get("content-type") || "";
+        if (r.ok && ct.includes("audio")) {
+          const url = URL.createObjectURL(await r.blob());
+          audio = new Audio(url);
+          await new Promise((res) => { audio.onended = res; audio.onerror = res; audio.play().catch(() => res()); });
+          URL.revokeObjectURL(url); played = true;
+        }
+      } catch (e) {}
+    }
+    if (!played && synth) {
+      await new Promise((res) => { try { synth.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; u.onend = res; u.onerror = res; synth.speak(u); } catch (e) { res(); } });
+    }
+    speaking = false;
   }
 
-  // route a transcript to an intent (deterministic — the LLM/rules still own all money)
-  function route(t) {
-    t = (t || "").toLowerCase().trim();
+  // ---- direct commands (instant, deterministic — the rules still own every dollar) ----
+  function command(t) {
     const has = (...w) => w.some((x) => t.includes(x));
-    if (!t) { return; }
-    if (has("find my money", "find money", "start scan", "scan my", "run scan", "scan")) { flash("“" + t + "”"); say("Opening your private scan. Paste a statement and nothing leaves your browser."); click("#find-money"); }
-    else if (has("example", "demo", "walk", "show me how")) { flash("“" + t + "”"); say("Here is a sixty second example of how recovery works."); click("#see-example"); }
-    else if (has("approve all", "approve everything", "approve the safe", "recover all")) { flash("“" + t + "”"); if (click("#btn-approve-all")) say("Approving every safe win. Nothing is sent until you confirm on the real site."); else say("Run a scan first, then I can approve your safe wins."); }
-    else if (has("how much", "my total", "owed", "leaking", "how many")) { speakTotal(); }
-    else if (has("connect gmail", "my email", "read my")) { flash("“" + t + "”"); say("You can connect read only Gmail from the sign in page. It only reads subscription receipts."); }
-    else if (has("what", "who", "explain", "help", "about", "how does", "tell me")) { flash("What is Recoup?"); say("Recoup is a money recovery agent. It scans your statements or read only Gmail, finds money you are owed and subscriptions draining you, drafts every claim, and waits for your approval before anything happens. You stay in control of every dollar."); }
-    else { flash("Try: “find my money”"); say("I can scan your money, show an example, approve your safe wins, or tell you your total. What would you like?"); }
-  }
-  function speakTotal() {
-    const o = (document.querySelector("#one-time") || {}).textContent || "0";
-    const r = (document.querySelector("#recurring") || {}).textContent || "0";
-    flash("Your total");
-    say("You have about " + o + " dollars owed to you now, and " + r + " dollars leaking every year. Say find my money to start recovering it.");
+    if (has("find my money", "find money", "start scan", "scan my", "run a scan", "run scan")) { flash("→ opening scan"); speak("Opening your private scan. Paste a statement and nothing leaves your browser."); document.querySelector("#find-money") && document.querySelector("#find-money").click(); return true; }
+    if (has("example", "demo", "walk me", "show me how")) { flash("→ example"); speak("Here is a sixty second example of how recovery works."); document.querySelector("#see-example") && document.querySelector("#see-example").click(); return true; }
+    if (has("approve all", "approve everything", "recover all")) { const b = document.querySelector("#btn-approve-all"); if (b) { flash("→ approving"); speak("Approving every safe win. Nothing sends until you confirm on the real site."); b.click(); } else speak("Run a scan first, then I can approve your safe wins."); return true; }
+    if (has("stop listening", "stop", "cancel", "that's all", "goodbye")) { flash("voice off"); stop(); return true; }
+    if (/(how much|my total|owed|leaking)/.test(t)) { const o = (document.querySelector("#one-time") || {}).textContent || "0", r = (document.querySelector("#recurring") || {}).textContent || "0"; flash("your total"); speak("You have about " + o + " dollars owed to you now, and " + r + " dollars leaking every year. Say find my money to recover it."); return true; }
+    return false;
   }
 
-  let rec = null, listening = false, timer = null;
-  function stop() { if (rec) { try { rec.stop(); } catch (e) {} } }
-  function start() {
-    if (listening) { stop(); return; }
-    try { rec = new SR(); } catch (e) { flash("Voice unavailable"); return; }
-    rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1; rec.continuous = false;
-    rec.onstart = () => { listening = true; btn.classList.add("listening"); btn.setAttribute("aria-pressed", "true"); flash("Listening…"); timer = setTimeout(stop, 8000); };
-    rec.onend = () => { listening = false; btn.classList.remove("listening"); btn.setAttribute("aria-pressed", "false"); clearTimeout(timer); };
-    rec.onerror = (e) => { listening = false; btn.classList.remove("listening"); btn.setAttribute("aria-pressed", "false"); if (e.error === "not-allowed" || e.error === "service-not-allowed") { flash("Allow the mic to use voice"); say("I need microphone permission to listen."); } else if (e.error === "no-speech") { flash("Didn't catch that"); } };
-    rec.onresult = (e) => { const best = e.results[0][0]; if (best && (best.confidence === 0 || best.confidence > 0.35)) route(best.transcript); else flash("Didn't catch that — try again"); };
-    try { rec.start(); } catch (e) { /* already started */ }
+  function pageContext() {
+    const o = (document.querySelector("#one-time") || {}).textContent, r = (document.querySelector("#recurring") || {}).textContent;
+    const res = document.querySelector("#results");
+    const shown = res && !res.classList.contains("hidden");
+    return shown ? ("A scan is on screen: about $" + o + " owed one-time and $" + r + " per year leaking.") : "On the Recoup landing page (no scan run yet).";
   }
-  btn.addEventListener("click", start);
-  // keyboard: the button is focusable; Enter/Space already trigger click
+
+  async function handle(transcript) {
+    const t = (transcript || "").toLowerCase().trim();
+    if (!t) return;
+    if (command(t)) return;                         // direct command -> act instantly
+    if (!API) { await speak("I can scan your money, show an example, approve your safe wins, or tell you your total."); return; }
+    flash("Thinking…", true);
+    try {
+      const r = await fetch(API + "/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: transcript, context: pageContext() }) });
+      const d = await r.json();
+      const a = (d && d.answer) ? d.answer : "I can scan your money, show an example, approve your safe wins, or tell you your total. What would you like?";
+      flash(a.slice(0, 110));
+      await speak(a);
+    } catch (e) { await speak("I couldn't reach my brain just now. Try a command like, find my money."); }
+  }
+
+  // ---- recognition lifecycle (continuous, auto-restart, idle-off) ----
+  function startRec() {
+    if (!active || speaking || processing) return;
+    try { rec = new SR(); } catch (e) { return; }
+    rec.lang = "en-US"; rec.continuous = true; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      let interim = "", final = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) { const res = e.results[i]; if (res.isFinal) final += res[0].transcript; else interim += res[0].transcript; }
+      if (interim) flash("“" + interim.trim() + "”", true);
+      if (final.trim()) {
+        resetIdle(); processing = true;
+        try { rec.stop(); } catch (er) {}
+        handle(final.trim()).catch(() => {}).then(() => { processing = false; if (active) startRec(); });
+      }
+    };
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") { flash("Allow the mic to use voice"); speak("I need microphone permission to listen."); active = false; setUI(); }
+    };
+    rec.onend = () => { if (active && !speaking && !processing) { restartTimer = setTimeout(startRec, 250); } };
+    try { rec.start(); } catch (e) {}
+  }
+  function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { flash("Voice off (idle)"); stop(); }, 30000); }
+  function setUI() { btn.classList.toggle("listening", active); btn.setAttribute("aria-pressed", String(active)); }
+  function start() { active = true; setUI(); flash("Listening… try “find my money” or ask me anything"); resetIdle(); startRec(); }
+  function stop() {
+    active = false; setUI();
+    clearTimeout(idleTimer); clearTimeout(restartTimer);
+    try { rec && rec.stop(); } catch (e) {}
+    try { synth && synth.cancel(); } catch (e) {}
+    if (audio) { try { audio.pause(); } catch (e) {} }
+  }
+
+  btn.addEventListener("click", () => { active ? stop() : start(); });
 })();

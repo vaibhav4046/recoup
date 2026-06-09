@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     email_from: str = "Recoup <onboarding@resend.dev>"
     turnstile_secret: str = ""              # Cloudflare Turnstile CAPTCHA (free)
     turnstile_site_key: str = ""
+    elevenlabs_api_key: str = ""            # premium TTS for the voice agent (optional; falls back to free browser TTS)
+    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # default "Rachel"
 
     # --- behaviour ---
     use_cached_fallback: bool = True
