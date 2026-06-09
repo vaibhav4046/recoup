@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<a href="#results" class="skip-link">Skip to content</a>
+<a href="#main" class="skip-link">Skip to content</a>
 <div id="bg-field" aria-hidden="true"></div>
 
 <header class="topbar">
@@ -22,12 +22,12 @@
   </div>
   <div class="topbar-right">
     <div class="chips" id="status-chips" role="list" aria-label="System status"><!-- injected --></div>
-    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode" aria-pressed="false">◐</button>
     <a class="signin-link" href="/login.html">Sign in</a>
   </div>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
 
   <!-- LANDING -->
   <section class="landing" id="landing">

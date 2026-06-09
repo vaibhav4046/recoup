@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** https://recoup-vaibhav4046s-projects.vercel.app
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API (Hugging Face Space):** https://vaibhav3313-recoup.hf.space/api/health
-- **Built with:** Google **Gemini 2.5-flash** · FastAPI · MongoDB · MCP-compatible JSON-RPC tools · Hugging Face Spaces · Vercel
+- **Built with:** Google **Gemini 2.5-flash** · FastAPI · MongoDB · MCP-compatible JSON-RPC tools *(committed backend; mounts on redeploy)* · Hugging Face Spaces · Vercel
 
 ---
 
@@ -53,7 +53,7 @@ Recoup turns a messy financial footprint into recovered money through one audite
 - A **real, deployed, end-to-end** product (not a mockup) on an entirely free, no-card stack.
 - **Real data, totally private** — the in-browser scan finds your actual recurring charges without anything leaving your device.
 - An agent that is **honest by construction**: amounts from rules not the model, one-time money never annualized, eligibility caveats up front, a verifier that flags what it can't confirm.
-- A judge-friendly technical story: deterministic money rules, Gemini reasoning, human approval, SHA-256 audit, MongoDB persistence, and an MCP-compatible tool surface for agent access.
+- A judge-friendly technical story: deterministic money rules, Gemini reasoning, human approval, SHA-256 audit, MongoDB persistence, and an MCP-compatible tool surface for agent access *(in the committed backend; live on the Space at the next redeploy)*.
 
 ## What we learned
 

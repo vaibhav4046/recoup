@@ -5,6 +5,7 @@
 window.RecoupScan = (function () {
   "use strict";
   const round2 = (n) => Math.round(n * 100) / 100;
+  const SEP = String.fromCharCode(1); // sentinel: protects "1,200" thousands commas from the field split
 
   function norm(m) {
     return m.toUpperCase().replace(/\s+/g, " ")
@@ -15,7 +16,9 @@ window.RecoupScan = (function () {
   function parseLine(line) {
     line = line.trim(); if (!line || /^(date|merchant|description|amount)/i.test(line)) return null;
     let amount = null, date = null, nameBits = [];
-    const parts = line.split(/[,\t;|]+/).map((s) => s.trim()).filter(Boolean);
+    // protect thousands separators ("1,200" is one number, not two fields) before the delimiter split
+    const guarded = line.replace(/(\d),(\d{3})(?=\D|$)/g, "$1" + SEP + "$2");
+    const parts = guarded.split(/[,\t;|]+/).map((s) => s.split(SEP).join(",").trim()).filter(Boolean);
     if (parts.length > 1) {
       parts.forEach((p) => {
         const clean = p.replace(/[\s$£€]/g, "");
