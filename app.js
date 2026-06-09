@@ -686,6 +686,18 @@
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
+
+    // savings estimator checkboxes
+    const cbs = document.querySelectorAll(".calc-cb");
+    const calcTotal = $("#calc-total");
+    const updateCalc = () => {
+      let sum = 0;
+      cbs.forEach(cb => { if (cb.checked) sum += parseFloat(cb.getAttribute("data-amount") || "0"); });
+      if (calcTotal) calcTotal.textContent = sum.toString();
+    };
+    cbs.forEach(cb => cb.onchange = updateCalc);
+    const ctaBtn = $("#calc-cta-btn");
+    if (ctaBtn) ctaBtn.onclick = openScan;
   }
 
   function applyTheme(t) {

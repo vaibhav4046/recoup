@@ -1,6 +1,6 @@
-/* Recoup — hero phone "demo reel": loops scan -> money found -> recovered.
-   Bulletproof: a scene is always visible, the loop pauses off-screen/hidden,
-   and prefers-reduced-motion shows a single static frame (no motion). */
+/* Recoup — hero Google Pixel phone "demo reel"
+   Cycles through a 5-step showcase: Scan → Vector Match → Gemini Reasoning → Voice Assist → Recovered
+   Bulletproof: scene is visible, pauses off-screen, handles reduced-motion. */
 (function () {
   "use strict";
   const stage = document.getElementById("reel-stage");
@@ -18,11 +18,11 @@
   });
 
   const show = (i) => scenes.forEach((s, k) => s.classList.toggle("is-active", k === i));
-  show(1); // default: the "money found" frame is visible immediately, even if the loop never starts
+  show(0); // default: scan scene visible
 
-  if (reduce) { if (countEl) countEl.textContent = "1,305"; return; } // static, no animation
+  if (reduce) { if (countEl) countEl.textContent = "480"; return; } // static
 
-  const DUR = [2600, 3500, 2600]; // ms per scene
+  const DUR = [4000, 3500, 4500, 3500, 4000]; // longer duration showcase for the Pixel Frame
   let idx = 0, timer = null, running = false, raf = 0;
 
   function countTo(el, target, ms) {
@@ -38,11 +38,23 @@
 
   function play() {
     show(idx);
-    if (idx === 0 && scanN) scanN.textContent = "1,204 emails read · scanning";
-    if (idx === 1) { if (countEl) countEl.textContent = "0"; countTo(countEl, 1305, 1300); }
-    const d = DUR[idx];
-    timer = setTimeout(() => { idx = (idx + 1) % scenes.length; if (running) play(); }, d);
+    if (idx === 0) {
+      if (scanN) {
+        scanN.textContent = "Connecting Gmail...";
+        setTimeout(() => { if (running && idx === 0) scanN.textContent = "Reading receipts & statement..."; }, 1500);
+      }
+    }
+    if (idx === 4) {
+      if (countEl) countEl.textContent = "0";
+      countTo(countEl, 480, 1500);
+    }
+    const d = DUR[idx] || 3500;
+    timer = setTimeout(() => {
+      idx = (idx + 1) % scenes.length;
+      if (running) play();
+    }, d);
   }
+  
   function start() { if (running) return; running = true; idx = 0; play(); }
   function stop() { running = false; clearTimeout(timer); cancelAnimationFrame(raf); }
 

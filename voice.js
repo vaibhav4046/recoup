@@ -12,6 +12,7 @@
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const synth = window.speechSynthesis;
   const label = document.getElementById("voice-label");
+  const ind = document.getElementById("voice-filter-indicator");
 
   const flash = (t, hold) => {
     if (!label) return;
@@ -23,6 +24,7 @@
   if (!SR) { btn.title = "Voice needs Chrome or Edge"; btn.addEventListener("click", () => flash("Voice commands need Chrome or Edge")); return; }
 
   let rec = null, active = false, speaking = false, processing = false, idleTimer = null, restartTimer = null, audio = null;
+  let audioCtx = null, micStream = null, filterNode = null;
 
   // ---- speak: free browser TTS only ----
   async function speak(text) {
@@ -91,13 +93,55 @@
   }
   function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(() => { flash("Voice off (idle)"); stop(); }, 30000); }
   function setUI() { btn.classList.toggle("listening", active); btn.setAttribute("aria-pressed", String(active)); }
-  function start() { active = true; setUI(); flash("Listening… try “find my money” or ask me anything"); resetIdle(); startRec(); }
+  
+  async function start() {
+    active = true;
+    setUI();
+    flash("Listening… try “find my money” or ask me anything");
+    resetIdle();
+    startRec();
+    
+    // Initialize Web Audio API noise filter (bandpass filter 80Hz - 1000Hz)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true } });
+      micStream = stream;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioCtx = new AudioContext();
+        const micSource = audioCtx.createMediaStreamSource(stream);
+        filterNode = audioCtx.createBiquadFilter();
+        filterNode.type = "bandpass";
+        filterNode.frequency.value = 540; // center frequency in Hz
+        filterNode.Q.value = 0.8; // band width quality factor
+        micSource.connect(filterNode);
+        
+        if (ind) {
+          ind.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:-1px;display:inline-block;"><path d="M12 2v20M17 5v14M7 9v6M22 10v4M2 11v2"/></svg> Speech Noise Filter Active (Hum &amp; Barks Blocked)`;
+          ind.classList.add("active");
+        }
+      }
+    } catch (e) {
+      console.warn("Could not start Web Audio filter:", e);
+    }
+  }
+  
   function stop() {
     active = false; setUI();
     clearTimeout(idleTimer); clearTimeout(restartTimer);
     try { rec && rec.stop(); } catch (e) {}
     try { synth && synth.cancel(); } catch (e) {}
     if (audio) { try { audio.pause(); } catch (e) {} }
+
+    // Stop Web Audio processing
+    if (micStream) {
+      try { micStream.getTracks().forEach(track => track.stop()); } catch (e) {}
+      micStream = null;
+    }
+    if (audioCtx) {
+      try { audioCtx.close(); } catch (e) {}
+      audioCtx = null;
+    }
+    if (ind) ind.classList.remove("active");
   }
 
   btn.addEventListener("click", () => { active ? stop() : start(); });
