@@ -47,6 +47,65 @@ def get_agent(tools=None):
     return _agent
 
 
+def mongodb_toolset():
+    """The OFFICIAL MongoDB MCP server (`mongodb-mcp-server`) registered as an ADK MCP toolset.
+    The Gemini agent queries Atlas THROUGH this tool — not hand-rolled DB calls. URI from env."""
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+    s = get_settings()
+    if not s.mongodb_uri:
+        return None
+    return MCPToolset(connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="npx",
+            args=["-y", "mongodb-mcp-server", "--connectionString", s.mongodb_uri],
+        ), timeout=60))
+
+
+def _tool_agent(tools):
+    from google.adk.agents import LlmAgent
+    s = get_settings()
+    if s.google_api_key:
+        os.environ.setdefault("GOOGLE_API_KEY", s.google_api_key)
+    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "FALSE")
+    return LlmAgent(
+        name="recoup_data_agent", model=s.gemini_model or "gemini-2.5-flash",
+        instruction="You are Recoup's data agent. Use the available MongoDB tools to answer the question "
+                    "about the Atlas database. Always CALL the tools to get real data; never guess.",
+        tools=tools or [])
+
+
+async def run_query(prompt: str, tools=None) -> dict:
+    """Run the agent with MCP tools and report the tool calls it made + final text."""
+    from google.adk.runners import InMemoryRunner
+    from google.genai import types
+    runner = InMemoryRunner(agent=_tool_agent(tools), app_name=_APP)
+    sess = await runner.session_service.create_session(app_name=_APP, user_id="recoup")
+    content = types.Content(role="user", parts=[types.Part(text=prompt)])
+    out, calls = "", []
+    async for ev in runner.run_async(user_id="recoup", session_id=sess.id, new_message=content):
+        if ev.content and ev.content.parts:
+            for p in ev.content.parts:
+                fc = getattr(p, "function_call", None)
+                if fc:
+                    calls.append(fc.name)
+        if ev.is_final_response() and ev.content and ev.content.parts:
+            out = ev.content.parts[0].text or ""
+    return {"text": out.strip(), "tool_calls": calls}
+
+
+def _deterministic_plan(charge: dict, playbook: str) -> str:
+    """Plan assembled deterministically from the retrieved playbook — used when ADK/Gemini is
+    rate-limited (free-tier 429). Amounts come from the charge, never invented."""
+    m = charge.get("merchant") or charge.get("title") or "this charge"
+    amt = charge.get("amount_label") or (f"${charge.get('amount')}" if charge.get("amount") else "")
+    head = f"Recovery plan for {m}" + (f" ({amt})" if amt else "") + ":"
+    steps = (playbook or "").strip() or ("1) Contact the vendor in writing. 2) Cite the consumer-protection "
+             "basis. 3) Request cancellation/refund. 4) Escalate to a chargeback if refused.")
+    return f"{head}\n{steps}\n\nDraft ready for your approval — nothing is sent until you confirm."
+
+
 async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
     """Run the ADK Gemini agent to plan a recovery for one charge.
     Returns {plan, status:'pending_approval', model, live}."""
@@ -69,4 +128,6 @@ async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
                 out = ev.content.parts[0].text or ""
         return {"plan": out.strip(), "status": "pending_approval", "model": s.gemini_model, "live": True}
     except Exception as e:  # noqa: BLE001
-        return {"plan": "", "status": "pending_approval", "model": "error", "live": False, "note": f"{type(e).__name__}: {str(e)[:120]}"}
+        # ADK/Gemini unavailable (e.g. free-tier 429 ResourceExhausted) -> deterministic playbook-based plan
+        return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
+                "model": "deterministic-fallback", "live": False, "note": f"{type(e).__name__}"}
