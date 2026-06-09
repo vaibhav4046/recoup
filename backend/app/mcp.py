@@ -85,10 +85,17 @@ def handle_mcp(message: dict) -> dict:
             args = params.get("arguments") or {}
             if not isinstance(args, dict):
                 return _err(req_id, -32602, "MCP tool arguments must be an object")
-            return _ok(req_id, _call_tool(str(params.get("name", "")), args))
+            name = str(params.get("name", ""))
+            if name not in {t["name"] for t in TOOLS}:
+                return _err(req_id, -32601, f"Unknown tool: {name}")
+            if name == "gmail_detect_subscriptions":
+                msgs = args.get("messages")
+                if not isinstance(msgs, list) or not all(isinstance(x, dict) for x in msgs):
+                    return _err(req_id, -32602, "messages must be an array of objects")
+            return _ok(req_id, _call_tool(name, args))
         return _err(req_id, -32601, f"Unsupported MCP method: {method}")
-    except Exception as exc:
-        return _err(req_id, -32603, str(exc))
+    except Exception:
+        return _err(req_id, -32603, "internal error")
 
 
 def _call_tool(name: str, args: dict) -> dict:

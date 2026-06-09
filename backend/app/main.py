@@ -231,7 +231,7 @@ async def auth_me(request: Request, ro_session: str = Cookie(default="")):
 @app.post("/api/auth/logout")
 async def auth_logout():
     resp = JSONResponse(content={"ok": True})
-    resp.delete_cookie(COOKIE)
+    resp.delete_cookie(COOKIE, path="/", secure=True, samesite="lax", httponly=True)
     return resp
 
 
@@ -309,6 +309,5 @@ async def forget(request: Request, token: str = "", ro_session: str = Cookie(def
         _GMAIL_FINDINGS.pop(token, None)
     elif ro_session:
         _GMAIL_FINDINGS.pop(ro_session, None)
-    else:
-        _GMAIL_FINDINGS.clear()
+    # no token and no session -> no identity to scope a delete to; never wipe every visitor's findings
     return _ok(request, cleared=True, revoke_at="https://myaccount.google.com/permissions")

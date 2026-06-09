@@ -38,7 +38,19 @@ KNOWN_SERVICES = {
     "patreon": ("Patreon", 6.00),
     "hellofresh": ("HelloFresh", 40.00),
 }
-_MONEY = re.compile(r"([$£€])\s?(\d+(?:[.,]\d{2})?)")
+# currency symbol + amount; supports "1,200.00" thousands groups and plain "12.99"
+_MONEY = re.compile(r"([$£€])\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:[.,]\d{2})?)")
+
+
+def _parse_amount(raw: str) -> float:
+    """A comma before exactly 3 digits is a thousands separator ("1,200" -> 1200);
+    a comma before 2 digits is a EU decimal ("12,99" -> 12.99)."""
+    raw = raw.strip()
+    raw = raw.replace(",", "") if re.search(r",\d{3}(?:\D|$)", raw) else raw.replace(",", ".")
+    try:
+        return round(float(raw), 2)
+    except ValueError:
+        return 0.0
 
 
 def _match(sender: str, subject: str) -> tuple[str, float] | None:
@@ -58,16 +70,30 @@ def detect(messages: list[dict]) -> list[dict]:
             continue
         name, est = hit
         body = f"{m.get('subject','')} {m.get('snippet','')}"
+        text = body.lower()
+        # money already returned / subscription already cancelled -> not a live leak; skip it
+        if any(w in text for w in ("refund", "refunded", "credited", "reversal", "cancellation confirmed", "we have cancelled", "we've cancelled", "has been cancelled")):
+            continue
         found = _MONEY.search(body)
-        amount = round(float(found.group(2).replace(",", ".")), 2) if found else est
+        amount = _parse_amount(found.group(2)) if found else est
+        if found and amount <= 0:                # unparseable figure -> fall back to a typical estimate
+            amount, found = est, None
         currency = found.group(1) if found else "$"
         confident_amt = bool(found)
-        trial = "trial" in body.lower()
-        lapsing = any(w in body.lower() for w in ("cancel", "update payment", "lose access", "expired", "failed"))
+        # detect the billing period so an annual receipt is NOT annualized again (the ×12 bug)
+        if re.search(r"\b(year|yearly|annual|annually|per year|/ ?yr|12 ?months)\b", text):
+            period = "year"
+        elif re.search(r"\b(month|monthly|per month|/ ?mo)\b", text):
+            period = "month"
+        else:
+            period = "unknown"
+        trial = "trial" in text
+        lapsing = any(w in text for w in ("cancel", "update payment", "lose access", "expired", "failed"))
         if name not in seen:
             seen[name] = {
-                "name": name, "monthly": amount, "currency": currency, "amount_known": confident_amt,
-                "trial": trial, "lapsing": lapsing, "evidence": m.get("subject", "")[:120],
+                "name": name, "amount": amount, "period": period, "currency": currency,
+                "amount_known": confident_amt, "trial": trial, "lapsing": lapsing,
+                "evidence": m.get("subject", "")[:120],
             }
     return list(seen.values())
 
@@ -76,15 +102,22 @@ def to_findings(subs: list[dict]) -> list[dict]:
     """Map detected subscriptions to Recoup's action/finding shape."""
     out = []
     for i, s in enumerate(subs, 1):
-        annual = round(s["monthly"] * 12, 2)
         currency = s.get("currency", "$")
-        note = "free trial — will auto-convert" if s["trial"] else "payment lapsing" if s["lapsing"] else "active recurring charge"
+        amt = s.get("amount", 0.0)
+        period = s.get("period", "unknown")
+        if period == "year":
+            annual = round(amt, 2)               # the receipt amount IS the yearly figure — do not annualize
+            monthly = round(amt / 12, 2)
+        else:                                     # monthly or unknown -> treat the figure as a monthly charge
+            annual = round(amt * 12, 2)
+            monthly = round(amt, 2)
+        note = "free trial — will auto-convert" if s["trial"] else "payment lapsing" if s["lapsing"] else ("annual plan" if period == "year" else "active recurring charge")
         conf = 0.9 if s["amount_known"] else 0.72
         out.append({
             "id": f"gm_{i}", "kind": "dead_subscription",
             "title": f"Review {s['name']} subscription",
             "amount": annual, "cadence": "yearly", "currency": currency,
-            "amount_label": f"{currency}{annual:,.0f}/yr", "unit_note": f"{currency}{s['monthly']:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
+            "amount_label": f"{currency}{annual:,.0f}/yr", "unit_note": f"{currency}{monthly:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
             "evidence": f"From your Gmail: \"{s['evidence']}\" — {note}",
             "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium",
             "caveat": "Confirm you've stopped using it before cancelling." if not s["trial"] else "Cancel before the trial converts to avoid the charge.",
