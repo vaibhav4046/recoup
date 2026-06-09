@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** https://recoup-vaibhav4046s-projects.vercel.app
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API (Hugging Face Space):** https://vaibhav3313-recoup.hf.space/api/health
-- **Built with:** Google **Gemini 2.5-flash** · FastAPI · MongoDB · MCP-compatible JSON-RPC tools *(committed backend; mounts on redeploy)* · Hugging Face Spaces · Vercel
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · FastAPI · MCP-compatible JSON-RPC tools · a zero-cost in-browser **voice agent** · Hugging Face Spaces · Vercel
 
 ---
 
@@ -18,7 +18,7 @@ Every year people leave **billions** on the table — $1B+ in expiring tax refun
 Recoup turns a messy financial footprint into recovered money through one audited loop:
 
 1. **Scan** — point it at your data (paste a statement, or connect Gmail read-only). A deterministic rule engine finds money you're **losing** (dead subscriptions, price creep, billing errors) and money you're **owed** (refunds, EU261 flight-delay compensation, class-action settlements, unclaimed property, warranties, deposits).
-2. **Reason** — a **4-agent swarm** (Subscription Hunter, Billing Auditor, Refund Claimant, Entitlement Finder) is dispatched by a Coordinator; an independent **Verifier** auto-confirms the mechanical leaks and explicitly flags entitlements as "needs your eligibility sign-off." **Gemini** narrates the reasoning — but never invents an amount.
+2. **Reason — grounded in real precedent via MongoDB Atlas Vector Search.** This is the agent's brain: for every finding it embeds the case (`gemini-embedding-001`, 768-dim) and runs an Atlas **`$vectorSearch`** over a consumer-protection precedent corpus to retrieve the exact legal basis *with similarity scores* — so the reasoning is grounded in actual law (FTC Click-to-Cancel, EU261, the Fair Credit Billing Act…), not the model's imagination. The agent then runs a genuine **plan → tool → act** loop: a Coordinator dispatches a **4-agent swarm** (Subscription Hunter, Billing Auditor, Refund Claimant, Entitlement Finder); an independent **Verifier** auto-confirms mechanical leaks and flags entitlements for your eligibility sign-off. **Gemini** narrates — but never invents an amount.
 3. **Show the work** — every claim has a confidence score, the consumer-protection rule it cites, the exact source evidence, the Verifier's boolean checks, an honest "you might NOT qualify if…" caveat, and a deep-link to the *real* claim form (MissingMoney/NAUPA, the CAA for EU261, the FTC for settlements).
 4. **Approve → Send → Recover** — approval is the only path that readies a claim; each advances Drafted → Sent → Recovered. "Recovered" only counts money you mark as actually received (self-reported, labelled as such).
 5. **Audit** — every step folds into a **SHA-256 hash chain** with a `verify()` re-walk that detects tampering.
@@ -36,8 +36,10 @@ Recoup turns a messy financial footprint into recovered money through one audite
 
 | Layer | Tech | Cost |
 |---|---|---|
+| **Vector Search** | **MongoDB Atlas Vector Search** + `gemini-embedding-001` (768d) | free (M0) |
 | Reasoning | **Google Gemini 2.5-flash** | free tier |
 | Store | **MongoDB** Atlas M0 | free |
+| Voice agent | Browser Web Speech (STT + TTS); ElevenLabs optional | free |
 | Agent tools | MCP-compatible JSON-RPC over HTTP | free |
 | Backend host | **Hugging Face** Docker Spaces | free |
 | Frontend host | **Vercel** | free |
@@ -73,7 +75,7 @@ For an AI-near-money product, *checkable* beats *clever*. Showing the work — t
 
 **[0:20–0:50] The scan.** "Recoup scans your financial footprint — here, 100% in the browser, nothing uploaded." *(open "Scan your statement" → Try a sample → Scan → cards populate)* "It found recurring leaks and money you're owed — and notice the amounts come from rules, not the model."
 
-**[0:50–1:30] The swarm + show-your-work.** "A coordinator dispatched four specialist agents; an independent verifier auto-confirmed the mechanical leaks but flagged the entitlements for your eligibility sign-off — it doesn't mark its own homework." *(click "Show work")* "Every claim shows the rule, the source evidence, the verifier's checks, an honest 'you might not qualify if', and a deep-link to the real claim form."
+**[0:50–1:30] Atlas Vector Search + the swarm.** "Here's the technical heart: for every finding, the agent embeds the case and runs a **MongoDB Atlas Vector Search** over a consumer-protection precedent corpus — you can see it retrieve the exact legal basis with a similarity score." *(point at the 'Tool · Atlas Vector Search → FTC Click-to-Cancel (sim 0.84)' reasoning line)* "That's a real plan→tool→act loop, not a chatbot. A coordinator dispatched four specialist agents; an independent verifier auto-confirmed the mechanical leaks but flagged the entitlements for your sign-off — it doesn't mark its own homework." *(click "Show work")* "Every claim shows the rule, the source evidence, the verifier's checks, an honest 'you might not qualify if', and a deep-link to the real claim form. You can even drive it by **voice** — tap the mic and say 'find my money.'"
 
 **[1:30–2:10] Approve → recover.** "Nothing sends without me." *(Approve → Copy / Open claim form → Mark sent → Mark recovered)* "Each step writes a tamper-evident SHA-256 audit chain — and 'recovered' only counts what I confirm I actually got back."
 
