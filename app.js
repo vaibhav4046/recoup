@@ -639,6 +639,9 @@
 
   function animateCount(node, target) {
     if (!node) return;
+    // guarantee the final value even when rAF is paused (hidden/background tab) or motion is reduced
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if ((typeof document !== "undefined" && document.hidden) || reduce) { node.textContent = money(target); return; }
     const start = parseFloat((node.textContent || "0").replace(/[^0-9.]/g, "")) || 0;
     const t0 = performance.now(), dur = 700;
     function step(now) {
