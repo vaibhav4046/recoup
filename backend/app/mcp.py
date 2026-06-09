@@ -102,22 +102,22 @@ def handle_mcp(message: dict) -> dict:
 
 def _call_tool(name: str, args: dict) -> dict:
     if name == "recoup_scan_demo":
-        scan = APP.run_scan()
-        APP.run_agent()
-        once = [a for a in APP.actions if a.get("cadence") == "once"]
-        once_sym = "≈$" if len({(a.get("currency") or "$") for a in once}) > 1 else "$"  # honest mixed-currency marker
+        from . import snapshot
+        scan = snapshot.scan()            # deterministic rule engine only — no Gemini, no global-state mutation for anon callers
+        findings = scan.get("findings", [])
+        once = [f for f in findings if f.get("cadence") == "once"]
+        once_sym = "≈$" if len({(f.get("currency") or "$") for f in once}) > 1 else "$"  # honest mixed-currency marker
         return {
             **_text(
-                f"Found {len(scan['findings'])} recoverable actions: "
+                f"Found {len(findings)} recoverable actions: "
                 f"${scan['recurring_year']:,.0f}/yr recurring leaks + "
                 f"{once_sym}{scan['one_time']:,.0f} one-time payouts."
             ),
-            "structuredContent": _state_payload(),
+            "structuredContent": {"findings": findings, "recurring_year": scan.get("recurring_year"), "one_time": scan.get("one_time"), "total": scan.get("total")},
         }
     if name == "recoup_get_state":
         if not APP.actions:
-            APP.run_scan()
-            APP.run_agent()
+            APP.run_scan()                # deterministic only — never run the LLM for an anonymous MCP caller
         return {**_text("Current Recoup state returned."), "structuredContent": _state_payload()}
     if name == "gmail_detect_subscriptions":
         messages = args.get("messages") or []
