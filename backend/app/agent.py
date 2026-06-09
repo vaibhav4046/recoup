@@ -149,35 +149,57 @@ def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True
 
 
 def draft_plan(scan: dict) -> dict:
+    """The agentic loop: PLAN -> use TOOLS (Atlas Vector Search + the rule engine) ->
+    ACT (draft claims) -> human approval gate. Not a chatbot: it retrieves real
+    consumer-protection precedent for every finding and grounds the drafts in it."""
     s = get_settings()
     meta = swarm.orchestrate(scan)             # attribute + verify findings; build roster + orchestration trace
     actions = build_actions(scan["findings"])  # findings now carry agent attribution + verdict
     sw = {"swarm": meta["roster"], "verified": meta["verified"], "needs_confirm": meta["needs_confirm"],
           "flagged": meta["flagged"], "agents": meta["agents"]}
+
+    # ---- PLAN ----
+    plan_line = [{"t": f"Plan: classify {len(scan['findings'])} charges, retrieve each one's legal basis "
+                       "via MongoDB Atlas Vector Search, then draft a claim you approve.", "tone": "cyan"}]
+
+    # ---- TOOL: ground the top findings in real precedent via Atlas Vector Search ----
+    from . import vector
+    grounding, vlines = [], []
+    for f in scan["findings"][:3]:
+        hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1)
+        if hits:
+            h = hits[0]
+            grounding.append({"finding": f["title"], "precedent": {k: h.get(k) for k in ("title", "basis", "jurisdiction")}})
+            via = "Atlas Vector Search" if h.get("via") == "atlas_vector_search" else "vector cosine"
+            vlines.append({"t": f"Tool · {via}: \"{f['title'][:34]}\" → {h['title']} · {h['basis']} (sim {h.get('score', 0):.2f})", "tone": "cyan"})
+    sw["grounding"] = grounding
+
     closing = [
         {"t": "One-time payouts are never annualized; amounts come from the rules, not the model", "tone": "dim"},
         {"t": "Nothing is sent without your approval", "tone": "ok"},
     ]
 
     if not s.gemini_ready:
-        return {"reasoning": meta["trace"] + closing, "actions": actions, **sw,
+        return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
-                "note": "Gemini not configured — deterministic swarm reasoning (labelled)."}
+                "note": "Gemini not configured — deterministic swarm + Atlas Vector Search grounding."}
     try:
         prompt = (f"{SYSTEM_PROMPT}\n\nSCAN (amounts already computed — do not change them):\n"
-                  f"{json.dumps(scan, ensure_ascii=False)[:9000]}\n\n"
-                  'Return JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 2-3 concise '
-                  "narration lines on the most valuable recoveries. Keep recurring vs one-time "
-                  "distinct; never annualize a one-time payout.")
+                  f"{json.dumps(scan, ensure_ascii=False)[:7000]}\n\n"
+                  f"PRECEDENTS RETRIEVED via MongoDB Atlas Vector Search (cite these as the basis):\n"
+                  f"{json.dumps(grounding, ensure_ascii=False)[:1500]}\n\n"
+                  'Return JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 2-3 concise narration '
+                  "lines on the most valuable recoveries, citing the retrieved precedent basis. Keep "
+                  "recurring vs one-time distinct; never annualize a one-time payout.")
         t0 = time.perf_counter()
         text = _generate(s.gemini_model, prompt)
         latency = round((time.perf_counter() - t0) * 1000)
         gem = (json.loads(text).get("reasoning") or [])[:3]
-        return {"reasoning": meta["trace"] + gem + closing[:1], "actions": actions, **sw,
+        return {"reasoning": plan_line + meta["trace"] + vlines + gem + closing[:1], "actions": actions, **sw,
                 "model": s.gemini_model, "latency_ms": latency, "live": True,
-                "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm."}
+                "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm grounded in Atlas Vector Search."}
     except Exception as e:  # noqa: BLE001
-        return {"reasoning": meta["trace"] + closing, "actions": actions, **sw,
+        return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
                 "note": f"Gemini fallback ({type(e).__name__}): {str(e)[:90]}"}
 

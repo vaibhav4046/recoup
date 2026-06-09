@@ -28,6 +28,11 @@ COOKIE = "ro_session"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
+        from . import vector
+        vector.seed()  # embed the precedent corpus + ensure the Atlas Vector Search index
+    except Exception:
+        pass
+    try:
         APP.run_scan()
         APP.run_agent()
     except Exception:
@@ -35,7 +40,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Recoup API", version="0.2.3", lifespan=lifespan)
+app = FastAPI(title="Recoup API", version="0.3.0", lifespan=lifespan)
 _s = get_settings()
 _cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
 _cors_wild = "*" in _cors_list  # catch "*" ANYWHERE in the list, not only an exact ["*"] — a wildcard mixed with other origins still makes Starlette reflect any origin when credentials are on
@@ -72,9 +77,11 @@ async def trace_mw(request: Request, call_next):
 @app.get("/api/health")
 async def health(request: Request):
     s = get_settings()
+    from . import vector
     return _ok(request, service="recoup-api", version=app.version, mode=s.mode,
                integrations=s.integration_status(),
                gemini_model=s.gemini_model if s.gemini_ready else None,
+               vector=vector.status(),  # MongoDB Atlas Vector Search — the agent's retrieval brain
                audit=APP.audit.verify(),  # SHA-256 chain state {intact,count,head} — externally verifiable
                recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,
                one_time=APP.scan_result["one_time"] if APP.scan_result else 0,
