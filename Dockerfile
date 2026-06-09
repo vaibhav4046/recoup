@@ -18,7 +18,6 @@ RUN npx -y mongodb-mcp-server --version || true
 COPY backend/app ./app
 RUN mkdir -p ./static
 COPY index.html login.html privacy.html config.js data.js recover.js app.js reel.js voice.js agent-timeline.js login.js styles.css favicon.png mark.png logo.png ./static/
-COPY screens/ ./static/screens/
 ENV PORT=8080 GOOGLE_GENAI_USE_VERTEXAI=FALSE
 # Cloud Run injects $PORT; bind to it
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
