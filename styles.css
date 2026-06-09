@@ -43,6 +43,7 @@ body{
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
   padding:14px clamp(16px,4vw,40px);background:rgba(7,8,12,.72);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border)}
+.topbar[inert]{visibility:hidden}  /* hide the sticky header while a dialog is open so it can't overlap the modal close button (mobile) */
 .brand{display:flex;align-items:center;gap:12px}
 .logo{width:38px;height:38px;border-radius:12px;background:var(--grad);display:grid;place-items:center;
   font-weight:900;color:#04231d;font-size:21px;letter-spacing:0;position:relative;transition:transform .35s var(--ease);
