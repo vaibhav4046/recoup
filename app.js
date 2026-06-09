@@ -56,6 +56,26 @@
     return curs.length ? curs.map((c) => `${c}${money(by[c])}${suffix || ""}`).join(" + ") : "$0";
   };
 
+  // one coherent inline-SVG icon set (stroke, currentColor) — replaces inconsistent platform emoji
+  const ICONS = {
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    flask: '<path d="M9 3h6M10 3v6l-5.6 9.3A2 2 0 0 0 6.1 22h11.8a2 2 0 0 0 1.7-3.7L14 9V3"/><path d="M7.5 14.5h9"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/>',
+    check: '<path d="M20 6 9 17l-5-5"/>',
+    x: '<path d="M18 6 6 18M6 6l12 12"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    diamond: '<path d="M12 2.5 21.5 12 12 21.5 2.5 12z"/>',
+    alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+    coin: '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/>',
+    play: '<path d="M7 4v16l13-8z" fill="currentColor" stroke="none"/>',
+    upRight: '<path d="M7 17 17 7M8 7h9v9"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+  };
+  const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+
   /* real SHA-256 (Web Crypto) — 64-char hex, chained like the backend's audit.py */
   async function sha256(str) {
     try {
@@ -168,8 +188,8 @@
     $("#findings-count").textContent = S.actions.length;
     const dn = $("#demo-note");
     if (dn) dn.innerHTML = S._real
-      ? '🔒 <b>Your data</b> — scanned privately in your browser. Nothing was uploaded. <button class="linklike2" id="open-scan">Re-scan →</button>'
-      : '🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Recover your own subscriptions →</button>';
+      ? `${icon('lock')} <b>Your data</b> — scanned privately in your browser. Nothing was uploaded. <button class="linklike2" id="open-scan">Re-scan →</button>`
+      : `${icon('flask')} <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Recover your own subscriptions →</button>`;
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     updateReadyUI();
   }
@@ -243,27 +263,27 @@
     c.setAttribute("aria-label", [a.title, a.amount_label, _kindWord, a.confidence ? Math.round(a.confidence * 100) + "% confidence" : "", _stateWord].filter(Boolean).join(", "));
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const sendRow = `<div class="fc-send">
-        <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text"><span aria-hidden="true">⧉</span> Copy</button>
-        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form <span aria-hidden="true">↗</span></a>` : `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft"><span aria-hidden="true">✉</span> Email</button>`}
+        <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text">${icon('copy')} Copy</button>
+        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form ${icon('upRight')}</a>` : `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft">${icon('mail')} Email</button>`}
       </div>`;
     let actions;
     if (a.approvalState === "rejected") {
-      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${aid}"><span aria-hidden="true">✓</span> Approve instead</button><button class="btn btn-view" data-view="${aid}">Show work</button></div>`;
+      actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${aid}">${icon('check')} Approve instead</button><button class="btn btn-view" data-view="${aid}">Show work</button></div>`;
     } else if (!approved) {
       actions = `<div class="fc-actions">
-           <button class="btn btn-approve" data-approve="${aid}"><span aria-hidden="true">✓</span> Approve</button>
+           <button class="btn btn-approve" data-approve="${aid}">${icon('check')} Approve</button>
            <button class="btn btn-view" data-view="${aid}">Show work</button>
            <button class="btn btn-skip" data-skip="${aid}">Skip</button>
          </div>`;
     } else if (st === "paid") {
-      actions = `<div class="fc-paid"><span aria-hidden="true">✓</span> Recovered ${esc(a.amount_label)}</div>`;
+      actions = `<div class="fc-paid">${icon('check')} Recovered ${esc(a.amount_label)}</div>`;
     } else if (st === "sent") {
-      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${aid}"><span aria-hidden="true">💰</span> Mark recovered</button>`;
+      actions = `${sendRow}<button class="btn btn-life paid full" data-paid="${aid}">${icon('coin')} Mark recovered</button>`;
     } else {
       actions = `${sendRow}<button class="btn btn-life full" data-sent="${aid}">Mark sent →</button>`;
     }
     const tag = approved
-      ? `<span class="fc-kind ready">${st === "paid" ? '<span aria-hidden="true">✓</span> paid' : st === "sent" ? "sent" : '<span aria-hidden="true">✓</span> ready'}</span>`
+      ? `<span class="fc-kind ready">${st === "paid" ? `${icon('check')} paid` : st === "sent" ? "sent" : `${icon('check')} ready`}</span>`
       : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed" : "leak"}</span>`;
     c.innerHTML = `
       <div class="fc-top">
@@ -276,8 +296,8 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
-      ${a.timeline ? `<div class="fc-expect"><span aria-hidden="true">⏱</span> ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
-      ${a.agent_name ? `<div class="fc-agent"><span aria-hidden="true">◆</span> ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm"><span aria-hidden="true">⚠</span> confirm eligibility</span>` : (a.verify.ok ? " · rule-checked" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
+      ${a.timeline ? `<div class="fc-expect">${icon('clock')} ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
+      ${a.agent_name ? `<div class="fc-agent">${icon('diamond')} ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm">${icon('alert')} confirm eligibility</span>` : (a.verify.ok ? " · rule-checked" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
       ${actions}`;
     return c;
   }
@@ -355,7 +375,7 @@
     await appendAudit("human", "You", "CLAIM_PAID", "Recovered — you confirmed: " + a.title + " (" + a.amount_label + ")", a.amount);
     recompute(); renderHero(); renderBreakdown(); updateReadyUI(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
-    toast(`💰 Recovered ${a.amount_label} — ${a.title}`);
+    toast(`Recovered ${a.amount_label} — ${a.title}`);
   }
 
   function approveAllSafe() {
@@ -379,13 +399,13 @@
       if (!pick) { toast("Nothing pending to walk through — hit 'Run recovery scan' to reset"); return; }
       const df = $("#demo-flag"); if (df) df.classList.remove("hidden");
       const card = $("#card-" + pick.id); if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
-      toast(`▶ Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
+      toast(`Illustrative walkthrough (demo) — approving ${pick.amount_label}…`); await W(1100);
       demoInternal = true; await approve(pick.id, true); demoInternal = false; await W(1200);
-      toast("✉ Claim filed — nothing sent until you approved it"); demoInternal = true; await markSent(pick.id, true); demoInternal = false; await W(1500);
+      toast("Claim filed — nothing sent until you approved it"); demoInternal = true; await markSent(pick.id, true); demoInternal = false; await W(1500);
       const ref = "RC-" + Math.floor(100000 + Math.random() * 900000);
       toast(`📨 Acknowledged · reference #${ref} (demo)`); await W(1700);
       demoInternal = true; await markPaid(pick.id, true); demoInternal = false;
-      toast(`💰 Demo complete — full loop shown: detect → approve → file → paid. Real payouts land in the timeline each card shows.`);
+      toast(`Demo complete — full loop shown: detect → approve → file → paid. Real payouts land in the timeline each card shows.`);
     } finally {
       demoInternal = false;
       demoRunning = false;
@@ -408,7 +428,7 @@
     const totals = v.reduce((acc, r) => { const c = r.currency || "$"; acc[c] = r2((acc[c] || 0) + (r.amount || 0)); return acc; }, {});
     const totalText = Object.entries(totals).map(([c, n]) => `${c}${Number(n).toFixed(2)}`).join(" · ");
     list.innerHTML = `<div class="vrec-empty">Total you've logged: <b class="vrec-total">${esc(totalText)}</b> <span class="muted">(you-confirmed)</span></div>` +
-      v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">${esc(r.currency || "$")}${Number(r.amount).toFixed(2)}</span></div>`).join("");
+      v.map((r) => `<div class="vrec-item"><span>${icon('check')} <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">${esc(r.currency || "$")}${Number(r.amount).toFixed(2)}</span></div>`).join("");
   }
   function addVrec() {
     const amt = r2(parseFloat(($("#vrec-amt") || {}).value));
@@ -421,7 +441,7 @@
     setVrec(v);
     const f = $("#vrec-form"); if (f) { f.reset(); f.classList.add("hidden"); }
     renderVrec();
-    toast(`✓ Logged ${currency}${amt.toFixed(2)} recovery`);
+    toast(`Logged ${currency}${amt.toFixed(2)} recovery`);
   }
 
   function mailtoFor(a) {
@@ -473,11 +493,11 @@
       `<div class="prov-rule">${esc(RULES[a.rule] || a.rule)}</div>` +
       `<div class="prov-ev">Source — ${esc(a.evidence)}</div></div>` +
       `<div class="prov-sec"><div class="prov-h">Verifier checks <span class="prov-by">· independent agent</span></div>` +
-      (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}"><span aria-hidden="true">${c.ok ? "✓" : "✗"}</span><span class="sr-only">${c.ok ? "Passed" : "Failed"}: </span>${esc(c.label)}</div>`).join("") : `<div class="prov-check ok"><span aria-hidden="true">✓</span> verified</div>`) +
+      (checks.length ? checks.map((c) => `<div class="prov-check ${c.ok ? "ok" : "bad"}">${c.ok ? icon('check') : icon('x')}<span class="sr-only">${c.ok ? "Passed" : "Failed"}: </span>${esc(c.label)}</div>`).join("") : `<div class="prov-check ok">${icon('check')} rule-checked</div>`) +
       `</div>` +
-      (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">⚠ You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
-      (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">⏱ Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
-      (a.claim_url ? `<a class="btn btn-mail full" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ↗</a>` : "") +
+      (a.caveat ? `<div class="prov-sec caveat"><div class="prov-h">${icon('alert')} You might NOT qualify if</div><div>${esc(a.caveat)}</div></div>` : "") +
+      (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">${icon('clock')} Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
+      (a.claim_url ? `<a class="btn btn-mail full" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ${icon('upRight')}</a>` : "") +
       `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
     $("#drawer-body").textContent = a.draft || "(no draft)";
     const ab = $("#drawer-approve"), sb = $("#drawer-skip");
@@ -664,13 +684,13 @@
 
   function applyTheme(t) {
     document.body.classList.toggle("light", t === "light");
-    const b = document.querySelector("#theme-toggle"); if (b) { b.textContent = t === "light" ? "☀" : "◐"; b.setAttribute("aria-pressed", String(t === "light")); }
+    const b = document.querySelector("#theme-toggle"); if (b) { b.innerHTML = t === "light" ? icon('sun') : icon('moon'); b.setAttribute("aria-pressed", String(t === "light")); }
   }
 
   let toastT;
   function toast(msg) {
     let t = $(".toast"); if (!t) { t = el("div", "toast"); t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); document.body.appendChild(t); }
-    t.textContent = "✓ " + msg; t.classList.add("show");
+    t.innerHTML = icon('check') + " " + esc(msg); t.classList.add("show");
     clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2800);
   }
 

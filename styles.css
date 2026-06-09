@@ -16,6 +16,10 @@
 }
 *{box-sizing:border-box}
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:6px}
+.ico{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex:0 0 auto}
+.x .ico{width:17px;height:17px;vertical-align:middle}
+.theme-toggle .ico{width:18px;height:18px}
+.btn .ico{vertical-align:-0.16em}
 @keyframes cardIn{from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:none}}
 @keyframes heroIn{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
