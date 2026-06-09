@@ -407,7 +407,7 @@
     if (!v.length) { list.innerHTML = `<div class="vrec-empty">Nothing logged yet. When you actually get money back — cancel a real subscription, claim real unclaimed cash — log it here with its confirmation reference, so it's <b>checkable</b>, not a vague estimate. (You-logged, not independently audited.)</div>`; return; }
     const totals = v.reduce((acc, r) => { const c = r.currency || "$"; acc[c] = r2((acc[c] || 0) + (r.amount || 0)); return acc; }, {});
     const totalText = Object.entries(totals).map(([c, n]) => `${c}${Number(n).toFixed(2)}`).join(" · ");
-    list.innerHTML = `<div class="vrec-empty">Total you've logged: <b style="color:#37d67a">${esc(totalText)}</b> <span class="muted">(you-confirmed)</span></div>` +
+    list.innerHTML = `<div class="vrec-empty">Total you've logged: <b class="vrec-total">${esc(totalText)}</b> <span class="muted">(you-confirmed)</span></div>` +
       v.map((r) => `<div class="vrec-item"><span>✓ <b>${esc(r.what)}</b>${r.ref ? ` · ref ${esc(r.ref)}` : ""} <span class="muted">· ${esc(r.date)}</span></span><span class="amt">${esc(r.currency || "$")}${Number(r.amount).toFixed(2)}</span></div>`).join("");
   }
   function addVrec() {
@@ -439,7 +439,7 @@
   function openMail(id) { const a = S.actions.find((x) => x.id === id); if (a) window.open(mailtoFor(a), "_blank"); }
 
   async function rescan() {
-    await appendAudit("system", "Recoup scanner", "SCAN_RUN", `Re-scanned — $${money(S.recurring_year)}/yr recurring + $${money(S.one_time)} one-time`, S.recoverable);
+    await appendAudit("system", "Recoup scanner", "SCAN_RUN", `Re-scanned — ${fmtCurrencies(perCurrency(S.actions.filter((a) => a.cadence === "yearly")), "/yr")} recurring + ${fmtCurrencies(perCurrency(S.actions.filter((a) => a.cadence === "once")))} one-time`, S.recoverable);
     renderTrace(true); renderAudit();
     toast("Scan complete — your money surface is up to date");
   }
