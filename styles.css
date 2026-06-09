@@ -114,7 +114,57 @@ body{
 .founder-strip b{color:var(--text)}
 .founder-strip a{color:var(--cyan);text-decoration:none}
 
-.product-stage{min-width:0;perspective:1200px;animation:heroIn .85s var(--ease) .08s both}
+.product-stage{min-width:0;perspective:1200px;animation:heroIn .85s var(--ease) .08s both;display:flex;flex-direction:column;align-items:center;gap:15px}
+/* ===== animated mobile-frame demo reel ===== */
+.phone{position:relative;width:min(298px,80vw);aspect-ratio:300/618;cursor:pointer;transform:rotateY(-9deg) rotateX(3deg);transform-style:preserve-3d;transition:transform .6s var(--ease)}
+.phone:hover,.phone:focus-visible{transform:rotateY(0) rotateX(0) translateY(-5px);outline:none}
+.phone:focus-visible .phone-frame{box-shadow:0 0 0 3px var(--cyan),0 40px 80px -24px rgba(0,0,0,.75)}
+.phone-glow{position:absolute;inset:-16% -12%;background:radial-gradient(58% 48% at 50% 28%,rgba(52,211,153,.34),transparent 70%);filter:blur(28px);z-index:-1;animation:glowPulse 5s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{opacity:.5}50%{opacity:.95}}
+.phone-frame{position:absolute;inset:0;border-radius:46px;background:linear-gradient(155deg,#262a34,#0b0d13 62%);padding:11px;box-shadow:0 40px 80px -24px rgba(0,0,0,.78),inset 0 1px 0 rgba(255,255,255,.15),0 0 0 1px rgba(255,255,255,.05)}
+.phone-island{position:absolute;top:21px;left:50%;transform:translateX(-50%);width:80px;height:23px;background:#04060b;border-radius:20px;z-index:3}
+.phone-screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,rgba(34,211,238,.09),transparent 55%),var(--bg2);display:flex;flex-direction:column;padding:16px 14px 12px}
+.reel-top{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.2px}
+.reel-logo{width:22px;height:22px;border-radius:7px;background:var(--grad);display:grid;place-items:center;box-shadow:0 4px 12px -3px rgba(52,211,153,.6)}
+.reel-live{margin-left:auto;font-size:9px;font-weight:800;color:#7ef0c9;display:flex;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.07em}
+.reel-live i{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 7px var(--emerald);animation:pulse 2s infinite}
+.reel-stage{position:relative;flex:1;margin-top:15px}
+.reel-scene{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;transform:translateY(10px) scale(.985);transition:opacity .55s var(--ease),transform .55s var(--ease);pointer-events:none}
+.reel-scene.is-active{opacity:1;transform:none}
+.reel-scan{align-items:center;justify-content:center;text-align:center}
+.reel-radar{position:relative;width:76px;height:76px;margin-bottom:20px}
+.reel-radar span{position:absolute;inset:0;border:2px solid rgba(52,211,153,.55);border-radius:50%;animation:radar 2.1s ease-out infinite}
+.reel-radar span:nth-child(2){animation-delay:.7s}.reel-radar span:nth-child(3){animation-delay:1.4s}
+@keyframes radar{0%{transform:scale(.3);opacity:.9}100%{transform:scale(1);opacity:0}}
+.reel-scan-label{font-size:15px;font-weight:800;color:var(--text)}
+.reel-bar{width:78%;height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin:14px 0 9px;overflow:hidden}
+.reel-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:6px}
+.reel-scene.is-active .reel-bar i{animation:fillbar 2.4s var(--ease) forwards}
+@keyframes fillbar{from{width:0}to{width:100%}}
+.reel-scan-sub{font-size:11px;color:var(--muted)}
+.reel-found{justify-content:center}
+.reel-found-head{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}
+.reel-money{font-size:46px;font-weight:900;line-height:1;letter-spacing:-1px;background:var(--grad-money);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-top:4px}
+.reel-money-sub{font-size:11.5px;color:var(--muted);margin:6px 0 16px}
+.reel-rows{display:flex;flex-direction:column;gap:8px}
+.reel-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:11px;background:var(--panel2);border:1px solid var(--border);font-size:12.5px;color:var(--text);opacity:0;transform:translateX(-8px)}
+.reel-scene.is-active .reel-row{animation:rowin .5s var(--ease) forwards}
+.reel-scene.is-active .reel-row:nth-child(1){animation-delay:.15s}
+.reel-scene.is-active .reel-row:nth-child(2){animation-delay:.32s}
+.reel-scene.is-active .reel-row:nth-child(3){animation-delay:.49s}
+@keyframes rowin{to{opacity:1;transform:none}}
+.reel-row b{color:var(--emerald);font-weight:800}
+.reel-done{align-items:center;justify-content:center;text-align:center}
+.reel-check{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;color:#04231d;background:var(--grad);box-shadow:0 12px 30px -8px rgba(52,211,153,.7);margin-bottom:16px}
+.reel-scene.is-active .reel-check{animation:pop .55s var(--ease)}
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.reel-done-amt{font-size:24px;font-weight:900;color:var(--text)}
+.reel-done-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.reel-done-chip{margin-top:14px;font-size:10px;font-weight:800;color:#7ef0c9;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.08);border-radius:20px;padding:5px 11px}
+.reel-foot{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);font-weight:700;padding-top:10px;border-top:1px solid var(--border);margin-top:10px;text-transform:uppercase;letter-spacing:.04em}
+.phone-cta{font-size:12px;color:var(--muted);font-weight:600}
+@media(prefers-reduced-motion:reduce){.phone{transform:none}.phone-glow,.reel-radar span,.reel-live i{animation:none}.reel-scene{transition:none}.reel-row{opacity:1;transform:none;animation:none}.reel-bar i{width:100%;animation:none}}
+@media(max-width:900px){.phone{transform:none}.phone-glow{animation:none;opacity:.6}}
 .product-window{position:relative;border:1px solid rgba(255,255,255,.14);border-radius:24px;overflow:hidden;background:
   linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.035)),
   linear-gradient(135deg,rgba(52,211,153,.12),rgba(34,211,238,.045) 48%,rgba(167,139,250,.07));

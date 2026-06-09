@@ -52,60 +52,44 @@
       </div>
     </div>
     <div class="product-stage" aria-label="Recoup product preview">
-      <div class="product-window">
-        <div class="window-bar">
-          <div class="window-title">Recoup scan</div>
-          <div class="window-status">Gemini + rules verified</div>
-        </div>
-        <div class="preview-hero">
-          <div>
-            <div class="preview-label">recoverable surface</div>
-            <div class="preview-money">$1,659/yr</div>
-            <div class="preview-caption">+ $60 one-time · illustrative preview — run a scan for your real numbers</div>
-          </div>
-          <button class="btn btn-primary preview-scan" type="button" data-open-scan>Run my scan</button>
-        </div>
-        <div class="preview-grid">
-          <div class="preview-panel strong">
-            <div class="preview-panel-top">
-              <span>Subscription Hunter</span>
-              <b>$1,659/yr</b>
+      <div class="phone" id="reel-phone" role="button" tabindex="0" data-open-scan aria-label="Watch Recoup recover money — tap to run your own scan">
+        <div class="phone-glow" aria-hidden="true"></div>
+        <div class="phone-frame">
+          <div class="phone-island" aria-hidden="true"></div>
+          <div class="phone-screen">
+            <div class="reel-top"><span class="reel-logo"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="#04231d" stroke-width="2.8" stroke-linecap="round"/><path d="M20 3.6V8.2h-4.6" stroke="#04231d" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Recoup <span class="reel-live"><i></i>live</span></div>
+            <div class="reel-stage" id="reel-stage">
+              <!-- scene 1: scanning -->
+              <section class="reel-scene reel-scan" data-scene="0">
+                <div class="reel-radar" aria-hidden="true"><span></span><span></span><span></span></div>
+                <div class="reel-scan-label">Scanning receipts…</div>
+                <div class="reel-bar"><i></i></div>
+                <div class="reel-scan-sub" id="reel-scan-n">1,204 emails read · 0 leaks</div>
+              </section>
+              <!-- scene 2: money found -->
+              <section class="reel-scene reel-found" data-scene="1">
+                <div class="reel-found-head">owed to you now</div>
+                <div class="reel-money"><span>$</span><span id="reel-count">0</span></div>
+                <div class="reel-money-sub">+ €250 owed · 10 items found</div>
+                <div class="reel-rows">
+                  <div class="reel-row"><span>Netflix price hike</span><b>$30/yr</b></div>
+                  <div class="reel-row"><span>Adobe duplicate charge</span><b>$60</b></div>
+                  <div class="reel-row"><span>Flight delay · EU261</span><b>€250</b></div>
+                </div>
+              </section>
+              <!-- scene 3: recovered -->
+              <section class="reel-scene reel-done" data-scene="2">
+                <div class="reel-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="reel-done-amt">Recovered $240</div>
+                <div class="reel-done-sub">StreamMax — cancelled &amp; prorated</div>
+                <div class="reel-done-chip">you approved it · SHA-256 logged</div>
+              </section>
             </div>
-            <div class="preview-bars" aria-hidden="true">
-              <span style="width:92%"></span>
-              <span style="width:66%"></span>
-              <span style="width:41%"></span>
-            </div>
+            <div class="reel-foot"><span>rules own every $</span><span>you approve all</span></div>
           </div>
-          <div class="preview-panel">
-            <div class="preview-panel-top">
-              <span>Billing Auditor</span>
-              <b>$60</b>
-            </div>
-            <div class="mini-claim">
-              <span>Adobe duplicate charge</span>
-              <em>draft ready</em>
-            </div>
-          </div>
-        </div>
-        <div class="preview-card">
-          <div class="claim-top">
-            <span>Challenge NETFLIX price hike</span>
-            <b>82%</b>
-          </div>
-          <div class="claim-amount">$30/yr <span>+$2.50/mo</span></div>
-          <div class="claim-copy">The price quietly went up. Ask for the old rate or cancel.</div>
-          <div class="claim-actions">
-            <button class="btn btn-approve" type="button" data-show-results><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Approve</button>
-            <button class="btn btn-view" type="button" data-show-results>Show work</button>
-          </div>
-        </div>
-        <div class="preview-audit">
-          <span>hash 4e9a6c2f1b</span>
-          <span>human-in-the-loop</span>
-          <span>MCP-ready Gmail intake</span>
         </div>
       </div>
+      <div class="phone-cta" aria-hidden="true">Live demo — tap the phone to scan your own</div>
     </div>
   </section>
 
@@ -255,5 +239,6 @@
 <script src="data.js"></script>
 <script src="recover.js"></script>
 <script src="app.js"></script>
+<script src="reel.js"></script>
 </body>
 </html>
