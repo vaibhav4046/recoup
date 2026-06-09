@@ -597,11 +597,7 @@
       body: JSON.stringify({ token }),
     });
     if (r.ok) return r.json();
-    // Backward compatibility while the Space rebuilds or if only the frontend is deployed.
-    if (r.status === 404 || r.status === 405) {
-      return fetch(API + "/api/gmail/findings?token=" + encodeURIComponent(token)).then((res) => res.json());
-    }
-    throw new Error("gmail findings failed");
+    throw new Error("gmail findings failed"); // POST-only — never put the handoff token in a URL (no leak via server logs / Referer)
   }
 
   // ---- misc ----
