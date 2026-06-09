@@ -386,6 +386,8 @@ body.light .toast{background:var(--bg2);color:#047857;border-color:rgba(4,120,87
 body.light .vrec-total{color:#047857}
 .landing-safe{margin-top:16px;font-size:13.5px;color:var(--muted);max-width:60ch;line-height:1.55;padding:10px 14px;border:1px solid rgba(52,211,153,.25);border-radius:10px;background:rgba(52,211,153,.05)}
 .landing-safe b{color:var(--text)}
+.audit-verify{display:inline-block;margin-top:12px;font-size:11.5px;color:var(--cyan);text-decoration:none;font-weight:600}
+.audit-verify:hover{text-decoration:underline}
 .divider{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:12px;margin:16px 0}
 .divider::before,.divider::after{content:"";height:1px;flex:1;background:var(--border)}
 
