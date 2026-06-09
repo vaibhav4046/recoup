@@ -22,7 +22,7 @@
   </div>
   <div class="topbar-right">
     <div class="chips" id="status-chips" role="list" aria-label="System status"><!-- injected --></div>
-    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode" aria-pressed="false">◐</button>
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle light or dark mode" aria-pressed="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
     <a class="signin-link" href="/login.html">Sign in</a>
   </div>
 </header>
@@ -45,7 +45,7 @@
         <span>Human approval gate</span>
         <span>SHA-256 audit</span>
       </div>
-      <p class="landing-safe"><span aria-hidden="true">🛡</span> Recoup will <b>never</b> ask for your money, password, bank details, or remote access. Money only ever moves on the official vendor/government site — never through Recoup.</p>
+      <p class="landing-safe"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Recoup will <b>never</b> ask for your money, password, bank details, or remote access. Money only ever moves on the official vendor/government site — never through Recoup.</p>
       <div class="founder-strip">
         <span><b>Who's behind this?</b> Built by Vaibhav — a final-year Computer Science student at the University of Liverpool — as a dissertation &amp; portfolio project.</span>
         <span><b>Free because it's a student project, not a data broker.</b> The code is open-source and your data is never sold. <a href="https://github.com/vaibhav4046/recoup" target="_blank" rel="noopener">See the code →</a></span>
@@ -96,7 +96,7 @@
           <div class="claim-amount">$30/yr <span>+$2.50/mo</span></div>
           <div class="claim-copy">The price quietly went up. Ask for the old rate or cancel.</div>
           <div class="claim-actions">
-            <button class="btn btn-approve" type="button" data-show-results><span aria-hidden="true">✓</span> Approve</button>
+            <button class="btn btn-approve" type="button" data-show-results><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Approve</button>
             <button class="btn btn-view" type="button" data-show-results>Show work</button>
           </div>
         </div>
@@ -132,9 +132,9 @@
       <div class="hero-actions">
         <button class="btn btn-primary" id="btn-scan"><span class="dot"></span> Run recovery scan</button>
         <button class="btn btn-ghost" id="btn-approve-all">Approve all safe wins</button>
-        <button class="btn btn-ghost" id="demo-recovery" aria-label="See a claim recovered — demo walkthrough"><span aria-hidden="true">▶</span> See a claim → recovered (demo)</button>
+        <button class="btn btn-ghost" id="demo-recovery" aria-label="See a claim recovered — demo walkthrough"><svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg> See a claim → recovered (demo)</button>
       </div>
-      <div class="demo-note" id="demo-note">🧪 <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button></div>
+      <div class="demo-note" id="demo-note"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.6 9.3A2 2 0 0 0 6.1 22h11.8a2 2 0 0 0 1.7-3.7L14 9V3"/><path d="M7.5 14.5h9"/></svg> <b>Sample inbox</b> — example data, $0 of this is yours yet. <button class="linklike2" id="open-scan">Scan your own statement — 100% private →</button></div>
     </div>
     <div class="hero-right">
       <div class="recovered-card">
@@ -142,7 +142,7 @@
         <div class="recovered-amount"><span id="ready-count">0</span><span class="rc-of">/<span id="total-count">0</span></span></div>
         <div class="ring"><svg viewBox="0 0 120 120"><circle class="ring-bg" cx="60" cy="60" r="52"/><circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"/></svg><div class="ring-pct" id="ring-pct">0%</div></div>
         <div class="recovered-foot" id="ready-foot">—</div>
-        <div class="demo-flag hidden" id="demo-flag">🧪 demo recovery shown — not real money</div>
+        <div class="demo-flag hidden" id="demo-flag"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.6 9.3A2 2 0 0 0 6.1 22h11.8a2 2 0 0 0 1.7-3.7L14 9V3"/><path d="M7.5 14.5h9"/></svg> demo recovery shown — not real money</div>
         <div id="ring-status" class="sr-only" role="status" aria-live="polite"></div>
       </div>
     </div>
@@ -205,7 +205,7 @@
       <span class="audit-badge" id="audit-badge">● verifying…</span>
     </div>
     <div class="audit" id="audit"><!-- injected --></div>
-    <a class="audit-verify" href="https://vaibhav3313-recoup.hf.space/api/health" target="_blank" rel="noopener">Verify the live chain head &amp; integrity at /api/health <span aria-hidden="true">↗</span></a>
+    <a class="audit-verify" href="https://vaibhav3313-recoup.hf.space/api/health" target="_blank" rel="noopener">Verify the live chain head &amp; integrity at /api/health <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </section>
 
   </div><!-- /#results -->
@@ -219,8 +219,8 @@
 <!-- scan-your-own-data modal -->
 <div class="modal-scrim" id="scan-scrim"></div>
 <div class="modal glass" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title" aria-describedby="scan-desc" aria-hidden="true">
-  <div class="modal-head"><h3 id="scan-title">Scan a statement — no sign-in</h3><button class="x" id="scan-x" aria-label="Close">✕</button></div>
-  <p class="modal-sub" id="scan-desc"><span aria-hidden="true">🔒</span> Paste a card/bank statement or subscription list. It runs <b>100% in your browser</b> — nothing is uploaded, no account needed. Close the tab and it's gone.</p>
+  <div class="modal-head"><h3 id="scan-title">Scan a statement — no sign-in</h3><button class="x" id="scan-x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <p class="modal-sub" id="scan-desc"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Paste a card/bank statement or subscription list. It runs <b>100% in your browser</b> — nothing is uploaded, no account needed. Close the tab and it's gone.</p>
   <textarea id="scan-input" class="scan-input" spellcheck="false" aria-label="Paste your statement" placeholder="Paste a card/bank statement or subscription list — one per line:&#10;&#10;Netflix, 19.99&#10;2026-01-12, SPOTIFY, 11.99&#10;Gym membership 49.99&#10;..."></textarea>
   <div class="modal-actions">
     <button class="btn btn-ghost" id="scan-sample">Try a sample</button>
@@ -229,7 +229,7 @@
   <details class="gmail-advanced">
     <summary>Prefer to connect Gmail? <span class="ga-tag">advanced · testers only</span></summary>
     <p class="ga-desc"><b>Read-only</b> Google OAuth — subscriptions/receipts only, never your bank or card data. Processes on our server, deletable anytime.</p>
-    <div class="gmail-testnote" id="scan-gmail-note"><span aria-hidden="true">⚠</span> Gmail connect is in Google's <b>test mode</b> — only approved testers can sign in, and Google shows an <b>"unverified app"</b> screen (Advanced → Continue). The paste scan above needs no sign-in.</div>
+    <div class="gmail-testnote" id="scan-gmail-note"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg> Gmail connect is in Google's <b>test mode</b> — only approved testers can sign in, and Google shows an <b>"unverified app"</b> screen (Advanced → Continue). The paste scan above needs no sign-in.</div>
     <button class="btn gbtn full" id="gmail-connect" type="button">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.8 37.9 46.5 31.8 46.5 24.5z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3.1-.8-4.9s.3-3.4.8-4.9l-7.9-6.2C1 15.6 0 19.7 0 24s1 8.4 2.6 11.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.6-4-13.5-9.6l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
       Connect your Gmail
@@ -241,12 +241,12 @@
 <div class="drawer-scrim" id="drawer-scrim"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" aria-describedby="drawer-desc" aria-hidden="true">
   <p class="sr-only" id="drawer-desc">Review the evidence, verifier checks, caveats, and drafted claim before approving or skipping this recovery action.</p>
-  <div class="drawer-head"><h4 id="drawer-title">Drafted message</h4><button class="x" id="drawer-x" aria-label="Close">✕</button></div>
+  <div class="drawer-head"><h4 id="drawer-title">Drafted message</h4><button class="x" id="drawer-x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="drawer-meta" id="drawer-meta"></div>
   <div class="drawer-prov" id="drawer-prov"></div>
   <pre class="drawer-body" id="drawer-body"></pre>
   <div class="drawer-foot">
-    <button class="btn btn-primary" id="drawer-approve" aria-label="Approve and recover"><span aria-hidden="true">✓</span> Approve &amp; recover</button>
+    <button class="btn btn-primary" id="drawer-approve" aria-label="Approve and recover"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Approve &amp; recover</button>
     <button class="btn btn-ghost" id="drawer-skip">Skip</button>
   </div>
 </aside>
