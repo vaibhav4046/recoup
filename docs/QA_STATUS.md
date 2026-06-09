@@ -72,6 +72,19 @@ Live verification: 2026-06-09 (UTC). Frontend commits `2613260` + `08e6a50` (liv
 
 ---
 
+## QA round 12 — combined defect-hunt + 14-persona panel (2026-06-09)
+6-dimension defect-hunt swarm over the current refactored code + 14 personas. **Panel avg 7.43/10** (up from 6/10) — technical 8.5, idea 8.1, trust 8.0 (strong); design/polish 7.4; wouldUse 6.7 (payout-gated). 24 defects found; **the 6 demo-critical functional ones fixed + live-verified** (commit follows):
+| # | Sev | Issue | Fix (verified live) |
+|---|---|---|---|
+| Q1 | **BLOCKER** | recover.js truncated card ids to 14 chars → two similar merchants on a real pasted statement collide → approve/skip hit the wrong card (the bundled sample hid it) | per-scan monotonic unique ids (`u_${n}_${kind}`); live-verified two ADOBE plans get distinct ids, full lifecycle works on pasted data |
+| Q2 | HIGH | mark-sent/paid didn't refresh the hero/breakdown (stale headline after the demo) | both now call `recompute(); renderHero(); renderBreakdown()` like approve/skip |
+| Q3 | HIGH | parser ate 4-digit years as amounts, Math.abs'd refunds into charges, let ref-numbers clobber the real amount | date-tested first; negatives skipped; decimal/currency token preferred — unit-tested |
+| Q4 | MED | `skip()` closed an already-closed drawer → spurious focus jump + inert churn | guarded `if (drawer.open) closeDrawer()` |
+| Q5 | MED | demo-flag banner showed even when the demo early-returned (nothing pending) | flag un-hidden only after the pending-item guard |
+| Q6 | MED | addVrec accepted sub-cent → "$0.00" logged; toast rounded while the row showed 2dp | round-first validation; toast uses the stored 2dp value |
+
+**Win-readiness: 6.5 → ~8/10** (the BLOCKER was the thing capping it; per the panel, "land the 5 fixes and it's an honest ~8/10 contender"). Remaining from this hunt (lower priority, mostly backend-redeploy or polish): backend per-currency totals in snapshot.py/state.py (frontend already labels mixed "≈$"); MCP/CORS auth posture review; mobile button-wrap + modal max-height + 44px touch targets; product-preview light-mode parity. The wouldUse ceiling stays gated on one real recovery (owner).
+
 ## Headline wins
 - 🎉 **Live Gemini reasoning now renders on the deployed backend** (`live: true · gemini-2.5-flash`) — it fell back all session until the defensive-parse fix.
 - **Light mode rebuilt** — was genuinely broken in ~10 spots (invisible ring track, breakdown bars, borders; illegible buttons/amounts).
