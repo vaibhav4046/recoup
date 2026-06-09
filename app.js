@@ -64,6 +64,9 @@
     }
     if (!S) { S = JSON.parse(JSON.stringify(window.RO_FALLBACK || { actions: [], audit: [], reasoning: [] })); S._live = false; }
     S.actions = S.actions || []; S.audit = S.audit || []; S.reasoning = S.reasoning || [];
+    // per-visitor demo: start every visitor clean — never inherit another visitor's approvals from the shared backend
+    S.actions.forEach((a) => { a.approvalState = "pending"; a.status = "drafted"; });
+    S.audit = [];
     recompute();
     renderAll(true);
     wire();
@@ -272,7 +275,6 @@
     recompute(); renderHero(); renderBreakdown(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`Claim drafted — ready to send: ${a.title}`);
-    if (API) { try { await fetch(`${API}/api/actions/${id}/approve`, { method: "POST" }); } catch (e) {} }
   }
 
   async function skip(id) {
@@ -282,7 +284,6 @@
     recompute(); renderHero(); renderBreakdown(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     closeDrawer();
-    if (API) { try { await fetch(`${API}/api/actions/${id}/reject`, { method: "POST" }); } catch (e) {} }
   }
 
   async function markSent(id) {
@@ -292,7 +293,6 @@
     renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`Marked sent — ${a.title}`);
-    if (API) { try { await fetch(`${API}/api/actions/${id}/sent`, { method: "POST" }); } catch (e) {} }
   }
 
   async function markPaid(id) {
@@ -302,7 +302,6 @@
     updateReadyUI(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     toast(`💰 Recovered ${a.amount_label} — ${a.title}`);
-    if (API) { try { await fetch(`${API}/api/actions/${id}/paid`, { method: "POST" }); } catch (e) {} }
   }
 
   function approveAllSafe() {
