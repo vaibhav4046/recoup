@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # --- auth (all optional; each provider activates when its key is set) ---
     app_secret: str = ""                    # HMAC secret for session tokens
     base_url: str = "http://localhost:8099"  # public backend URL (for OAuth/magic-link callbacks)
-    frontend_url: str = "https://recoup-vaibhav4046s-projects.vercel.app"  # where to send the user after Gmail OAuth
+    frontend_url: str = "http://localhost:8099"  # set to the Cloud Run URL in production
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
     resend_api_key: str = ""                # magic-link email sender (resend.com, free)
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     # --- behaviour ---
     use_cached_fallback: bool = True
     # pinned allowlist by default (never reflect an arbitrary Origin with credentials). Set to "*" only for a no-credentials open demo.
-    cors_origins: str = "https://recoup-vaibhav4046s-projects.vercel.app,http://localhost:8123,http://127.0.0.1:8123"
+    cors_origins: str = "http://localhost:8123,http://127.0.0.1:8123"
 
     @property
     def gemini_ready(self) -> bool:

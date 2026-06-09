@@ -106,8 +106,7 @@ def _fallback_reasoning(scan: dict) -> list[dict]:
 
 def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True) -> str:
     """Call the Gemini REST API directly via httpx — robust across runtimes
-    (avoids the google-genai SDK client-lifecycle RuntimeError on the Spaces
-    container). Returns the model's text; backs off on 429/503."""
+    across serverless containers. Returns the model's text; backs off on 429/503."""
     import httpx
     s = get_settings()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"

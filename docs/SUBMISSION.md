@@ -2,10 +2,10 @@
 
 **Tagline:** The AI agent that gets your money back — finds what you're owed and losing, drafts every claim, and *you* approve each one.
 
-- 🔗 **Live demo:** https://recoup-vaibhav4046s-projects.vercel.app
+- 🔗 **Live demo:** Google Cloud Run URL after deploy
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
-- 🤖 **Live API (Hugging Face Space):** https://vaibhav3313-recoup.hf.space/api/health
-- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI · a zero-cost in-browser **voice agent** · Hugging Face Spaces today, Cloud Run-ready image in repo · Vercel
+- 🤖 **Live API:** Google Cloud Run `/api/health` after deploy
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 2.5-flash** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · a zero-cost in-browser **voice agent**
 
 ---
 
@@ -27,8 +27,8 @@ Recoup turns a messy financial footprint into recovered money through one audite
 
 ## How we built it
 
-- **Frontend:** a zero-build static app (instant load) — vanilla JS + a premium product-led UI, light/dark mode, responsive mobile layout, full accessibility (ARIA roles, focus-visible, reduced-motion), deployed on **Vercel**.
-- **Backend:** **FastAPI** currently deployed on a free **Hugging Face Docker Space**, with a Cloud Run image and exact deploy command committed for the Google Cloud submission path. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** writes the human-readable plan/reasoning and degrades to deterministic fallback under free-tier rate limits. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. The agent spine registers the official **MongoDB MCP server** as an ADK toolset, while Atlas **Vector Search** stores/retrieves recovery playbook memory.
+- **Frontend:** a zero-build static app (instant load) — vanilla JS + a premium product-led UI, responsive mobile layout, full accessibility (ARIA roles, focus-visible, reduced-motion), served by the same **Cloud Run** service as the API.
+- **Backend:** **FastAPI** on **Google Cloud Run**. A deterministic rule engine owns every dollar amount; **Gemini 2.5-flash** writes the human-readable plan/reasoning and degrades to deterministic fallback under free-tier rate limits. Server-enforced human-approval gate. A `hashlib` **SHA-256 audit chain**. The agent spine registers the official **MongoDB MCP server** as an ADK toolset, while Atlas **Vector Search** stores/retrieves recovery playbook memory.
 - **The swarm:** a Coordinator → specialist agents → an independent Verifier → a Drafter, each finding carrying its agent attribution + verdict.
 - **Quality:** we ran **three rounds of brutal multi-agent QA** (14 personas + hackathon-judge lenses each round), then fixed what they found — the honesty calibration (no annualized one-time payouts, eligibility caveats, "self-reported" recovered, a Verifier that says *no*) came directly out of that.
 
@@ -41,13 +41,13 @@ Recoup turns a messy financial footprint into recovered money through one audite
 | Store | **MongoDB** Atlas M0 | free |
 | Voice agent | Browser Web Speech (STT + TTS) only | free |
 | Agent tools | Google ADK + official MongoDB MCP server | free |
-| Backend host | **Hugging Face** Docker Spaces | free |
-| Frontend host | **Vercel** | free |
+| Backend host | **Google Cloud Run** | free tier |
+| Full app host | **Google Cloud Run** | free tier |
 
 ## Challenges we ran into
 
 - **Trust is the whole game.** Our QA panel kept scoring us down for things that *read* as untrustworthy even when correct — a blended "/yr" number, a self-certifying audit chain, a verifier that passed 100% of its sibling's output. Every one became a fix.
-- **Gemini on the Spaces container** threw a client-lifecycle `RuntimeError`; we switched to calling the Gemini REST API directly via httpx, which is robust across runtimes (and degrades gracefully to the deterministic trace on a transient 503).
+- **Free-tier runtime reliability:** Gemini can rate-limit during demos, so every agent endpoint has a deterministic fallback that preserves the retrieved playbook and the human-approval gate.
 - **Free-tier rate limits** (5 calls/min) — handled with retry + a clearly-labelled deterministic fallback, so the demo never breaks.
 
 ## Accomplishments we're proud of
@@ -79,6 +79,6 @@ For an AI-near-money product, *checkable* beats *clever*. Showing the work — t
 
 **[1:30–2:10] Approve → recover.** "Nothing sends without me." *(Approve → Copy / Open claim form → Mark sent → Mark recovered)* "Each step writes a tamper-evident SHA-256 audit chain — and 'recovered' only counts what I confirm I actually got back."
 
-**[2:10–2:40] Real + trustworthy + free.** "It's live: a FastAPI backend on Hugging Face, Gemini doing the reasoning, a private in-browser engine, all on a free no-card stack." *(show the "Backend · live / Gemini · live" chips, toggle light/dark)*
+**[2:10–2:40] Real + trustworthy + free.** "It's live: a FastAPI backend on Google Cloud Run, Gemini doing the reasoning, a private in-browser engine, and MongoDB Atlas Vector Search powering memory." *(show the "Backend · live / Gemini · live" chips, toggle light/dark)*
 
 **[2:40–3:00] Close.** "Recoup — money you're owed, recovered, on your terms. Thanks for watching." *(live link on screen)*

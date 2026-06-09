@@ -1,4 +1,4 @@
-"""Recoup — Cloud / Spaces API (FastAPI).
+"""Recoup — Cloud Run API (FastAPI).
 
 Endpoints the frontend calls: scan the money surface, run the Gemini agent,
 approve/reject each drafted action (the human gate), read the audit hash-chain,
@@ -11,11 +11,13 @@ import uuid
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import Cookie, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from . import auth
 from .config import get_settings
@@ -387,3 +389,10 @@ async def forget(request: Request, token: str = "", ro_session: str = Cookie(def
         _GMAIL_FINDINGS.pop(ro_session, None)
     # no token and no session -> no identity to scope a delete to; never wipe every visitor's findings
     return _ok(request, cleared=True, revoke_at="https://myaccount.google.com/permissions")
+
+
+# Cloud Run can serve the full product from one Google URL. The root Dockerfile copies the
+# static frontend into /app/static; local backend-only runs simply skip this mount.
+_STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(_STATIC_DIR), html=True), name="static")
