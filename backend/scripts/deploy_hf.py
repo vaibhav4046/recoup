@@ -43,16 +43,27 @@ if envp.exists():
             k, v = line.split("=", 1)
             env[k.strip()] = v.split(" #")[0].strip()
 
+def _get(k, default=""):
+    # prefer a real environment variable (setx) over backend/.env; never printed
+    return (os.environ.get(k) or env.get(k, default) or "").strip()
+
 secrets_to_set = {
-    "GOOGLE_API_KEY": env.get("GOOGLE_API_KEY", ""),
-    "USE_VERTEX": env.get("USE_VERTEX", "false"),
-    "GEMINI_MODEL": env.get("GEMINI_MODEL", "gemini-2.5-flash"),
-    "GOOGLE_CLOUD_PROJECT": env.get("GOOGLE_CLOUD_PROJECT", ""),
-    "MONGODB_URI": env.get("MONGODB_URI", ""),
-    "MONGODB_DB": env.get("MONGODB_DB", ""),
+    "GOOGLE_API_KEY": _get("GOOGLE_API_KEY"),
+    "USE_VERTEX": _get("USE_VERTEX", "false"),
+    "GEMINI_MODEL": _get("GEMINI_MODEL", "gemini-2.5-flash"),
+    "GOOGLE_CLOUD_PROJECT": _get("GOOGLE_CLOUD_PROJECT"),
+    "MONGODB_URI": _get("MONGODB_URI"),
+    "MONGODB_DB": _get("MONGODB_DB"),
+    # ---- real auth (provide via setx) ----
+    "GOOGLE_OAUTH_CLIENT_ID": _get("GOOGLE_OAUTH_CLIENT_ID"),
+    "GOOGLE_OAUTH_CLIENT_SECRET": _get("GOOGLE_OAUTH_CLIENT_SECRET"),
+    "RESEND_API_KEY": _get("RESEND_API_KEY"),       # magic-link + account/reset email (resend.com)
+    "EMAIL_FROM": _get("EMAIL_FROM"),
+    "TURNSTILE_SITE_KEY": _get("TURNSTILE_SITE_KEY"),  # Cloudflare Turnstile CAPTCHA
+    "TURNSTILE_SECRET": _get("TURNSTILE_SECRET"),
     "CORS_ORIGINS": "https://recoup-vaibhav4046s-projects.vercel.app,http://localhost:8123,http://127.0.0.1:8123",  # pinned: never "*" (wildcard+credentials reflects any origin)
     "BASE_URL": url,
-    "APP_SECRET": _secrets.token_hex(24),
+    "APP_SECRET": _get("APP_SECRET") or _secrets.token_hex(24),  # set APP_SECRET via setx to keep sessions alive across redeploys
 }
 for k, v in secrets_to_set.items():
     if v:
