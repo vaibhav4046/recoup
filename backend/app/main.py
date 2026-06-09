@@ -183,7 +183,9 @@ def _set_session(resp, token: str) -> None:
 @app.get("/api/auth/status")
 async def auth_status(request: Request):
     s = get_settings()
-    return _ok(request, providers=auth.status(), turnstile_site_key=s.turnstile_site_key)
+    # signin_ready=True signals the frontend that THIS build has the frontend-absolute OAuth redirect
+    # fix (so login won't dead-end on a backend 404). Older deployed builds lack this key -> login gates off.
+    return _ok(request, providers=auth.status(), turnstile_site_key=s.turnstile_site_key, signin_ready=True)
 
 
 @app.post("/api/auth/magic/start")
