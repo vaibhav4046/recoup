@@ -40,7 +40,8 @@ class Settings(BaseSettings):
 
     # --- behaviour ---
     use_cached_fallback: bool = True
-    cors_origins: str = "*"
+    # pinned allowlist by default (never reflect an arbitrary Origin with credentials). Set to "*" only for a no-credentials open demo.
+    cors_origins: str = "https://recoup-vaibhav4046s-projects.vercel.app,http://localhost:8123,http://127.0.0.1:8123"
 
     @property
     def gemini_ready(self) -> bool:

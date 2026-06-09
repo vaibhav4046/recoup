@@ -86,6 +86,8 @@ def handle_mcp(message: dict) -> dict:
             if not isinstance(args, dict):
                 return _err(req_id, -32602, "MCP tool arguments must be an object")
             name = str(params.get("name", ""))
+            if not name:
+                return _err(req_id, -32602, "tool name is required")
             if name not in {t["name"] for t in TOOLS}:
                 return _err(req_id, -32601, f"Unknown tool: {name}")
             if name == "gmail_detect_subscriptions":
@@ -102,11 +104,13 @@ def _call_tool(name: str, args: dict) -> dict:
     if name == "recoup_scan_demo":
         scan = APP.run_scan()
         APP.run_agent()
+        once = [a for a in APP.actions if a.get("cadence") == "once"]
+        once_sym = "≈$" if len({(a.get("currency") or "$") for a in once}) > 1 else "$"  # honest mixed-currency marker
         return {
             **_text(
                 f"Found {len(scan['findings'])} recoverable actions: "
                 f"${scan['recurring_year']:,.0f}/yr recurring leaks + "
-                f"${scan['one_time']:,.0f} one-time payouts."
+                f"{once_sym}{scan['one_time']:,.0f} one-time payouts."
             ),
             "structuredContent": _state_payload(),
         }
