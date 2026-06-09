@@ -57,11 +57,15 @@ def mongodb_toolset():
         from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
         from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
         from mcp import StdioServerParameters
+        mcp_args = ["-y", "mongodb-mcp-server"]
+        if os.name == "nt":  # Windows can't exec the npx .cmd shim directly from a stdio spawn
+            cmd, args = "cmd", ["/c", "npx", *mcp_args]
+        else:                # Linux / Cloud Run
+            cmd, args = "npx", mcp_args
+        # URI via the official env var (no deprecated flag noise on stdio, no URI on the command line)
+        env = {**os.environ, "MDB_MCP_CONNECTION_STRING": s.mongodb_uri}
         return MCPToolset(connection_params=StdioConnectionParams(
-            server_params=StdioServerParameters(
-                command="npx",
-                args=["-y", "mongodb-mcp-server", "--connectionString", s.mongodb_uri],
-            ), timeout=60))
+            server_params=StdioServerParameters(command=cmd, args=args, env=env), timeout=60))
     except Exception:
         return None
 
