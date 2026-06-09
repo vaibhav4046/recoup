@@ -2,6 +2,68 @@
 
 Generated from a 60-agent defect hunt (78 reported → 40 confirmed real after adversarial verify) + a hard break-test. **40 of 40 fixed in code. Frontend fixes are deployed and live-verified; backend auth hardening is code-complete and tested locally, pending HF deploy because `HF_TOKEN` is not available in this workspace.** Live build: https://recoup-vaibhav4046s-projects.vercel.app
 
+## Live QA + hardening pass — 2026-06-09 (autonomous overnight)
+
+Full hands-on live QA of the deployed product (Vercel frontend + HF backend) via Chrome + a 5-viewport Playwright harness, plus a 4-agent static code/security/a11y/docs review swarm and a 16-persona adversarial panel. Verified live → fixed → re-deployed (frontend) → re-verified live.
+
+### Verified GREEN on the live site
+- **Zero console / page errors** across 375 / 390 / 430 / 1280 / 1440 px (Playwright) and through every interactive flow (Chrome).
+- **No horizontal overflow** at any mobile width; the mobile hero is product-led and thumb-friendly.
+- **Full lifecycle** drafted → approved → sent → recovered works; ring + counters + audit update; shows "$240 recovered (you confirmed)".
+- **Audit hash-chain**: SHA-256 chained, genesis from a per-visitor reset (no cross-visitor leakage); 3 chained events verified after a lifecycle.
+- **XSS-safe paste**: hostile merchant names (`<img onerror>`, `<svg onload>`, `<script>`) render as inert escaped text — 0 injected nodes, 0 markers fired.
+- **Empty / hostile scan input** handled gracefully (toast, no crash). **Esc** closes dialogs; closed dialogs are `aria-hidden`.
+- **Light + dark** both render correctly (light mode was previously broken — now clean). **Delete my data** clears local + server findings.
+- **Demo walkthrough** completes the full loop (€250 EU261) with currency-correct "€250 recovered", 0 errors.
+- **/api/health** live (gemini:live · mongodb:live · gemini-2.5-flash); **/api/auth/status** google:true, no secrets leaked.
+
+### Fixed this pass — deployed to Vercel + live-verified (commit 2613260)
+| # | Sev | Issue | Fix |
+|---|---|---|---|
+| L1 | P0 | README/SUBMISSION claimed the MCP surface is live, but `/mcp` 404s on the Space | Reworded to "committed; live after backend redeploy" + a Live-status note |
+| L2 | P2 | Skip link targeted `#results` (display:none on first paint) — dead on the landing | Repointed to always-present `#main` (tabindex −1) |
+| L3 | P2 | Background stayed in the AT tree while a dialog was open (only a JS focus-trap guarded it) | `#main`/`.topbar`/`#bg-field` go `inert`+`aria-hidden` while a dialog is open |
+| L4 | P2 | Small muted/dim text below WCAG AA 4.5:1 (dark theme) | Lifted `--muted`/`--dim` |
+| L5 | P1 | Finding `id` interpolated unescaped into card HTML/data-attrs | `esc()` the id (defense-in-depth) |
+| L6 | P2 | recover.js mis-split thousands separators ("$1,200" → 200 / 1.20) | Protect thousands commas before the delimiter split; unit-tested |
+| L7 | P3 | Theme toggle had no state in its accessible name | `aria-pressed` reflects light/dark |
+
+### Fixed in code, NOT yet deployed — backend (commit 0d9d122; goes live on redeploy)
+| # | Sev | Issue | Fix |
+|---|---|---|---|
+| B1 | P1 | Magic-link returned a working sign-in link (`dev_link`) from the public backend | `dev_link` only on a localhost backend (`Settings.is_local`) |
+| B2 | P1 | CAPTCHA failed OPEN when Turnstile unconfigured | fails CLOSED in prod |
+| B3 | P1 | Gmail annualized annual receipts ×12 ($155.88/yr → $1,871/yr) | detect billing period; annual receipts are not re-annualized (unit-tested → 155.88) |
+| B4 | P1 | Gmail money regex corrupted thousands ("$1,200" → 1.20) | thousands-aware parse (unit-tested → 1200) |
+| B5 | P2 | Gmail surfaced refund-already-issued emails as live leaks | skip refund/credit/cancellation-confirmation emails (unit-tested → 0) |
+| B6 | P2 | MCP mis-coded bad input / unknown tool as −32603 with a raw exception string | −32601 / −32602 + input validation + generic −32603 catch-all (verified) |
+| B7 | P2 | `/api/account/forget` could wipe ALL visitors' findings for an anonymous caller | no-identity → no-op |
+| B8 | P2 | logout `delete_cookie` attributes didn't match the set-cookie | match path/secure/samesite/httponly |
+
+Backend validated locally: `compileall`, `auth_smoke`, `mcp_smoke`, and a gmail-fix unit test — all green.
+
+### Known limitations (honest)
+- A backend redeploy (`HF_TOKEN`, owner) is required to (a) mount `/mcp` live and (b) ship B1–B8.
+- `snapshot.py`'s `one_time`/`total` still sum a €250 EU261 figure with USD; the frontend already labels this "≈$ mixed-currency", so the deeper per-currency split was deferred to avoid breaking the live frontend's number animation unverified — tracked for the owner.
+- No verified real recovery yet → `wouldUse` is realistically capped; the recovery ledger is honest-empty.
+- Google OAuth is published but unverified → judges see an "unverified app" warning + ~100 test-user cap. The paste path needs no sign-in.
+
+### 16-persona adversarial panel (honest, internal)
+Averages: clarity 7.4 · trust 6.9 · **wouldUse 4.3** · demoWow 6.4 · riskConcern 4.2 (lower = better). Panel win-readiness: **6/10**.
+
+Deployable fixes folded in (commit `08e6a50`, **live + verified**):
+- Paste scan foregrounded as the primary path; Gmail demoted behind an "advanced · testers only" `<details>` with an explicit unverified-app warning (the #1 recurring blocker, raised by 8).
+- login.html a11y (visible email label, skip-link, `<main>`, real logo) + OAuth pre-warning naming the read-only scope and the unverified-app step (raised by 4).
+- privacy.html: effective date, named data controller + contact, prominent anti-scam promise, Google API Limited-Use affirmation, processors/transfer disclosure (raised by 3).
+- Security headers (CSP `frame-ancestors 'none'`, X-Frame-Options DENY, nosniff, Referrer-Policy) — verified live in the response headers.
+- Honesty: landing "$1,719" relabeled an illustrative preview; count-up lands on the exact value even when rAF is paused (hidden tab) or `prefers-reduced-motion` is set.
+
+Owner-gated (cannot be fixed in code): **one verified real recovery** (raised by 8 — the single biggest lever); a backend **redeploy** to make `/mcp` live, expose the SHA-256 chain tip in `/api/health`, and ship B1–B8.
+
+Live verification: 2026-06-09 (UTC). Frontend commits `2613260` + `08e6a50` (live on Vercel). Backend commits `0d9d122` + audit-in-health (committed, awaiting owner redeploy).
+
+---
+
 ## Headline wins
 - 🎉 **Live Gemini reasoning now renders on the deployed backend** (`live: true · gemini-2.5-flash`) — it fell back all session until the defensive-parse fix.
 - **Light mode rebuilt** — was genuinely broken in ~10 spots (invisible ring track, breakdown bars, borders; illegible buttons/amounts).

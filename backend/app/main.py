@@ -70,6 +70,7 @@ async def health(request: Request):
     return _ok(request, service="recoup-api", version=app.version, mode=s.mode,
                integrations=s.integration_status(),
                gemini_model=s.gemini_model if s.gemini_ready else None,
+               audit=APP.audit.verify(),  # SHA-256 chain state {intact,count,head} — externally verifiable
                recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,
                one_time=APP.scan_result["one_time"] if APP.scan_result else 0,
                recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0)
