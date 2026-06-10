@@ -45,20 +45,22 @@ words, the rules compute the amounts.
 - `python ../tests/backend_test.py` (from `backend/`) — deterministic money + currency split,
   approval writes an audit block, **tamper breaks `verify()`**, idempotent recovery, MCP ASCII (11).
 
-## 5. Remaining env / deploy (the win hinges on ONE free step)
+## 5. Remaining deploy — ONE free step (the only account-gated action left)
 The Cloud Run frontend is baked into the Docker image, so **everything above goes live only on a
-Cloud Run rebuild.** No $300 credit needed — use **Google Cloud Shell** (free, gcloud preinstalled):
+Cloud Run rebuild.** No $300 credit needed — Cloud Run's free tier covers it, and **Google Cloud
+Shell** has `gcloud` preinstalled (nothing to install locally).
 
-```bash
-git clone https://github.com/vaibhav4046/recoup && cd recoup
-gcloud run deploy recoup-agent --source . --region us-central1 \
-  --allow-unauthenticated --memory 1Gi --min-instances 1 --max-instances 1 \
-  --set-env-vars "GOOGLE_API_KEY=...,MONGODB_URI=...,MONGODB_DB=recoup,GEMINI_MODEL=gemini-3-flash-preview,GOOGLE_GENAI_USE_VERTEXAI=FALSE,CORS_ORIGINS=https://recoup-agent-681822930558.us-central1.run.app"
-# verify the partner MCP fires live (must show "mcp":{"live":true):
-curl -X POST $URL/api/agent/recover -H 'content-type: application/json' \
-  -d '{"charge":{"merchant":"FitLife Gym","kind":"dead_subscription","amount":480}}'
-```
-Env vars: `GOOGLE_API_KEY` (aistudio.google.com/apikey), `MONGODB_URI` (Atlas M0, free).
+1. Get a fresh Gemini key (resets the daily quota): https://aistudio.google.com/apikey → **Create API key** → copy.
+2. Open Cloud Shell with the repo pre-cloned:
+   `https://shell.cloud.google.com/cloudshell/editor?cloneRepo=https://github.com/vaibhav4046/recoup`
+3. In the Cloud Shell terminal run **one command** — it prompts for the key + your Mongo URI, rebuilds, and verifies:
+   ```bash
+   cd recoup && bash deploy.sh
+   ```
+`deploy.sh` sets every env var (with a `^##^` delimiter so the comma-separated `CORS_ORIGINS`
+isn't mis-parsed), generates an `APP_SECRET`, deploys with `--min-instances 1`, and curls
+`/api/health` + `/api/agent/recover` so you can confirm `"mcp":{"live":true}` and Gemini live
+before submitting.
 
 ## 6. Demo
 - **Submit the Cloud Run URL** (`/api/health` for the live proof). Use the in-browser paste scan
