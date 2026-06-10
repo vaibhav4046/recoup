@@ -479,6 +479,20 @@
 
   </div><!-- /#results -->
 
+  <!-- REAL UNCLAIMED-MONEY SEARCH (official CA public records) -->
+  <section class="glass panel" id="unclaimed" aria-label="Search official unclaimed money records">
+    <div class="panel-head">
+      <h3>Search real unclaimed money <span class="uc-badge">official government data</span></h3>
+    </div>
+    <p class="uc-sub">Search a live slice of the <b>California State Controller's official unclaimed-property records</b> ($500-and-up segment) — real money held under real names. Recoup never touches the money: claims happen only on the official state site.</p>
+    <form class="uc-form" id="uc-form">
+      <input class="uc-input" id="uc-name" type="text" placeholder="Try a last name — e.g. GARCIA, NGUYEN, SMITH" aria-label="Owner name to search" autocomplete="off" maxlength="60" />
+      <button class="btn btn-primary" type="submit">Search records</button>
+    </form>
+    <div class="uc-results" id="uc-results" aria-live="polite"></div>
+    <p class="uc-meta">Indexed slice of the official dataset (updated weekly) · source: <a href="https://sco.ca.gov/upd_download_property_records.html" target="_blank" rel="noopener">sco.ca.gov public records</a> · claim only at <a href="https://claimit.ca.gov" target="_blank" rel="noopener">claimit.ca.gov</a></p>
+  </section>
+
   <section id="agent-timeline" class="agent-timeline" aria-label="Agent run timeline"></section>
 
   <footer class="foot">

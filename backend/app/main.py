@@ -169,6 +169,18 @@ async def agent_recover(request: Request):
     return _ok(request, charge=charge, mcp=adk_agent.last_mcp_proof(), playbook=pb, **res)
 
 
+@app.get("/api/unclaimed/search")
+async def unclaimed_search(request: Request, name: str = ""):
+    """REAL owed-money discovery: search an indexed slice of the official California State
+    Controller unclaimed-property records ($500+) by owner name. Every hit is a real public
+    record — claims happen only on the official state site (claimit.ca.gov)."""
+    from . import unclaimed
+    if not unclaimed.available():
+        return _ok(request, ok=False, error="MongoDB not configured", results=[])
+    res = await run_in_threadpool(unclaimed.search, name)
+    return _ok(request, **res)
+
+
 @app.post("/api/mcp/proof")
 async def mcp_proof(request: Request):
     """Deliberately exercise the official mongodb-mcp-server through ADK as a real multi-turn

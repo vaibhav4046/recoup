@@ -724,6 +724,33 @@
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
 
+    // REAL owed-money search — official CA unclaimed-property records (live Atlas query)
+    const ucf = $("#uc-form"); if (ucf) ucf.onsubmit = async (e) => {
+      e.preventDefault();
+      const name = (($("#uc-name") && $("#uc-name").value) || "").trim();
+      const box = $("#uc-results"); if (!box) return;
+      if (!API) { box.innerHTML = '<div class="uc-empty">The records search needs the live backend.</div>'; return; }
+      box.innerHTML = '<div class="uc-empty">Searching official records…</div>';
+      try {
+        const d = await fetch(API + "/api/unclaimed/search?name=" + encodeURIComponent(name)).then((r) => r.json());
+        if (!d.ok) { box.innerHTML = '<div class="uc-empty">' + esc(d.error || "Search failed — try again.") + "</div>"; return; }
+        if (!d.results || !d.results.length) {
+          box.innerHTML = '<div class="uc-empty">No matches in this indexed slice — try another name, or search the full official database at claimit.ca.gov.</div>'; return;
+        }
+        box.innerHTML = d.results.map((r) => (
+          '<div class="uc-row"><div class="uc-row-main"><b>' + esc(r.owner_name) + "</b>" +
+          (r.owner_city ? ' <span class="uc-city">' + esc(r.owner_city) + (r.owner_state ? ", " + esc(r.owner_state) : "") + "</span>" : "") +
+          '<div class="uc-holder">held by ' + esc(r.holder || "unknown holder") + " · " + esc(r.property_type || "property") + " · ID " + esc(r.property_id) + "</div></div>" +
+          '<div class="uc-amt">$' + Number(r.amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "</div>" +
+          '<a class="btn btn-ghost uc-claim" href="https://claimit.ca.gov" target="_blank" rel="noopener">Claim ↗</a></div>'
+        )).join("") +
+          '<div class="uc-total">' + d.total_matches + " match" + (d.total_matches === 1 ? "" : "es") +
+          " in this " + Number(d.records || 0).toLocaleString() + "-record slice · every result is a real public record</div>";
+      } catch (e2) {
+        box.innerHTML = '<div class="uc-empty">Backend waking up — try again in a few seconds.</div>';
+      }
+    };
+
     // savings estimator checkboxes — NEVER blend currencies into one figure (core product rule)
     const cbs = document.querySelectorAll(".calc-cb");
     const calcTotal = $("#calc-total");
