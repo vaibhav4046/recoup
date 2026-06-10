@@ -207,13 +207,34 @@ def _deterministic_plan(charge: dict, playbook: str) -> str:
     return f"{head}\n{steps}{tail}\n\nDraft ready for your approval — nothing is sent until you confirm."
 
 
+def _gemma_plan(charge: dict, playbook: str) -> dict | None:
+    """Resilience tier: when the ADK/Gemini path is rate-limited, draft the plan with a REAL
+    Google model via the free Gemma tier (separate quota pool, same API). Labeled honestly."""
+    try:
+        from . import agent as _agent
+        msg = f"{INSTRUCTION}\n\nDetected charge: {json.dumps(charge, ensure_ascii=False)}"
+        if playbook:
+            msg += f"\n\nRetrieved recovery playbook:\n{playbook}"
+        text, used = _agent.generate_any(msg, json_mode=False)
+        if not (text or "").strip():
+            return None
+        return {"plan": text.strip(), "status": "pending_approval", "model": used, "live": True,
+                "note": "gemma_resilience_tier" if used.startswith("gemma") else "rest_fallback"}
+    except Exception:  # noqa: BLE001 — every tier failed; caller degrades deterministically
+        return None
+
+
 async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
     """Run the ADK Gemini agent to plan a recovery for one charge.
     Returns {plan, status:'pending_approval', model, live}."""
     s = get_settings()
     if not s.gemini_ready:
         return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval", "model": "unconfigured", "live": False}
-    if quota_blocked():  # circuit breaker: don't burn 15s of retries per click while quota is dead
+    if quota_blocked():  # breaker open on the primary -> try the free Gemma tier (still a real model)
+        from starlette.concurrency import run_in_threadpool
+        g = await run_in_threadpool(_gemma_plan, charge, playbook)
+        if g:
+            return g
         return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
                 "model": "deterministic-fallback", "live": False, "note": "quota_cooldown"}
     try:
@@ -232,8 +253,13 @@ async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
                 out = ev.content.parts[0].text or ""
         return {"plan": out.strip(), "status": "pending_approval", "model": s.gemini_model, "live": True}
     except Exception as e:  # noqa: BLE001
-        # ADK/Gemini unavailable (e.g. free-tier 429 ResourceExhausted) -> deterministic playbook-based plan
+        # ADK/Gemini unavailable (e.g. free-tier 429 ResourceExhausted) -> Gemma resilience tier
+        # (a REAL Google model on the free separate-quota pool), then deterministic as last resort.
         _trip_breaker(f"{type(e).__name__}: {e}")
+        from starlette.concurrency import run_in_threadpool
+        g = await run_in_threadpool(_gemma_plan, charge, playbook)
+        if g:
+            return g
         return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
                 "model": "deterministic-fallback", "live": False, "note": f"{type(e).__name__}"}
     finally:
