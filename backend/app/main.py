@@ -251,6 +251,16 @@ async def unclaimed_search(request: Request, name: str = ""):
     return _ok(request, **res)
 
 
+@app.get("/api/unclaimed/stats")
+async def unclaimed_stats(request: Request):
+    """REAL aggregate of the indexed official-CA-records slice: total unclaimed $, count, largest."""
+    from . import unclaimed
+    if not unclaimed.available():
+        return _ok(request, ok=False, error="MongoDB not configured", records=0, total_amount=0)
+    res = await run_in_threadpool(unclaimed.stats_full)
+    return _ok(request, **res)
+
+
 @app.post("/api/mcp/proof")
 @app.get("/api/mcp/proof")
 async def mcp_proof(request: Request):
