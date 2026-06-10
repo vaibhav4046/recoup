@@ -22,7 +22,7 @@ RULES = {
     "eu261": "EU261/UK261: flights delayed 3h+ owe €250 (<1500km), €400 (1500–3500km), or €600 cash.",
     "dead_sub": "A subscription unused 60+ days is a recurring leak; most allow instant cancel + proration.",
     "price_creep": "Silent price increases can be challenged or matched to the new-customer rate (retention offer).",
-    "billing_error": "Duplicate charges / undisclosed fees are recoverable; card issuers allow chargebacks within 60–120 days.",
+    "billing_error": "Duplicate charges / undisclosed fees are recoverable: contact the vendor first (usually corrected within 30–60 days); if unresolved, your card issuer's chargeback window (typically 60–120 days from the statement) is the fallback.",
     "settlement": "Open class-action settlements (e.g. the $1.5B Amazon Prime / FTC fund) pay eligible consumers who file.",
     "unclaimed": "State unclaimed-property programs (NAUPA) hold forgotten deposits, refunds, and balances under your name.",
     "refund_window": "Many retailers and airlines owe a refund for a price drop or cancellation within a stated window.",
@@ -171,19 +171,25 @@ def scan() -> dict:
                 d["amount"], "$", "deposit",
                 f"held {d['held_days']}d — past the statutory return window", "request_refund", "high"))
 
-    recurring = round(sum(f["amount"] for f in findings if f["cadence"] == "yearly"), 2)
-    one_time = round(sum(f["amount"] for f in findings if f["cadence"] == "once"), 2)
-    # split one-time by currency so €250 is never silently summed into the $ headline
-    by_ccy: dict[str, float] = {}
+    # NEVER sum across currencies (a money app that adds $ + € loses an accountant's trust instantly).
+    # Split BOTH buckets by currency; the legacy numeric fields carry the $ component ONLY, and the
+    # *_by_currency / *_label fields carry the honest per-currency truth the UI renders.
+    rec_ccy: dict[str, float] = {}
+    one_ccy: dict[str, float] = {}
     for f in findings:
-        if f["cadence"] == "once":
-            by_ccy[f["currency"]] = round(by_ccy.get(f["currency"], 0.0) + f["amount"], 2)
+        bucket = rec_ccy if f["cadence"] == "yearly" else one_ccy
+        bucket[f["currency"]] = round(bucket.get(f["currency"], 0.0) + f["amount"], 2)
+    recurring = rec_ccy.get("$", 0.0)   # $ component only — no cross-currency blend
+    one_time = one_ccy.get("$", 0.0)
+    _label = lambda d: " + ".join(f"{c}{v:,.0f}" for c, v in sorted(d.items(), key=lambda kv: -kv[1]))
     return {
         "findings": findings,
-        "recurring_year": recurring,
-        "one_time": one_time,  # numeric sum (legacy field); see one_time_by_currency for the honest split
-        "one_time_by_currency": by_ccy,
-        "one_time_label": " + ".join(f"{c}{v:,.0f}" for c, v in sorted(by_ccy.items(), key=lambda kv: -kv[1])),
-        "total_recoverable": round(recurring + one_time, 2),
+        "recurring_year": recurring,            # $ only (legacy numeric); see recurring_by_currency
+        "recurring_by_currency": rec_ccy,
+        "recurring_label": _label(rec_ccy),
+        "one_time": one_time,                   # $ only (legacy numeric); see one_time_by_currency
+        "one_time_by_currency": one_ccy,
+        "one_time_label": _label(one_ccy),
+        "total_recoverable": round(recurring + one_time, 2),  # $ only — currencies never blended
         "surface": s,
     }

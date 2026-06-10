@@ -8,7 +8,7 @@
     eu261: "EU261/UK261 — 3h+ delay owes €250–€600 cash.",
     dead_sub: "Unused 60+ days — recurring leak, cancel + prorate.",
     price_creep: "Silent price hike — challenge or match new-customer rate.",
-    billing_error: "Duplicate/undisclosed fee — chargeback eligible.",
+    billing_error: "Duplicate/undisclosed fee — ask the vendor first; chargeback is the fallback.",
     settlement: "Open class-action settlement — file to get paid.",
     unclaimed: "State unclaimed-property (NAUPA) held in your name.",
     refund_window: "Price-protection / refund window owed back.",
@@ -230,7 +230,7 @@
   function renderTrace(animate) {
     const box = $("#trace"); box.innerHTML = "";
     const run = S.run || {};
-    $("#reason-model").textContent = run.model ? `${run.model}${run.live ? " · live" : " · fallback"}${run.latency_ms ? " · " + run.latency_ms + "ms" : ""}` : "—";
+    $("#reason-model").textContent = modelLabel(run);
     (S.reasoning || []).forEach((ln, i) => {
       const line = el("div", "line " + (ln.tone || "dim"), `<span class="mk">›</span><span class="t">${esc(ln.t)}</span>`);
       if (animate) line.style.animationDelay = (i * 0.09) + "s"; else { line.style.opacity = 1; line.style.transform = "none"; }
@@ -772,6 +772,18 @@
   // dark-only — theme toggle removed
 
   let toastT;
+  // Honest model badge: name the actual tier that produced the reasoning (never imply Gemini 3
+  // when a free-tier fallback ran). Mirrors the backend resilience ladder.
+  function modelLabel(run) {
+    if (!run || !run.model) return "—";
+    const m = String(run.model), ms = run.latency_ms ? " · " + run.latency_ms + "ms" : "";
+    if (m.indexOf("gemini-3") === 0) return "Gemini 3 · live" + ms;
+    if (m.indexOf("gemma") === 0) return m + " · Gemma resilience tier (free, primary rate-limited)" + ms;
+    if (m.indexOf("gemini") === 0) return m + " · Gemini fallback tier" + ms;
+    if (m === "deterministic-fallback") return "grounded rules · AI cooling down (no amount invented)";
+    return m + (run.live ? " · live" : "") + ms;
+  }
+
   function toast(msg) {
     let t = $(".toast"); if (!t) { t = el("div", "toast"); t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); document.body.appendChild(t); }
     t.innerHTML = icon('check') + " " + esc(msg); t.classList.add("show");
