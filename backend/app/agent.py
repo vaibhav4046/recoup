@@ -222,6 +222,16 @@ def draft_plan(scan: dict) -> dict:
                 vlines.append({"t": f"Tool · {via}: \"{f['title'][:34]}\" → {h['title']} · {h['basis']} (sim {h.get('score', 0):.2f})", "tone": "cyan"})
         if h:
             grounding.append({"finding": f["title"], "precedent": {k: h.get(k) for k in ("title", "basis", "jurisdiction")}})
+    # surface the partner-MCP integration in the trace: the official mongodb-mcp-server tool-call
+    # captured at warmup (judges asked for this to be visible, not buried at /api/mcp/proof).
+    try:
+        from . import adk_agent
+        proof = adk_agent.last_mcp_proof()
+        if proof.get("tool_calls"):
+            vlines.insert(0, {"t": f"Tool · MongoDB MCP (official mongodb-mcp-server): {', '.join(proof['tool_calls'][:3])} "
+                              f"on Atlas (captured {proof.get('captured_at', 'at warmup')})", "tone": "cyan"})
+    except Exception:
+        pass
     sw["grounding"] = grounding
 
     # ---- PLAN (honest: only claims vector retrieval when grounding actually happened) ----

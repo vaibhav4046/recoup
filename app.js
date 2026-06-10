@@ -175,9 +175,16 @@
       return;
     }
     const live = S.integrations || {};
-    const gem = (live.gemini || "fallback") === "live" && S._live && !!(S.run && S.run.live); // only claim "live" if the run actually used Gemini (not a 429 fallback)
+    const runModel = S.run && S.run.model ? String(S.run.model) : "";
+    const aiLive = (live.gemini || "fallback") === "live" && S._live && !!(S.run && S.run.live);
+    // Honest chip: name the tier that ACTUALLY produced the reasoning — never claim Gemini when a
+    // free-tier Gemma fallback ran. (The most-repeated user-test complaint across two rounds.)
+    let aiChip = "AI reasoning · on";
+    if (aiLive) aiChip = runModel.indexOf("gemini-3") === 0 ? "Gemini 3 · live"
+      : runModel.indexOf("gemma") === 0 ? "Gemma · live (fallback)"
+      : runModel.indexOf("gemini") === 0 ? "Gemini · live" : "AI · live";
     const mon = (live.mongodb || "fallback") === "live" && S._live; // never show "MongoDB · live" on embedded sample data
-    box.appendChild(chip(gem ? "Gemini · live" : "AI reasoning · on", gem ? "live" : ""));
+    box.appendChild(chip(aiChip, aiLive ? "live" : ""));
     box.appendChild(chip(mon ? "MongoDB · live" : "Storage · local", mon ? "live" : ""));
     box.appendChild(chip("Audit · SHA-256", "live"));
     box.appendChild(chip(S._live ? "Backend · live" : "Sample data", S._live ? "live" : ""));
