@@ -149,18 +149,32 @@ def _call_tool(name: str, args: dict) -> dict:
         from . import vector, adk_agent
         charge = {k: args.get(k) for k in ("merchant", "kind", "amount", "amount_label") if args.get(k) is not None}
         q = f"{charge.get('merchant', '')} {charge.get('kind', '')}".strip()
-        pb = None
         try:
-            pb = vector.retrieve_playbook(q)  # Atlas $vectorSearch (cosine fallback); None without creds
+            pb = vector.retrieve_playbook(q, str(charge.get("kind") or ""))  # $vectorSearch -> cosine -> keyword
         except Exception:
             pb = None
-        plan = adk_agent._deterministic_plan(charge, (pb or {}).get("text", ""))  # deterministic; amounts from the charge
+        # Drive the REAL ADK Gemini agent (handle_mcp runs on the event-loop thread, so the
+        # coroutine runs on its own loop in a worker thread). Falls back deterministically.
+        res = None
+        try:
+            import asyncio
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=1) as ex:
+                res = ex.submit(lambda: asyncio.run(
+                    adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", "")))).result(timeout=70)
+        except Exception:
+            res = None
+        if not res or not res.get("plan"):
+            res = {"plan": adk_agent._deterministic_plan(charge, (pb or {}).get("text", "")),
+                   "model": "deterministic-fallback", "live": False}
         return {
             **_text(f"Drafted a recovery plan for {charge.get('merchant', 'the charge')} - status pending_approval (you approve in-app)."),
             "structuredContent": {
                 "charge": charge,
                 "playbook": {k: (pb or {}).get(k) for k in ("id", "title", "basis", "score", "via")} if pb else None,
-                "plan": plan,
+                "plan": res["plan"],
+                "model": res.get("model"),
+                "live": bool(res.get("live")),
                 "status": "pending_approval",
                 "note": "Read-only: nothing is sent and no money moves; approval happens only in the Recoup app.",
             },

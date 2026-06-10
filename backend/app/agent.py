@@ -157,32 +157,39 @@ def draft_plan(scan: dict) -> dict:
     sw = {"swarm": meta["roster"], "verified": meta["verified"], "needs_confirm": meta["needs_confirm"],
           "flagged": meta["flagged"], "agents": meta["agents"]}
 
-    # ---- PLAN ----
-    plan_line = [{"t": f"Plan: classify {len(scan['findings'])} charges, retrieve each one's legal basis "
-                       "via MongoDB Atlas Vector Search, then draft a claim you approve.", "tone": "cyan"}]
-
-    # ---- TOOL: ground EVERY finding in real precedent via Atlas Vector Search ----
-    # (runs at startup + on /api/agent/run, not on the client-side demo scan, so latency is off the hot path)
+    # ---- TOOL: ground EVERY finding in real precedent (Atlas $vectorSearch; keyword fallback
+    # keeps the legal basis alive through a total Gemini outage). Runs at startup + on
+    # /api/agent/run, not on the client-side demo scan, so latency is off the hot path.
     from . import vector
     grounding, vlines = [], []
     for f in scan["findings"]:
-        hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1)
+        hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1, kind=f.get("kind", ""))
         if hits:
             h = hits[0]
             grounding.append({"finding": f["title"], "precedent": {k: h.get(k) for k in ("title", "basis", "jurisdiction")}})
-            via = "Atlas Vector Search" if h.get("via") == "atlas_vector_search" else "vector cosine"
+            via = ("Atlas Vector Search" if h.get("via") == "atlas_vector_search"
+                   else "keyword match" if h.get("via") == "keyword_fallback" else "vector cosine")
             vlines.append({"t": f"Tool · {via}: \"{f['title'][:34]}\" → {h['title']} · {h['basis']} (sim {h.get('score', 0):.2f})", "tone": "cyan"})
     sw["grounding"] = grounding
+
+    # ---- PLAN (honest: only claims vector retrieval when grounding actually happened) ----
+    plan_line = [{"t": (f"Plan: classify {len(scan['findings'])} charges, retrieve each one's legal basis "
+                        "via MongoDB Atlas Vector Search, then draft a claim you approve.")
+                     if vlines else
+                     (f"Plan: classify {len(scan['findings'])} charges against the consumer-protection "
+                      "rulebook, then draft a claim you approve."), "tone": "cyan"}]
 
     closing = [
         {"t": "One-time payouts are never annualized; amounts come from the rules, not the model", "tone": "dim"},
         {"t": "Nothing is sent without your approval", "tone": "ok"},
     ]
 
-    if not s.gemini_ready:
+    from . import adk_agent as _adk
+    if not s.gemini_ready or _adk.quota_blocked():
         return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
-                "note": "Gemini not configured — deterministic swarm + Atlas Vector Search grounding."}
+                "note": ("Gemini not configured — deterministic swarm + grounded retrieval." if not s.gemini_ready
+                         else "Gemini quota cooldown — deterministic swarm + grounded retrieval.")}
     try:
         prompt = (f"{SYSTEM_PROMPT}\n\nSCAN (amounts already computed — do not change them):\n"
                   f"{json.dumps(scan, ensure_ascii=False)[:7000]}\n\n"
@@ -199,6 +206,7 @@ def draft_plan(scan: dict) -> dict:
                 "model": s.gemini_model, "latency_ms": latency, "live": True,
                 "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm grounded in Atlas Vector Search."}
     except Exception as e:  # noqa: BLE001
+        _adk._trip_breaker(f"{type(e).__name__}: {e}")
         return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
                 "note": f"Gemini fallback ({type(e).__name__}): {str(e)[:90]}"}

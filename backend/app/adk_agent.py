@@ -12,9 +12,24 @@ import os
 
 from .config import get_settings
 
+import time as _time
+
 _APP = "recoup"
 _agent_plain = None  # cached tools-less planner
 _toolset_error = ""  # last reason mongodb_toolset() returned None (surfaced for debugging, never silent)
+_quota_block_until = 0.0  # circuit breaker: after a 429/ResourceExhausted, skip Gemini for a while
+
+
+def quota_blocked() -> bool:
+    return _time.time() < _quota_block_until
+
+
+def _trip_breaker(err: str) -> None:
+    """A 429/quota error trips a 5-minute breaker so fallbacks return in <1s instead of
+    burning 15s+ of retries (and more quota) on every judge click."""
+    global _quota_block_until
+    if any(t in err for t in ("ResourceExhausted", "429", "RESOURCE_EXHAUSTED", "quota")):
+        _quota_block_until = _time.time() + 300
 
 INSTRUCTION = (
     "You are Recoup's recovery-planner agent. You are given a detected CHARGE (merchant, amount, "
@@ -130,6 +145,7 @@ async def run_query(prompt: str, tools=None) -> dict:
                 out = ev.content.parts[0].text or ""
         return {"text": out.strip(), "tool_calls": calls, "live": bool(calls)}
     except Exception as e:  # noqa: BLE001
+        _trip_breaker(f"{type(e).__name__}: {e}")
         return {"text": "", "tool_calls": [], "live": False, "note": f"{type(e).__name__}"}
     finally:
         await _aclose(tools)  # terminate the MCP stdio subprocess; never leak it across requests
@@ -139,6 +155,8 @@ async def mcp_probe(charge: dict) -> dict:
     """Best-effort proof that the ADK agent has the official MongoDB MCP toolset registered.
     The agent asks Atlas for playbook/precedent context through `mongodb-mcp-server`.
     Vector Search retrieval still owns semantic memory; this call proves partner-MCP use."""
+    if quota_blocked():  # breaker: the probe needs a live Gemini tool-call run; skip while quota is dead
+        return {"live": False, "tool_calls": [], "note": "quota_cooldown"}
     ts = mongodb_toolset()
     if ts is None:
         return {"live": False, "tool_calls": [],
@@ -155,13 +173,25 @@ async def mcp_probe(charge: dict) -> dict:
 
 def _deterministic_plan(charge: dict, playbook: str) -> str:
     """Plan assembled deterministically from the retrieved playbook — used when ADK/Gemini is
-    rate-limited (free-tier 429). Amounts come from the charge, never invented."""
+    rate-limited (free-tier 429). Amounts come from the charge, never invented. KIND-AWARE:
+    with no retrieved playbook text, it pulls the matching playbook for the charge's kind from
+    the in-code corpus, so an EU261 flight never gets generic cancel-the-subscription advice."""
     m = charge.get("merchant") or charge.get("title") or "this charge"
     amt = charge.get("amount_label") or (f"${charge.get('amount')}" if charge.get("amount") else "")
     head = f"Recovery plan for {m}" + (f" ({amt})" if amt else "") + ":"
-    steps = (playbook or "").strip() or ("1) Contact the vendor in writing. 2) Cite the consumer-protection "
-             "basis. 3) Request cancellation/refund. 4) Escalate to a chargeback if refused.")
-    return f"{head}\n{steps}\n\nDraft ready for your approval — nothing is sent until you confirm."
+    steps = (playbook or "").strip()
+    basis = ""
+    if not steps:
+        from . import vector
+        pb = vector._keyword_best(vector.PLAYBOOKS, f"{m} {charge.get('kind', '')}", str(charge.get("kind") or ""))
+        if pb:
+            steps = pb.get("text", "")
+            basis = pb.get("basis", "")
+    if not steps:
+        steps = ("1) Contact the vendor in writing. 2) Cite the consumer-protection "
+                 "basis. 3) Request cancellation/refund. 4) Escalate to a chargeback if refused.")
+    tail = f"\nBasis: {basis}" if basis else ""
+    return f"{head}\n{steps}{tail}\n\nDraft ready for your approval — nothing is sent until you confirm."
 
 
 async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
@@ -169,7 +199,10 @@ async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
     Returns {plan, status:'pending_approval', model, live}."""
     s = get_settings()
     if not s.gemini_ready:
-        return {"plan": "", "status": "pending_approval", "model": "unconfigured", "live": False}
+        return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval", "model": "unconfigured", "live": False}
+    if quota_blocked():  # circuit breaker: don't burn 15s of retries per click while quota is dead
+        return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
+                "model": "deterministic-fallback", "live": False, "note": "quota_cooldown"}
     try:
         from google.adk.runners import InMemoryRunner
         from google.genai import types
@@ -187,6 +220,7 @@ async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
         return {"plan": out.strip(), "status": "pending_approval", "model": s.gemini_model, "live": True}
     except Exception as e:  # noqa: BLE001
         # ADK/Gemini unavailable (e.g. free-tier 429 ResourceExhausted) -> deterministic playbook-based plan
+        _trip_breaker(f"{type(e).__name__}: {e}")
         return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
                 "model": "deterministic-fallback", "live": False, "note": f"{type(e).__name__}"}
     finally:
