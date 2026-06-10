@@ -73,7 +73,12 @@ body{
     radial-gradient(32% 26% at 12% 80%,rgba(212,175,55,.08),transparent 72%);
   filter:blur(34px);animation:fieldDrift 28s ease-in-out infinite alternate}
 @keyframes fieldDrift{from{transform:translate3d(-2.5%,-2%,0) scale(1)}to{transform:translate3d(2.5%,2.5%,0) scale(1.07)}}
-@media(prefers-reduced-motion:reduce){#bg-field::before{animation:none}}
+/* sleek non-interactive gold light sheen gliding slowly across the canvas — luxe, calm, no particles */
+#bg-field::after{content:"";position:absolute;inset:-25% -40%;pointer-events:none;
+  background:linear-gradient(112deg,transparent 40%,rgba(245,197,24,.05) 47%,rgba(255,236,170,.09) 50%,rgba(245,197,24,.05) 53%,transparent 60%);
+  filter:blur(8px);animation:goldSheen 16s ease-in-out infinite}
+@keyframes goldSheen{0%{transform:translateX(-26%)}50%{transform:translateX(26%)}100%{transform:translateX(-26%)}}
+@media(prefers-reduced-motion:reduce){#bg-field::before,#bg-field::after{animation:none}}
 
 .glass{background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
@@ -160,18 +165,8 @@ body{
   animation:goldShimmer 5s ease-in-out infinite}
 @keyframes goldShimmer{0%{background-position:130% 50%}60%,100%{background-position:-30% 50%}}
 
-/* faint gold coins drifting UP behind the hero copy — recovered money rising, barely-there */
-.hero-coins{position:absolute;inset:0;pointer-events:none;z-index:-1}
 .landing-copy{position:relative}
-.coin{position:absolute;width:9px;height:9px;border-radius:50%;opacity:0;
-  background:radial-gradient(circle at 32% 30%,#ffe98a,#f5c518 55%,#8a6d00);
-  box-shadow:0 0 12px 2px rgba(245,197,24,.3);animation:coinRise 10s linear infinite}
-.coin.c1{left:6%;bottom:8%;animation-delay:0s}
-.coin.c2{left:84%;bottom:2%;width:6px;height:6px;animation-delay:3.2s}
-.coin.c3{left:58%;bottom:-4%;width:6px;height:6px;animation-delay:6s}
-.coin.c4{left:30%;bottom:-2%;width:7px;height:7px;animation-delay:8s}
-@keyframes coinRise{0%{transform:translateY(0) scale(.9);opacity:0}14%{opacity:.42}60%{opacity:.28}100%{transform:translateY(-330px) scale(1.05);opacity:0}}
-@media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none;background-position:0 50%}.coin{animation:none;opacity:0}}
+@media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none;background-position:0 50%}}
 .landing-sub{color:#a7afc1;font-size:18px;max-width:58ch;margin:0 0 28px;line-height:1.55}
 .landing-sub b{color:var(--text)}
 .landing-cta{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap}
