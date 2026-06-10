@@ -176,7 +176,7 @@
     }
     const live = S.integrations || {};
     const gem = (live.gemini || "fallback") === "live" && S._live && !!(S.run && S.run.live); // only claim "live" if the run actually used Gemini (not a 429 fallback)
-    const mon = (live.mongodb || "fallback") === "live";
+    const mon = (live.mongodb || "fallback") === "live" && S._live; // never show "MongoDB · live" on embedded sample data
     box.appendChild(chip(gem ? "Gemini · live" : "AI reasoning · on", gem ? "live" : ""));
     box.appendChild(chip(mon ? "MongoDB · live" : "Storage · local", mon ? "live" : ""));
     box.appendChild(chip("Audit · SHA-256", "live"));

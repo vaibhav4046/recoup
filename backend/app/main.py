@@ -27,8 +27,9 @@ from .state import APP
 COOKIE = "ro_session"
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+def _warmup():
+    """Seed the vector corpus + prime the first scan/agent run. Runs in a daemon thread so the
+    uvicorn port binds immediately (Cloud Run readiness) instead of blocking on ~25 embed calls."""
     try:
         from . import vector
         vector.seed()            # precedent corpus + Atlas Vector Search index
@@ -40,10 +41,16 @@ async def lifespan(app: FastAPI):
         APP.run_agent()
     except Exception:
         pass
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import threading
+    threading.Thread(target=_warmup, daemon=True).start()  # don't block the port bind on warmup
     yield
 
 
-app = FastAPI(title="Recoup API", version="0.4.2", lifespan=lifespan)
+app = FastAPI(title="Recoup API", version="0.4.3", lifespan=lifespan)
 _s = get_settings()
 _cors_list = ["*"] if _s.cors_origins.strip() == "*" else [o.strip() for o in _s.cors_origins.split(",") if o.strip()]
 _cors_wild = "*" in _cors_list  # catch "*" ANYWHERE in the list, not only an exact ["*"] — a wildcard mixed with other origins still makes Starlette reflect any origin when credentials are on
@@ -102,24 +109,13 @@ async def health(request: Request):
                recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0)
 
 
-@app.post("/api/ask")
-async def ask(request: Request):
-    """Voice agent Q&A — a concise spoken-style Gemini answer (free AI Studio key)."""
-    body = await _json_obj(request)
-    q = ((body or {}).get("question") or "").strip()
-    if not q:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "question required"})
-    ctx = ((body or {}).get("context") or "")[:400]
-    from . import agent
-    res = await run_in_threadpool(agent.voice_answer, q, ctx)
-    return _ok(request, **res)
-
-
 @app.post("/api/vector/seed")
 async def vector_seed(request: Request):
-    """(Re)embed the precedent corpus + ensure the Atlas Vector Search index. Idempotent."""
+    """(Re)embed BOTH corpora (precedents + playbooks) and ensure both Atlas Vector Search indexes. Idempotent."""
     from . import vector
-    return _ok(request, **await run_in_threadpool(vector.seed))
+    pre = await run_in_threadpool(vector.seed)
+    pb = await run_in_threadpool(vector.seed_playbooks)
+    return _ok(request, precedents=pre, playbooks=pb)
 
 
 @app.post("/api/agent/plan")
@@ -127,11 +123,11 @@ async def agent_plan(request: Request):
     """ADK Gemini agent: plan a recovery for one detected charge. Amounts stay deterministic;
     returns status pending_approval (human gate downstream)."""
     body = await _json_obj(request)
-    charge = (body or {}).get("charge") or {}
-    if not charge:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
+    charge = (body or {}).get("charge")
+    if not isinstance(charge, dict) or not charge:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "charge object required"})
     from . import adk_agent
-    res = await adk_agent.plan_charge(charge, (body or {}).get("playbook", ""))
+    res = await adk_agent.plan_charge(charge, str((body or {}).get("playbook") or ""))
     return _ok(request, **res)
 
 
@@ -140,9 +136,9 @@ async def agent_recover(request: Request):
     """End-to-end agent spine: charge -> Atlas Vector Search retrieves the best recovery playbook ->
     ADK Gemini drafts the recovery grounded in it -> status pending_approval (human gate downstream)."""
     body = await _json_obj(request)
-    charge = (body or {}).get("charge") or {}
-    if not charge:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
+    charge = (body or {}).get("charge")
+    if not isinstance(charge, dict) or not charge:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "charge object required"})
     from . import vector, adk_agent
     q = f"{charge.get('merchant', '')} {charge.get('title', '')} {charge.get('kind', '')}".strip()
     mcp = await adk_agent.mcp_probe(charge)
@@ -276,13 +272,14 @@ async def auth_status(request: Request):
 @app.post("/api/auth/magic/start")
 async def magic_start(request: Request):
     body = await _json_obj(request)
-    email = ((body or {}).get("email") or "").strip()
-    captcha = (body or {}).get("captcha", "")
+    email = str((body or {}).get("email") or "").strip()
+    captcha = str((body or {}).get("captcha") or "")
     if not email or "@" not in email:
         return JSONResponse(status_code=400, content={"ok": False, "error": "a valid email is required"})
-    if not auth.verify_captcha(captcha, request.client.host if request.client else ""):
+    ip = request.client.host if request.client else ""
+    if not await run_in_threadpool(auth.verify_captcha, captcha, ip):  # blocking httpx — off the loop
         return JSONResponse(status_code=400, content={"ok": False, "error": "captcha verification failed"})
-    return _ok(request, **auth.start_magic(email))
+    return _ok(request, **await run_in_threadpool(auth.start_magic, email))  # blocking httpx (email send)
 
 
 @app.get("/api/auth/magic/verify")
@@ -314,7 +311,9 @@ async def google_cb(code: str = "", state: str = ""):
     fe = get_settings().frontend_url.rstrip("/")  # redirect to the FRONTEND, not the backend host (which has no "/" route -> 404)
     if not auth.verify_oauth_state(state, "google"):
         return RedirectResponse(f"{fe}/login.html?err=state")
-    token, access = auth.google_callback_full(code)
+    # blocking httpx (token exchange + userinfo) — keep off the single event loop so sign-in
+    # never freezes /api/health or the static frontend for other users
+    token, access = await run_in_threadpool(auth.google_callback_full, code)
     if not token:
         return RedirectResponse(f"{fe}/login.html?err=google")
     # same-pass real-inbox scan (only if the gmail scope was granted; never blocks sign-in)

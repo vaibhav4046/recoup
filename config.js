@@ -22,16 +22,20 @@
 
   var sameOriginApi = /\.run\.app$/i.test(location.hostname) ? location.origin : "";
 
-  // ?api= override: accept ONLY if it resolves to an allowlisted backend; otherwise ignore + purge.
+  // ?api= override: accept ONLY if it resolves to an allowlisted backend; store the bare ORIGIN
+  // (never a path) so a trailing path can't silently break every /api/* call. Otherwise ignore + purge.
   var fromQuery = "";
   try {
     var raw = clean(new URLSearchParams(location.search).get("api") || "");
-    if (raw && allowed(raw)) { fromQuery = raw; localStorage.setItem("RO_API_BASE", raw); }
+    if (raw && allowed(raw)) { fromQuery = originOf(raw); localStorage.setItem("RO_API_BASE", fromQuery); }
     else if (raw) { localStorage.removeItem("RO_API_BASE"); }  // reject a poisoned link, don't persist it
   } catch (e) {}
 
   var stored = "";
-  try { stored = clean(localStorage.getItem("RO_API_BASE") || ""); if (stored && !allowed(stored)) { localStorage.removeItem("RO_API_BASE"); stored = ""; } } catch (e) {}
+  try {
+    stored = originOf(clean(localStorage.getItem("RO_API_BASE") || ""));
+    if (stored && !allowed(stored)) { localStorage.removeItem("RO_API_BASE"); stored = ""; }
+  } catch (e) {}
 
   // On a production Cloud Run host, pin to the origin regardless of any stored value.
   var apiBase = sameOriginApi || fromQuery || stored || FALLBACK;

@@ -83,6 +83,21 @@ def mongodb_toolset():
         return None
 
 
+async def _aclose(tools):
+    """Best-effort shutdown of any MCP toolset (terminates the spawned `npx mongodb-mcp-server`
+    node subprocess so it can't accumulate across requests). Never raises into the caller."""
+    import inspect
+    for t in (tools or []):
+        try:
+            closer = getattr(t, "close", None)
+            if closer:
+                r = closer()
+                if inspect.isawaitable(r):
+                    await r
+        except Exception:
+            pass
+
+
 def _tool_agent(tools):
     from google.adk.agents import LlmAgent
     s = get_settings()
@@ -90,7 +105,7 @@ def _tool_agent(tools):
         os.environ.setdefault("GOOGLE_API_KEY", s.google_api_key)
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "FALSE")
     return LlmAgent(
-        name="recoup_data_agent", model=s.gemini_model or "gemini-2.5-flash",
+        name="recoup_data_agent", model=s.gemini_model or "gemini-3-flash-preview",
         instruction="You are Recoup's data agent. Use the available MongoDB tools to answer the question "
                     "about the Atlas database. Always CALL the tools to get real data; never guess.",
         tools=tools or [])
@@ -116,6 +131,8 @@ async def run_query(prompt: str, tools=None) -> dict:
         return {"text": out.strip(), "tool_calls": calls, "live": bool(calls)}
     except Exception as e:  # noqa: BLE001
         return {"text": "", "tool_calls": [], "live": False, "note": f"{type(e).__name__}"}
+    finally:
+        await _aclose(tools)  # terminate the MCP stdio subprocess; never leak it across requests
 
 
 async def mcp_probe(charge: dict) -> dict:
@@ -172,3 +189,6 @@ async def plan_charge(charge: dict, playbook: str = "", tools=None) -> dict:
         # ADK/Gemini unavailable (e.g. free-tier 429 ResourceExhausted) -> deterministic playbook-based plan
         return {"plan": _deterministic_plan(charge, playbook), "status": "pending_approval",
                 "model": "deterministic-fallback", "live": False, "note": f"{type(e).__name__}"}
+    finally:
+        if tools:
+            await _aclose(tools)  # close the MCP toolset spawned for this tooled run

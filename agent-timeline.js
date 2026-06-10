@@ -54,8 +54,8 @@
       '<span class="atl-sub">plan → MCP tool → vector memory → draft → human gate</span></div>' +
       '<div class="atl-grid"><ol class="atl-steps">' + stepsHtml + '</ol>' +
       '<aside class="atl-summary"><div class="atl-charge">' + esc(RUN.charge.merchant) + ' &middot; ' + esc(RUN.charge.amount_label) + '</div>' +
-      '<div class="atl-metric"><span class="atl-num" data-to="' + RUN.summary.waste + '">$0</span><span class="atl-cap">annual waste found</span></div>' +
-      '<div class="atl-metric gold"><span class="atl-num" data-to="' + RUN.summary.recovered + '">$0</span><span class="atl-cap">recovered (approved)</span></div>' +
+      '<div class="atl-metric"><span class="atl-num" data-to="' + RUN.summary.waste + '">$0</span><span class="atl-cap">annual waste found' + (RUN.live ? ' · sample' : '') + '</span></div>' +
+      '<div class="atl-metric gold"><span class="atl-num" data-to="' + RUN.summary.recovered + '">$0</span><span class="atl-cap">recovered (approved)' + (RUN.live ? ' · sample' : '') + '</span></div>' +
       '<div class="atl-foot">Atlas Vector Search &middot; MongoDB MCP &middot; Gemini + ADK</div></aside></div>';
 
     mount.querySelectorAll(".atl-num").forEach((n) => {
@@ -80,7 +80,9 @@
     const via = pb.via === "atlas_vector_search" ? "$vectorSearch" : "vector cosine";
     const mcpText = (mcp.live && (mcp.tool_calls || []).length)
       ? '<b>mongodb-mcp-server</b> &middot; called ' + esc((mcp.tool_calls || []).join(", "))
-      : '<b>mongodb-mcp-server</b> &middot; ADK MCP toolset registered; Atlas queried via $vectorSearch.';
+      : (mcp.note === "mongodb_mcp_toolset_unavailable"
+          ? '<b>mongodb-mcp-server</b> &middot; toolset unavailable on this deploy — Atlas queried directly via $vectorSearch.'
+          : '<b>mongodb-mcp-server</b> &middot; ADK MCP toolset registered; Atlas queried via $vectorSearch.');
     render({
       charge,
       live: true,
