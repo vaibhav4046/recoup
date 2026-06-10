@@ -69,6 +69,15 @@ def _ok(r: Request, **payload) -> dict:
     return {"ok": True, "trace_id": _tid(r), "ts": _now_iso(), **payload}
 
 
+async def _json_obj(request: Request) -> dict:
+    """Parse a JSON object body, tolerating empty/malformed input — returns {} instead of a raw 500."""
+    try:
+        body = await request.json()
+    except Exception:
+        return {}
+    return body if isinstance(body, dict) else {}
+
+
 @app.middleware("http")
 async def trace_mw(request: Request, call_next):
     request.state.trace_id = "tr_" + uuid.uuid4().hex[:12]
@@ -81,20 +90,22 @@ async def trace_mw(request: Request, call_next):
 async def health(request: Request):
     s = get_settings()
     from . import vector
+    vstatus = await run_in_threadpool(vector.status)  # touches Atlas — keep it off the event loop
     return _ok(request, service="recoup-api", version=app.version, mode=s.mode,
                integrations=s.integration_status(),
                gemini_model=s.gemini_model if s.gemini_ready else None,
-               vector=vector.status(),  # MongoDB Atlas Vector Search — the agent's retrieval brain
+               vector=vstatus,  # MongoDB Atlas Vector Search — the agent's retrieval brain
                audit=APP.audit.verify(),  # SHA-256 chain state {intact,count,head} — externally verifiable
                recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,
                one_time=APP.scan_result["one_time"] if APP.scan_result else 0,
+               one_time_by_currency=APP.scan_result.get("one_time_by_currency") if APP.scan_result else {},
                recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0)
 
 
 @app.post("/api/ask")
 async def ask(request: Request):
     """Voice agent Q&A — a concise spoken-style Gemini answer (free AI Studio key)."""
-    body = await request.json()
+    body = await _json_obj(request)
     q = ((body or {}).get("question") or "").strip()
     if not q:
         return JSONResponse(status_code=400, content={"ok": False, "error": "question required"})
@@ -115,7 +126,7 @@ async def vector_seed(request: Request):
 async def agent_plan(request: Request):
     """ADK Gemini agent: plan a recovery for one detected charge. Amounts stay deterministic;
     returns status pending_approval (human gate downstream)."""
-    body = await request.json()
+    body = await _json_obj(request)
     charge = (body or {}).get("charge") or {}
     if not charge:
         return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
@@ -128,7 +139,7 @@ async def agent_plan(request: Request):
 async def agent_recover(request: Request):
     """End-to-end agent spine: charge -> Atlas Vector Search retrieves the best recovery playbook ->
     ADK Gemini drafts the recovery grounded in it -> status pending_approval (human gate downstream)."""
-    body = await request.json()
+    body = await _json_obj(request)
     charge = (body or {}).get("charge") or {}
     if not charge:
         return JSONResponse(status_code=400, content={"ok": False, "error": "charge required"})
@@ -160,7 +171,7 @@ async def agent_run(request: Request):
 @app.post("/api/actions/{action_id}/approve")
 async def approve(action_id: str, request: Request):
     try:
-        a = APP.approve_action(action_id, trace_id=_tid(request))
+        a = await run_in_threadpool(APP.approve_action, action_id, _tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
     return _ok(request, action=a, totals=APP.totals(), contained=APP.contained())
@@ -169,16 +180,18 @@ async def approve(action_id: str, request: Request):
 @app.post("/api/actions/{action_id}/reject")
 async def reject(action_id: str, request: Request):
     try:
-        a = APP.reject_action(action_id, trace_id=_tid(request))
+        a = await run_in_threadpool(APP.reject_action, action_id, _tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
+    except PermissionError:
+        return JSONResponse(status_code=409, content={"ok": False, "error": "already_actioned", "message": "This claim was already sent or recovered.", "trace_id": _tid(request)})
     return _ok(request, action=a, totals=APP.totals(), contained=APP.contained())
 
 
 @app.post("/api/actions/{action_id}/sent")
 async def mark_sent(action_id: str, request: Request):
     try:
-        a = APP.mark_sent(action_id, trace_id=_tid(request))
+        a = await run_in_threadpool(APP.mark_sent, action_id, _tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
     except PermissionError:
@@ -189,7 +202,7 @@ async def mark_sent(action_id: str, request: Request):
 @app.post("/api/actions/{action_id}/paid")
 async def mark_paid(action_id: str, request: Request):
     try:
-        a = APP.mark_paid(action_id, trace_id=_tid(request))
+        a = await run_in_threadpool(APP.mark_paid, action_id, _tid(request))
     except KeyError:
         return JSONResponse(status_code=404, content={"ok": False, "error": f"unknown action {action_id}", "trace_id": _tid(request)})
     except PermissionError:
@@ -222,6 +235,7 @@ async def full_state(request: Request):
         totals=APP.totals(),
         recurring_year=APP.scan_result["recurring_year"] if APP.scan_result else 0,
         one_time=APP.scan_result["one_time"] if APP.scan_result else 0,
+        one_time_by_currency=APP.scan_result.get("one_time_by_currency") if APP.scan_result else {},
         recoverable=APP.scan_result["total_recoverable"] if APP.scan_result else 0,
         audit=APP.audit.list(), auditIntegrity=APP.audit.verify(), contained=APP.contained(),
     )
@@ -261,8 +275,8 @@ async def auth_status(request: Request):
 
 @app.post("/api/auth/magic/start")
 async def magic_start(request: Request):
-    body = await request.json()
-    email = (body or {}).get("email", "").strip()
+    body = await _json_obj(request)
+    email = ((body or {}).get("email") or "").strip()
     captcha = (body or {}).get("captcha", "")
     if not email or "@" not in email:
         return JSONResponse(status_code=400, content={"ok": False, "error": "a valid email is required"})
@@ -366,11 +380,12 @@ async def gmail_cb(code: str = "", state: str = ""):
     if not auth.verify_oauth_state(state, "gmail"):
         return RedirectResponse(f"{fe}/#gmail=err")
     try:
-        tok = auth.google_exchange(code, redirect_path="/api/gmail/callback")
+        # blocking httpx calls — keep them OFF the event loop so a slow inbox can't freeze the whole API
+        tok = await run_in_threadpool(auth.google_exchange, code, "/api/gmail/callback")
         access = tok.get("access_token")
         if not access:
             return RedirectResponse(f"{fe}/#gmail=err")
-        msgs = gmailmod.fetch_subscription_emails(access)
+        msgs = await run_in_threadpool(gmailmod.fetch_subscription_emails, access)
         findings = gmailmod.to_findings(gmailmod.detect(msgs))
     except Exception:
         return RedirectResponse(f"{fe}/#gmail=err")

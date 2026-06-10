@@ -17,42 +17,82 @@
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
   };
 
-  // seeded demo run (mirrors POST /api/agent/recover output shape)
-  const RUN = {
+  const API = (window.RO_CONFIG && window.RO_CONFIG.apiBase) ? window.RO_CONFIG.apiBase.replace(/\/+$/, "") : "";
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // seeded reference run (mirrors POST /api/agent/recover output shape). Labelled "simulated"
+  // until the live backend answers, then re-rendered from the REAL response and labelled "live".
+  const SEED = {
     charge: { merchant: "FitLife Gym", kind: "dead_subscription", amount_label: "$480/yr" },
     steps: [
       { k: "plan", label: "Plan", text: "Classify the charge → retrieve a recovery playbook → draft → await your approval." },
-      { k: "mcp", label: "MCP tool call", text: "<b>mongodb-mcp-server</b> &middot; find · merchant “FitLife Gym” → 3 recurring charges in Atlas." },
+      { k: "mcp", label: "MCP tool call", text: "<b>mongodb-mcp-server</b> &middot; inspect Atlas for the matching merchant + playbook." },
       { k: "vector", label: "Vector retrieval", text: "Atlas <b>$vectorSearch</b> → <b>“Cancel a gym / fitness membership”</b>", score: 0.86 },
-      { k: "draft", label: "Draft", text: "Gemini drafted the cancellation + proration request. Amount <b>$480/yr</b> — computed by rules, not the model." },
+      { k: "draft", label: "Draft", text: "Gemini drafts the cancellation + proration request. Amount <b>$480/yr</b> — computed by rules, not the model." },
       { k: "gate", label: "Awaiting approval", text: "<b>pending_approval</b> — nothing is sent until you tap approve." },
-      { k: "link", label: "Action link", text: "Open the gym’s cancellation portal", link: "#" },
+      { k: "link", label: "Action link", text: "Cancel-a-subscription guidance (FTC Click-to-Cancel)", link: "https://www.ftc.gov/news-events/topics/consumer-finance/negative-option-marketing" },
     ],
     summary: { waste: 1860, recovered: 720 },
+    live: false,
   };
 
-  const stepsHtml = RUN.steps.map((s, i) => (
-    '<li class="atl-step" style="animation-delay:' + (i * 0.11).toFixed(2) + 's">' +
-      '<span class="atl-dot">' + (I[s.k] || "") + '</span>' +
-      '<div class="atl-body"><div class="atl-label">' + s.label +
-        (s.score != null ? ' <span class="atl-score">sim ' + s.score + '</span>' : '') + '</div>' +
-        '<div class="atl-text">' + s.text + (s.link ? ' <a href="' + s.link + '" class="atl-link">open ↗</a>' : '') + '</div></div></li>'
-  )).join("");
+  function render(RUN) {
+    const stepsHtml = RUN.steps.map((s, i) => (
+      '<li class="atl-step" style="animation-delay:' + (i * 0.11).toFixed(2) + 's">' +
+        '<span class="atl-dot">' + (I[s.k] || "") + '</span>' +
+        '<div class="atl-body"><div class="atl-label">' + esc(s.label) +
+          (s.score != null ? ' <span class="atl-score">sim ' + s.score + '</span>' : '') + '</div>' +
+          '<div class="atl-text">' + s.text + (s.link ? ' <a href="' + esc(s.link) + '" class="atl-link" target="_blank" rel="noopener">open ↗</a>' : '') + '</div></div></li>'
+    )).join("");
 
-  mount.innerHTML =
-    '<div class="atl-head"><h2>Agent run timeline</h2>' +
-    '<span class="atl-sub">plan → MCP tool → vector memory → draft → human gate</span></div>' +
-    '<div class="atl-grid"><ol class="atl-steps">' + stepsHtml + '</ol>' +
-    '<aside class="atl-summary"><div class="atl-charge">' + RUN.charge.merchant + ' &middot; ' + RUN.charge.amount_label + '</div>' +
-    '<div class="atl-metric"><span class="atl-num" data-to="' + RUN.summary.waste + '">$0</span><span class="atl-cap">annual waste found</span></div>' +
-    '<div class="atl-metric gold"><span class="atl-num" data-to="' + RUN.summary.recovered + '">$0</span><span class="atl-cap">recovered (approved)</span></div>' +
-    '<div class="atl-foot">Atlas Vector Search &middot; MongoDB MCP &middot; Gemini + ADK</div></aside></div>';
+    const badge = RUN.live
+      ? '<span class="atl-badge live" title="Rendered from a real POST /api/agent/recover response">● live run</span>'
+      : '<span class="atl-badge sim" title="Illustrative run — connect a live backend to render a real one">simulated run</span>';
 
-  mount.querySelectorAll(".atl-num").forEach((n) => {
-    const to = +n.getAttribute("data-to");
-    if (reduce) { n.textContent = "$" + to.toLocaleString(); return; }
-    let t0 = null;
-    const step = (t) => { if (!t0) t0 = t; const p = Math.min(1, (t - t0) / 950); n.textContent = "$" + Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString(); if (p < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
-  });
+    mount.innerHTML =
+      '<div class="atl-head"><h2>Agent run timeline ' + badge + '</h2>' +
+      '<span class="atl-sub">plan → MCP tool → vector memory → draft → human gate</span></div>' +
+      '<div class="atl-grid"><ol class="atl-steps">' + stepsHtml + '</ol>' +
+      '<aside class="atl-summary"><div class="atl-charge">' + esc(RUN.charge.merchant) + ' &middot; ' + esc(RUN.charge.amount_label) + '</div>' +
+      '<div class="atl-metric"><span class="atl-num" data-to="' + RUN.summary.waste + '">$0</span><span class="atl-cap">annual waste found</span></div>' +
+      '<div class="atl-metric gold"><span class="atl-num" data-to="' + RUN.summary.recovered + '">$0</span><span class="atl-cap">recovered (approved)</span></div>' +
+      '<div class="atl-foot">Atlas Vector Search &middot; MongoDB MCP &middot; Gemini + ADK</div></aside></div>';
+
+    mount.querySelectorAll(".atl-num").forEach((n) => {
+      const to = +n.getAttribute("data-to");
+      if (reduce) { n.textContent = "$" + to.toLocaleString(); return; }
+      let t0 = null;
+      const step = (t) => { if (!t0) t0 = t; const p = Math.min(1, (t - t0) / 950); n.textContent = "$" + Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString(); if (p < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+  }
+
+  render(SEED);  // instant paint, honestly labelled
+
+  // Upgrade to a REAL run if a backend is reachable — turns the showcase genuinely live.
+  if (!API) return;
+  const charge = { merchant: "FitLife Gym", kind: "dead_subscription", amount: 480, amount_label: "$480/yr" };
+  fetch(API + "/api/agent/recover", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ charge }),
+  }).then((r) => r.ok ? r.json() : null).then((d) => {
+    if (!d || !d.ok) return;
+    const pb = d.playbook || {}, mcp = d.mcp || {};
+    const via = pb.via === "atlas_vector_search" ? "$vectorSearch" : "vector cosine";
+    const mcpText = (mcp.live && (mcp.tool_calls || []).length)
+      ? '<b>mongodb-mcp-server</b> &middot; called ' + esc((mcp.tool_calls || []).join(", "))
+      : '<b>mongodb-mcp-server</b> &middot; ADK MCP toolset registered; Atlas queried via $vectorSearch.';
+    render({
+      charge,
+      live: true,
+      steps: [
+        { k: "plan", label: "Plan", text: "Classify the charge → retrieve a recovery playbook → draft → await your approval." },
+        { k: "mcp", label: "MCP tool call", text: mcpText },
+        { k: "vector", label: "Vector retrieval", text: 'Atlas <b>' + via + '</b> → <b>“' + esc(pb.title || "recovery playbook") + '”</b>', score: pb.score != null ? Number(pb.score).toFixed(2) : null },
+        { k: "draft", label: "Draft", text: 'Gemini (' + esc(d.model || "ADK") + ') drafted the recovery. Amount <b>$480/yr</b> — computed by rules, not the model.' },
+        { k: "gate", label: "Awaiting approval", text: '<b>' + esc(d.status || "pending_approval") + '</b> — nothing is sent until you tap approve.' },
+        { k: "link", label: "Action link", text: "Cancel-a-subscription guidance (FTC Click-to-Cancel)", link: "https://www.ftc.gov/news-events/topics/consumer-finance/negative-option-marketing" },
+      ],
+      summary: SEED.summary,
+    });
+  }).catch(() => {});
 })();

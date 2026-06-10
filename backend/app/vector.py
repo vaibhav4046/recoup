@@ -1,12 +1,12 @@
 """Recoup — MongoDB Atlas Vector Search: the agent's retrieval brain.
 
-Consumer-protection precedents are embedded with Gemini text-embedding-004 (free) and
-stored in Atlas with a native Vector Search index. For every finding the agent embeds the
-case and runs an Atlas `$vectorSearch` aggregation to retrieve the most semantically
-relevant legal basis — so each recovery is GROUNDED IN REAL PRECEDENT, not the model's
-imagination. Zero cost (Gemini free tier + Atlas M0). If the Atlas vector index isn't
-provisioned yet, it transparently falls back to in-process cosine over the same stored
-Gemini embeddings, so retrieval never breaks during a demo.
+Consumer-protection precedents are embedded with Gemini gemini-embedding-001 (768-d, free)
+and stored in Atlas with a native Vector Search index. The agent embeds a charge and runs an
+Atlas `$vectorSearch` aggregation to retrieve the most semantically relevant legal basis — so
+each recovery is GROUNDED IN REAL PRECEDENT, not the model's imagination. Zero cost (Gemini
+free tier + Atlas M0). If the Atlas vector index isn't provisioned yet, it transparently falls
+back to in-process cosine over the same stored Gemini embeddings, so retrieval never breaks
+during a demo.
 """
 from __future__ import annotations
 
@@ -62,9 +62,8 @@ def _embed(text: str, task: str = "RETRIEVAL_DOCUMENT") -> list[float]:
 
 
 def _coll():
-    from pymongo import MongoClient
-    s = get_settings()
-    return MongoClient(s.mongodb_uri)[s.mongodb_db][COLL]
+    from . import mongodb  # shared pooled client (fast-fail timeouts, no per-call handshake)
+    return mongodb.db()[COLL]
 
 
 def _ensure_index(coll, index_name=INDEX) -> bool:
@@ -173,9 +172,8 @@ PLAYBOOKS = [
 
 
 def _pb_coll():
-    from pymongo import MongoClient
-    s = get_settings()
-    return MongoClient(s.mongodb_uri)[s.mongodb_db][PLAYBOOK_COLL]
+    from . import mongodb  # shared pooled client
+    return mongodb.db()[PLAYBOOK_COLL]
 
 
 def seed_playbooks() -> dict:

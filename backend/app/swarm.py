@@ -76,7 +76,7 @@ def orchestrate(scan_result: dict) -> dict:
             "status": "active" if items else "idle",
         })
 
-    trace = [{"t": f"Coordinator dispatched {len(SPECIALISTS)} specialist agents in parallel", "tone": "cyan"}]
+    trace = [{"t": f"Coordinator routed findings to {len(SPECIALISTS)} specialist agents", "tone": "cyan"}]
     for r in roster:
         if r["count"]:
             trace.append({"t": f"{r['name']} → {r['count']} found (${r['amount']:,.0f})", "tone": "warn"})

@@ -423,10 +423,17 @@
   }
 
   async function forgetData() {
-    try { if (API) await fetch(API + "/api/account/forget", { method: "POST" }); } catch (e) {}
-    try { localStorage.removeItem("ro-vrec"); } catch (e) {}
+    // send the session cookie (same-origin) + any live Gmail handoff token so the server can
+    // actually scope the erasure; Gmail-derived findings also auto-expire server-side in 5 minutes.
+    var tok = "";
+    try { tok = gmailHandoff() || ""; } catch (e) {}
+    try {
+      if (API) await fetch(API + "/api/account/forget" + (tok ? "?token=" + encodeURIComponent(tok) : ""),
+        { method: "POST", credentials: "include" });
+    } catch (e) {}
+    try { localStorage.removeItem("ro-vrec"); localStorage.removeItem("RO_API_BASE"); } catch (e) {}
     renderVrec();
-    toast("Your stored data was cleared. Revoke Gmail access at myaccount.google.com/permissions.");
+    toast("Local data cleared. Any Gmail-derived results auto-expire within 5 minutes; revoke access at myaccount.google.com/permissions.");
   }
 
   function getVrec() { try { return JSON.parse(localStorage.getItem("ro-vrec") || "[]"); } catch (e) { return []; } }

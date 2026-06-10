@@ -13,7 +13,7 @@ Architecture: **Frontend → Cloud Run [Gemini + Google ADK] → MongoDB MCP →
 | 5 | **Cloud Run** image — root `Dockerfile` (Python + Node) + `.gcloudignore` | ✅ code; deploy = your gcloud |
 | 6 | **LICENSE** (MIT) + README architecture + this HANDOFF | ✅ |
 
-Runtime AI is **Google-only**; voice = browser Web Speech with Web Audio API bandpass filter (80Hz - 1000Hz) to filter hums & dog barks. Money math deterministic; human gate intact; secrets from env.
+Runtime AI is **Google-only** (Gemini 3 via ADK; gemini-embedding-001 for vectors). Money math deterministic; human gate intact; secrets from env.
 
 ## Left (your manual steps, in order)
 1. **Prove MCP + Vector live (1 min):** in your terminal `setx MONGODB_URI "mongodb+srv://…"`, then I run `backend/scripts/adk_mcp_smoke.py` + `/api/agent/recover` (or you run them).
@@ -21,7 +21,7 @@ Runtime AI is **Google-only**; voice = browser Web Speech with Web Audio API ban
 3. **Make GitHub repo public**, record the 3-min video (script in `docs/SUBMISSION.md`), submit Devpost with the Cloud Run URL.
 
 ## Env vars (all from env, never hardcoded)
-`GOOGLE_API_KEY` · `MONGODB_URI` · `MONGODB_DB=recoup` · `GEMINI_MODEL=gemini-2.5-flash` · `GOOGLE_GENAI_USE_VERTEXAI=FALSE` · `CORS_ORIGINS`
+`GOOGLE_API_KEY` · `MONGODB_URI` · `MONGODB_DB=recoup` · `GEMINI_MODEL=gemini-3-flash-preview` · `GOOGLE_GENAI_USE_VERTEXAI=FALSE` · `CORS_ORIGINS`
 
 ## Commands
 ```bash
@@ -31,7 +31,7 @@ python backend/scripts/adk_mcp_smoke.py      # official MongoDB MCP tool call (n
 
 # deploy to Cloud Run (root Dockerfile installs Node for the MCP server)
 gcloud run deploy recoup-agent --source . --region us-central1 --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-3-flash-preview,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
 
 # optional after gcloud prints the service URL (OAuth/Gmail redirects only)
 gcloud run services update recoup-agent --region us-central1 \

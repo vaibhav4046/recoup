@@ -40,8 +40,9 @@ Recoup turns a messy financial footprint into recovered money through one audite
 ### How we built it
 - **Google:** Gemini 3 (gemini-3-flash-preview) as the ADK `LlmAgent` reasoner; the whole app (static frontend + FastAPI) is served by **one Cloud Run service**.
 - **MongoDB (partner MCP):** the agent queries Atlas through the **official `mongodb-mcp-server`** registered as an ADK `MCPToolset` — and uses **Atlas Vector Search as its memory** (9 precedents + 6 recovery playbooks, embedded with gemini-embedding-001, native vector indexes).
-- **Trust engineering:** money math is deterministic in code (the model never invents an amount); one-time payouts are never annualized; a server-enforced human-approval gate; a SHA-256 audit chain with a public integrity check.
-- **Voice:** a zero-cost browser Web Speech agent ("find my money") — Google-only runtime AI throughout.
+- **Trust engineering:** money math is deterministic in code (the model never invents an amount); one-time payouts are never annualized; a human-approval gate enforced in the API (state.py) and mirrored in the demo UI; a SHA-256 audit chain with a public integrity check at `/api/health`.
+- **Recoup is also an MCP server itself:** a JSON-RPC surface at `/mcp` exposes 4 tools (run the recovery scan, read state, detect Gmail subscriptions from metadata, report Gmail connection status) so *any* agent host can call Recoup — Google-only runtime AI throughout.
+- **One-tap onboarding:** a single Google consent both signs you in and runs a same-pass read-only Gmail scan, so you land in the command center with your real subscriptions already loaded. A plain-English GDPR/Limited-Use privacy page backs it, with a 5-minute retention window enforced in code.
 
 ### Challenges we ran into
 Trust is the whole game: our adversarial QA personas kept failing us on things that merely *read* as untrustworthy — a blended $/yr figure, a self-certifying audit chain, fabricated-looking testimonials. Every one became a fix: per-currency totals, a race-safe audit chain verified under concurrent approvals, and a QA section that only shows reproducible claims. Free-tier reliability mattered too: every agent endpoint degrades to a deterministic playbook-based fallback so the demo never breaks under rate limits.

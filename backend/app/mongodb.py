@@ -6,6 +6,8 @@ exposes these same collections to the agent as tools (see docs).
 """
 from __future__ import annotations
 
+from functools import lru_cache
+
 from .config import get_settings
 
 
@@ -13,10 +15,22 @@ def available() -> bool:
     return get_settings().mongodb_ready
 
 
-def _coll():
+@lru_cache(maxsize=1)
+def client():
+    """ONE shared, thread-safe, connection-pooled MongoClient for the whole process.
+    Fast-fail timeouts so an Atlas blip degrades in ~3s instead of pymongo's 30s default
+    (a 30s server-selection stall would otherwise freeze the single uvicorn event loop)."""
     from pymongo import MongoClient  # lazy
     s = get_settings()
-    return MongoClient(s.mongodb_uri)[s.mongodb_db]["cases"]
+    return MongoClient(s.mongodb_uri, serverSelectionTimeoutMS=3000, connectTimeoutMS=3000)
+
+
+def db():
+    return client()[get_settings().mongodb_db]
+
+
+def _coll():
+    return db()["cases"]
 
 
 def save_case(action: dict) -> dict:

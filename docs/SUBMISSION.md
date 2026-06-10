@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** Google Cloud Run URL after deploy
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API:** Google Cloud Run `/api/health` after deploy
-- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 3 (gemini-3-flash-preview)** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · a zero-cost in-browser **voice agent**
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 3 (gemini-3-flash-preview)** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · Recoup is **also an MCP server itself** (4 JSON-RPC tools at `/mcp`)
 
 ---
 
@@ -18,7 +18,7 @@ Every year people leave **billions** on the table — $1B+ in expiring tax refun
 Recoup turns a messy financial footprint into recovered money through one audited loop:
 
 1. **Scan** — point it at your data (paste a statement, or connect Gmail read-only). A deterministic rule engine finds money you're **losing** (dead subscriptions, price creep, billing errors) and money you're **owed** (refunds, EU261 flight-delay compensation, class-action settlements, unclaimed property, warranties, deposits).
-2. **Reason — grounded in real precedent via MongoDB Atlas Vector Search.** This is the agent's brain: for every finding it embeds the case (`gemini-embedding-001`, 768-dim) and runs an Atlas **`$vectorSearch`** over a consumer-protection precedent corpus to retrieve the exact legal basis *with similarity scores* — so the reasoning is grounded in actual law (FTC Click-to-Cancel, EU261, the Fair Credit Billing Act…), not the model's imagination. The agent then runs a genuine **plan → tool → act** loop: a Coordinator dispatches a **4-agent swarm** (Subscription Hunter, Billing Auditor, Refund Claimant, Entitlement Finder); an independent **Verifier** auto-confirms mechanical leaks and flags entitlements for your eligibility sign-off. **Gemini** narrates — but never invents an amount.
+2. **Reason — grounded in real precedent via MongoDB Atlas Vector Search.** This is the agent's brain: for every finding it embeds the case (`gemini-embedding-001`, 768-dim) and runs an Atlas **`$vectorSearch`** over a consumer-protection precedent corpus to retrieve the exact legal basis *with similarity scores* — so the reasoning is grounded in actual law (FTC Click-to-Cancel, EU261, the Fair Credit Billing Act…), not the model's imagination. The agent then runs a genuine **plan → tool → act** loop: a Coordinator routes each finding to one of four specialists (Subscription Hunter, Billing Auditor, Refund Claimant, Entitlement Finder), and an independent **Verifier** auto-confirms mechanical leaks while flagging entitlements for your eligibility sign-off. Routing and verification are **deterministic by design** (they decide *which* claim and *whether* it's valid); **Gemini** narrates the reasoning and never invents an amount.
 3. **Show the work** — every claim has a confidence score, the consumer-protection rule it cites, the exact source evidence, the Verifier's boolean checks, an honest "you might NOT qualify if…" caveat, and a deep-link to the *real* claim form (MissingMoney/NAUPA, the CAA for EU261, the FTC for settlements).
 4. **Approve → Send → Recover** — approval is the only path that readies a claim; each advances Drafted → Sent → Recovered. "Recovered" only counts money you mark as actually received (self-reported, labelled as such).
 5. **Audit** — every step folds into a **SHA-256 hash chain** with a `verify()` re-walk that detects tampering.
@@ -39,7 +39,6 @@ Recoup turns a messy financial footprint into recovered money through one audite
 | **Vector Search** | **MongoDB Atlas Vector Search** + `gemini-embedding-001` (768d) | free (M0) |
 | Reasoning | **Google Gemini 3 (gemini-3-flash-preview)** | free tier |
 | Store | **MongoDB** Atlas M0 | free |
-| Voice agent | Browser Web Speech (STT + TTS) only | free |
 | Agent tools | Google ADK + official MongoDB MCP server | free |
 | Backend host | **Google Cloud Run** | free tier |
 | Full app host | **Google Cloud Run** | free tier |
@@ -75,10 +74,10 @@ For an AI-near-money product, *checkable* beats *clever*. Showing the work — t
 
 **[0:20–0:50] The scan.** "Recoup scans your financial footprint — here, 100% in the browser, nothing uploaded." *(open "Scan your statement" → Try a sample → Scan → cards populate)* "It found recurring leaks and money you're owed — and notice the amounts come from rules, not the model."
 
-**[0:50–1:30] Atlas Vector Search + the swarm.** "Here's the technical heart: for every finding, the agent embeds the case and runs a **MongoDB Atlas Vector Search** over a consumer-protection precedent corpus — you can see it retrieve the exact legal basis with a similarity score." *(point at the 'Tool · Atlas Vector Search → FTC Click-to-Cancel (sim 0.84)' reasoning line)* "That's a real plan→tool→act loop, not a chatbot. A coordinator dispatched four specialist agents; an independent verifier auto-confirmed the mechanical leaks but flagged the entitlements for your sign-off — it doesn't mark its own homework." *(click "Show work")* "Every claim shows the rule, the source evidence, the verifier's checks, an honest 'you might not qualify if', and a deep-link to the real claim form. You can even drive it by **voice** — tap the mic and say 'find my money.'"
+**[0:50–1:30] Atlas Vector Search + the swarm.** "Here's the technical heart: for every finding, the agent embeds the case and runs a **MongoDB Atlas Vector Search** over a consumer-protection precedent corpus — you can see it retrieve the exact legal basis with a similarity score." *(point at the 'Tool · Atlas Vector Search → FTC Click-to-Cancel (sim 0.84)' reasoning line)* "That's a real plan→tool→act loop, not a chatbot. A coordinator dispatched four specialist agents; an independent verifier auto-confirmed the mechanical leaks but flagged the entitlements for your sign-off — it doesn't mark its own homework." *(click "Show work")* "Every claim shows the rule, the source evidence, the verifier's checks, an honest 'you might not qualify if', and a deep-link to the real claim form."
 
 **[1:30–2:10] Approve → recover.** "Nothing sends without me." *(Approve → Copy / Open claim form → Mark sent → Mark recovered)* "Each step writes a tamper-evident SHA-256 audit chain — and 'recovered' only counts what I confirm I actually got back."
 
-**[2:10–2:40] Real + trustworthy + free.** "It's live: a FastAPI backend on Google Cloud Run, Gemini doing the reasoning, a private in-browser engine, and MongoDB Atlas Vector Search powering memory." *(show the "Backend · live / Gemini · live" chips, toggle light/dark)*
+**[2:10–2:40] Real + trustworthy + free.** "It's live: a FastAPI backend on Google Cloud Run, Gemini 3 doing the reasoning, a private in-browser engine, and MongoDB Atlas Vector Search powering memory." *(show the "Backend · live / Gemini · live / MongoDB · live" chips, then open `/api/health` to show the live integrations + intact SHA-256 audit chain)*
 
 **[2:40–3:00] Close.** "Recoup — money you're owed, recovered, on your terms. Thanks for watching." *(live link on screen)*

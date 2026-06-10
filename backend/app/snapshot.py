@@ -173,10 +173,17 @@ def scan() -> dict:
 
     recurring = round(sum(f["amount"] for f in findings if f["cadence"] == "yearly"), 2)
     one_time = round(sum(f["amount"] for f in findings if f["cadence"] == "once"), 2)
+    # split one-time by currency so €250 is never silently summed into the $ headline
+    by_ccy: dict[str, float] = {}
+    for f in findings:
+        if f["cadence"] == "once":
+            by_ccy[f["currency"]] = round(by_ccy.get(f["currency"], 0.0) + f["amount"], 2)
     return {
         "findings": findings,
         "recurring_year": recurring,
-        "one_time": one_time,
+        "one_time": one_time,  # numeric sum (legacy field); see one_time_by_currency for the honest split
+        "one_time_by_currency": by_ccy,
+        "one_time_label": " + ".join(f"{c}{v:,.0f}" for c, v in sorted(by_ccy.items(), key=lambda kv: -kv[1])),
         "total_recoverable": round(recurring + one_time, 2),
         "surface": s,
     }

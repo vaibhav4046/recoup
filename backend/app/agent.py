@@ -161,10 +161,11 @@ def draft_plan(scan: dict) -> dict:
     plan_line = [{"t": f"Plan: classify {len(scan['findings'])} charges, retrieve each one's legal basis "
                        "via MongoDB Atlas Vector Search, then draft a claim you approve.", "tone": "cyan"}]
 
-    # ---- TOOL: ground the top findings in real precedent via Atlas Vector Search ----
+    # ---- TOOL: ground EVERY finding in real precedent via Atlas Vector Search ----
+    # (runs at startup + on /api/agent/run, not on the client-side demo scan, so latency is off the hot path)
     from . import vector
     grounding, vlines = [], []
-    for f in scan["findings"][:3]:
+    for f in scan["findings"]:
         hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1)
         if hits:
             h = hits[0]

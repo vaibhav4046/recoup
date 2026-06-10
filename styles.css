@@ -33,8 +33,11 @@
 /* ===== Agent Run Timeline (black + gold) ===== */
 .agent-timeline{margin:30px 0;padding:26px;border-radius:20px;background:linear-gradient(180deg,#0a0a0c,#070708);border:1px solid rgba(245,197,24,.18);box-shadow:0 20px 60px -30px rgba(0,0,0,.8),inset 0 1px 0 rgba(245,197,24,.08)}
 .atl-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.atl-head h2{font-size:20px;font-weight:900;letter-spacing:-.4px;margin:0;color:var(--text)}
+.atl-head h2{font-size:20px;font-weight:900;letter-spacing:-.4px;margin:0;color:var(--text);display:inline-flex;align-items:center;gap:10px}
 .atl-sub{font-size:12px;font-weight:700;color:#d4af37;text-transform:uppercase;letter-spacing:.06em}
+.atl-badge{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;border-radius:20px;padding:3px 9px;vertical-align:middle}
+.atl-badge.live{color:#0a160e;background:linear-gradient(90deg,#34d399,#10b981)}
+.atl-badge.sim{color:var(--muted);background:rgba(255,255,255,.06);border:1px solid var(--border)}
 .atl-grid{display:grid;grid-template-columns:1fr 280px;gap:26px}
 .atl-steps{list-style:none;margin:0;padding:0;position:relative}
 .atl-steps::before{content:"";position:absolute;left:17px;top:6px;bottom:14px;width:2px;background:linear-gradient(180deg,rgba(245,197,24,.5),rgba(245,197,24,.08))}
@@ -239,12 +242,13 @@ body{
 .reel-scene.is-active .reel-reason-box div:nth-child(1){animation-delay:.2s}
 .reel-scene.is-active .reel-reason-box div:nth-child(2){animation-delay:.55s}
 .reel-scene.is-active .reel-reason-box div:nth-child(3){animation-delay:.9s}
-/* reel: voice scene */
-.reel-voice-pulse{display:flex;align-items:center;justify-content:center;gap:14px;margin:30px 0 18px}
-.reel-voice-pulse span{width:10px;height:10px;border-radius:50%;background:#f5c518;animation:voicePulse 1.25s infinite}
-.reel-voice-pulse span:nth-child(2){animation-delay:.3s}
-.reel-voice-title{text-align:center;font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px}
-.reel-voice-text{text-align:center;font-size:13px;color:var(--muted);font-style:italic}
+/* reel: human-approval-gate scene */
+.reel-gate-icon{display:flex;align-items:center;justify-content:center;margin:26px 0 16px}
+.reel-gate-icon svg{filter:drop-shadow(0 4px 14px rgba(245,197,24,.5));animation:gateGlow 2.2s ease-in-out infinite}
+@keyframes gateGlow{0%,100%{opacity:.78;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+.reel-gate-title{text-align:center;font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px}
+.reel-gate-text{text-align:center;font-size:13px;color:var(--muted);line-height:1.5;padding:0 18px}
+.reel-gate-text b{color:#f5c518}
 @media(prefers-reduced-motion:reduce){.phone{transform:none}.phone-glow,.reel-radar span,.reel-live i{animation:none}.reel-scene{transition:none}.reel-row{opacity:1;transform:none;animation:none}.reel-bar i{width:100%;animation:none}.reel-reason-box div{opacity:1;animation:none}}
 @media(max-width:900px){.phone{transform:none}.phone-glow{animation:none;opacity:.6}}
 .product-window{position:relative;border:1px solid rgba(255,255,255,.14);border-radius:24px;overflow:hidden;background:

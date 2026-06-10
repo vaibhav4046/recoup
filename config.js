@@ -1,16 +1,39 @@
 /* Recoup runtime config — Cloud Run first.
-   After deploying the backend, either set RO_API_BASE in localStorage or visit:
-   /?api=https://YOUR-CLOUD-RUN-SERVICE-URL.run.app */
+   The backend is chosen from a fixed allowlist only. A ?api= override (persisted to
+   localStorage) is honored ONLY if it points at an allowlisted backend origin — this
+   prevents a poisoned ?api= link from redirecting credentialed/Gmail-handoff calls to
+   an attacker origin. On a same-origin Cloud Run host the API is always the origin itself. */
 (function () {
+  // Trusted backends. Same-origin (the Cloud Run service serving this file) is always allowed.
+  var ALLOW = [
+    "https://recoup-agent-681822930558.us-central1.run.app",
+    "https://vaibhav3313-recoup.hf.space",
+  ];
+  var FALLBACK = "https://vaibhav3313-recoup.hf.space";
+
+  function clean(u) { return (u || "").replace(/\/+$/, ""); }
+  function originOf(u) { try { return new URL(u).origin; } catch (e) { return ""; } }
+  function allowed(u) {
+    var o = originOf(clean(u));
+    if (!o) return false;
+    if (o === location.origin) return true;                 // same-origin Cloud Run host
+    return ALLOW.indexOf(o) !== -1;
+  }
+
+  var sameOriginApi = /\.run\.app$/i.test(location.hostname) ? location.origin : "";
+
+  // ?api= override: accept ONLY if it resolves to an allowlisted backend; otherwise ignore + purge.
   var fromQuery = "";
   try {
-    fromQuery = new URLSearchParams(location.search).get("api") || "";
-    if (fromQuery) localStorage.setItem("RO_API_BASE", fromQuery.replace(/\/+$/, ""));
+    var raw = clean(new URLSearchParams(location.search).get("api") || "");
+    if (raw && allowed(raw)) { fromQuery = raw; localStorage.setItem("RO_API_BASE", raw); }
+    else if (raw) { localStorage.removeItem("RO_API_BASE"); }  // reject a poisoned link, don't persist it
   } catch (e) {}
-  var sameOriginApi = /\.run\.app$/i.test(location.hostname) ? location.origin : "";
-  // until the Cloud Run URL exists, non-run.app hosts (Vercel preview) fall back to the live Space backend
-  var fallbackApi = "https://vaibhav3313-recoup.hf.space";
-  var apiBase = "";
-  try { apiBase = fromQuery || localStorage.getItem("RO_API_BASE") || sameOriginApi || fallbackApi; } catch (e) { apiBase = fromQuery || sameOriginApi || fallbackApi; }
-  window.RO_CONFIG = { apiBase: apiBase.replace(/\/+$/, "") };
+
+  var stored = "";
+  try { stored = clean(localStorage.getItem("RO_API_BASE") || ""); if (stored && !allowed(stored)) { localStorage.removeItem("RO_API_BASE"); stored = ""; } } catch (e) {}
+
+  // On a production Cloud Run host, pin to the origin regardless of any stored value.
+  var apiBase = sameOriginApi || fromQuery || stored || FALLBACK;
+  window.RO_CONFIG = { apiBase: clean(apiBase) };
 })();

@@ -11,5 +11,9 @@ google-genai>=1.0
 # MongoDB partner store / MCP — lazy imported
 pymongo>=4.6
 
-# Google ADK (Agent Development Kit) — qualifying agent runtime: Gemini reasoner + MCP toolset
-google-adk>=1.0
+# Google ADK (Agent Development Kit) — qualifying agent runtime: Gemini reasoner + MCP toolset.
+# Pinned to the 1.x line (and the [mcp] extra) because google-adk 2.x moved the `mcp` package
+# from a base dependency to an optional extra — an unpinned floor silently resolved to 2.2.0 on
+# rebuild and dropped `mcp`, killing the partner MongoDB MCP toolset. Explicit `mcp` pin = belt + braces.
+google-adk[mcp]>=1.34,<2
+mcp>=1.24,<2
