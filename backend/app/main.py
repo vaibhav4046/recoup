@@ -41,6 +41,14 @@ def _warmup():
         APP.run_agent()
     except Exception:
         pass
+    # A boot-time 429 (free-tier per-minute burst from the warmup's embed+narration calls) must NOT
+    # leave the circuit breaker open against real users — clear it once warmup finishes so the first
+    # genuine request gets a live Gemini attempt.
+    try:
+        from . import adk_agent
+        adk_agent._quota_block_until = 0.0
+    except Exception:
+        pass
 
 
 @asynccontextmanager
