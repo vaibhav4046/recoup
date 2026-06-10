@@ -114,11 +114,13 @@ async def health(request: Request):
     from . import vector, adk_agent
     vstatus = await run_in_threadpool(vector.status)  # touches Atlas — keep it off the event loop
     integrations = s.integration_status()
-    # honest: never report gemini "live" while the quota circuit-breaker is open
+    # honest: never report gemini "live" while the quota circuit-breaker is open — the agent
+    # stays AI-live through the free Gemma resilience tier (separate quota pool, same API).
     if integrations.get("gemini") == "live" and adk_agent.quota_blocked():
-        integrations["gemini"] = "rate-limited"
+        integrations["gemini"] = "rate-limited (gemma resilience tier active)"
     return _ok(request, service="recoup-api", version=app.version, mode=s.mode,
                integrations=integrations,
+               resilience_ladder=[s.gemini_model] + [m.strip() for m in (s.fallback_models or "").split(",") if m.strip()],
                gemini_model=s.gemini_model if s.gemini_ready else None,
                vector=vstatus,  # MongoDB Atlas Vector Search — the agent's retrieval brain
                audit=APP.audit.verify(),  # SHA-256 chain state {intact,count,head} — externally verifiable

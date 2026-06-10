@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     google_api_key: str = ""
     use_vertex: bool = False
     gemini_model: str = "gemini-3-flash-preview"  # hackathon headline model; falls back to gemini-2.5-flash if unavailable
+    # Resilience ladder, tried in order when the primary is rate-limited. Gemma models are served
+    # FREE on the same Generative Language API with a separate (larger) quota pool, so the agent
+    # keeps a REAL Google model reasoning 24/7 — zero extra infrastructure, zero cost. Each tier
+    # is labeled honestly in the response (`model` field) — never passed off as Gemini 3.
+    fallback_models: str = "gemma-3-27b-it,gemma-3-12b-it,gemini-2.5-flash"
     google_cloud_project: str = ""
     google_cloud_region: str = "us-central1"
 

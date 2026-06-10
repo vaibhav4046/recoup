@@ -104,6 +104,43 @@ def _fallback_reasoning(scan: dict) -> list[dict]:
     ]
 
 
+def _strip_fences(text: str) -> str:
+    """Gemma API models don't support JSON response mode, so they may wrap JSON in ```fences```."""
+    t = (text or "").strip()
+    if t.startswith("```"):
+        t = t.split("\n", 1)[-1] if "\n" in t else t
+        if t.rstrip().endswith("```"):
+            t = t.rstrip()[:-3]
+    return t.strip()
+
+
+def generate_any(prompt: str, json_mode: bool = True) -> tuple[str, str]:
+    """The all-Google resilience ladder: primary Gemini -> Gemma fallback tiers (FREE on the same
+    API with a separate quota pool) -> raises only if EVERY tier fails. Returns (text, model_used)
+    so callers label the tier honestly. The primary hop is skipped while its circuit breaker is
+    open; Gemma keeps a real model reasoning 24/7 at zero cost."""
+    from . import adk_agent as _adk
+    s = get_settings()
+    ladder = [s.gemini_model] + [m.strip() for m in (s.fallback_models or "").split(",") if m.strip()]
+    # serve a cache hit from ANY tier first — zero quota
+    from . import llm_cache
+    for m in ladder:
+        hit = llm_cache.get(m, prompt)
+        if hit is not None:
+            return hit, m
+    last: Exception | None = None
+    for m in ladder:
+        if m == s.gemini_model and _adk.quota_blocked():
+            continue  # breaker open on the primary -> go straight to the Gemma tier
+        try:
+            return _generate(m, prompt, attempts=2, json_mode=json_mode and not m.startswith("gemma")), m
+        except Exception as e:  # noqa: BLE001 — 429/404/anything: try the next tier
+            last = e
+            if m == s.gemini_model:
+                _adk._trip_breaker(f"{type(e).__name__}: {e}")
+    raise last if last else RuntimeError("no models configured")
+
+
 def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True) -> str:
     """Call the Gemini REST API directly via httpx — robust across runtimes
     across serverless containers. Returns the model's text; backs off on 429/503.
@@ -199,29 +236,27 @@ def draft_plan(scan: dict) -> dict:
         {"t": "Nothing is sent without your approval", "tone": "ok"},
     ]
 
-    from . import adk_agent as _adk
-    if not s.gemini_ready or _adk.quota_blocked():
+    if not s.gemini_ready:
         return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
-                "note": ("Gemini not configured — deterministic swarm + grounded retrieval." if not s.gemini_ready
-                         else "Gemini quota cooldown — deterministic swarm + grounded retrieval.")}
+                "note": "Gemini not configured — deterministic swarm + grounded retrieval."}
     try:
         prompt = (f"{SYSTEM_PROMPT}\n\nSCAN (amounts already computed — do not change them):\n"
                   f"{json.dumps(scan, ensure_ascii=False)[:7000]}\n\n"
                   f"PRECEDENTS RETRIEVED via MongoDB Atlas Vector Search (cite these as the basis):\n"
                   f"{json.dumps(grounding, ensure_ascii=False)[:1500]}\n\n"
-                  'Return JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 2-3 concise narration '
+                  'Return ONLY JSON {"reasoning":[{"t":str,"tone":"cyan|dim|ok|warn"}]} — 2-3 concise narration '
                   "lines on the most valuable recoveries, citing the retrieved precedent basis. Keep "
                   "recurring vs one-time distinct; never annualize a one-time payout.")
         t0 = time.perf_counter()
-        text = _generate(s.gemini_model, prompt)
+        text, used = generate_any(prompt)  # Gemini 3 -> Gemma free tier: a real Google model, 24/7
         latency = round((time.perf_counter() - t0) * 1000)
-        gem = (json.loads(text).get("reasoning") or [])[:3]
+        gem = (json.loads(_strip_fences(text)).get("reasoning") or [])[:3]
+        tier = "" if used == s.gemini_model else " (Gemma resilience tier — primary rate-limited)"
         return {"reasoning": plan_line + meta["trace"] + vlines + gem + closing[:1], "actions": actions, **sw,
-                "model": s.gemini_model, "latency_ms": latency, "live": True,
-                "note": f"Live {s.gemini_model} narrating a {meta['agents']}-agent swarm grounded in Atlas Vector Search."}
+                "model": used, "latency_ms": latency, "live": True,
+                "note": f"Live {used}{tier} narrating a {meta['agents']}-agent swarm grounded in Atlas Vector Search."}
     except Exception as e:  # noqa: BLE001
-        _adk._trip_breaker(f"{type(e).__name__}: {e}")
         return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
                 "note": f"Gemini fallback ({type(e).__name__}): {str(e)[:90]}"}
