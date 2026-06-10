@@ -106,7 +106,13 @@ def _fallback_reasoning(scan: dict) -> list[dict]:
 
 def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True) -> str:
     """Call the Gemini REST API directly via httpx — robust across runtimes
-    across serverless containers. Returns the model's text; backs off on 429/503."""
+    across serverless containers. Returns the model's text; backs off on 429/503.
+    Content-addressed cache first: a deterministic prompt served from MongoDB never re-bills
+    quota, so the live path stays live on free tier once warmed."""
+    from . import llm_cache
+    cached = llm_cache.get(model, prompt)
+    if cached is not None:
+        return cached
     import httpx
     s = get_settings()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -131,6 +137,7 @@ def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True
             if not parts or "text" not in parts[0]:
                 fr = (cands[0].get("finishReason") if cands else None) or "no_candidates"
                 raise RuntimeError(f"Gemini returned 200 with no text (finishReason={fr})")
+            llm_cache.put(model, prompt, parts[0]["text"])  # persist the real output for free-tier reuse
             return parts[0]["text"]
         except httpx.TransportError as e:  # timeouts, connect/read errors
             last = e
@@ -161,15 +168,23 @@ def draft_plan(scan: dict) -> dict:
     # keeps the legal basis alive through a total Gemini outage). Runs at startup + on
     # /api/agent/run, not on the client-side demo scan, so latency is off the hot path.
     from . import vector
-    grounding, vlines = [], []
+    grounding, vlines, _seen_kind = [], [], {}
     for f in scan["findings"]:
-        hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1, kind=f.get("kind", ""))
-        if hits:
-            h = hits[0]
+        kind = f.get("kind", "")
+        # dedupe retrieval by KIND: one $vectorSearch per distinct kind (~9), not one per finding
+        # (~all of them). Cached query-embeddings (llm_cache) then drop even that to ~0 on free tier.
+        if kind in _seen_kind:
+            h = _seen_kind[kind]
+        else:
+            hits = vector.retrieve(f"{f['title']}. {f.get('evidence', '')}", k=1, kind=kind)
+            h = hits[0] if hits else None
+            _seen_kind[kind] = h
+            if h:
+                via = ("Atlas Vector Search" if h.get("via") == "atlas_vector_search"
+                       else "keyword match" if h.get("via") == "keyword_fallback" else "vector cosine")
+                vlines.append({"t": f"Tool · {via}: \"{f['title'][:34]}\" → {h['title']} · {h['basis']} (sim {h.get('score', 0):.2f})", "tone": "cyan"})
+        if h:
             grounding.append({"finding": f["title"], "precedent": {k: h.get(k) for k in ("title", "basis", "jurisdiction")}})
-            via = ("Atlas Vector Search" if h.get("via") == "atlas_vector_search"
-                   else "keyword match" if h.get("via") == "keyword_fallback" else "vector cosine")
-            vlines.append({"t": f"Tool · {via}: \"{f['title'][:34]}\" → {h['title']} · {h['basis']} (sim {h.get('score', 0):.2f})", "tone": "cyan"})
     sw["grounding"] = grounding
 
     # ---- PLAN (honest: only claims vector retrieval when grounding actually happened) ----

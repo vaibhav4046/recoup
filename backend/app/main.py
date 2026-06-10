@@ -38,12 +38,19 @@ def _warmup():
         pass
     try:
         APP.run_scan()
-        APP.run_agent()
+        APP.run_agent()  # one canonical agent run -> populates the llm_cache (narration + embeddings)
     except Exception:
         pass
-    # A boot-time 429 (free-tier per-minute burst from the warmup's embed+narration calls) must NOT
-    # leave the circuit breaker open against real users — clear it once warmup finishes so the first
-    # genuine request gets a live Gemini attempt.
+    # Compute the real mongodb-mcp-server tool-call proof ONCE here, off the user hot path, and
+    # cache it (served by /api/agent/recover so a single click stays 1 Gemini turn).
+    try:
+        import asyncio
+        from . import adk_agent
+        asyncio.run(adk_agent.mcp_probe({"merchant": "FitLife Gym", "kind": "dead_subscription"}))
+    except Exception:
+        pass
+    # A boot-time 429 (free-tier per-minute burst from the warmup's calls) must NOT leave the
+    # circuit breaker open against real users — clear it so the first genuine request is a live try.
     try:
         from . import adk_agent
         adk_agent._quota_block_until = 0.0
@@ -153,12 +160,22 @@ async def agent_recover(request: Request):
         return JSONResponse(status_code=400, content={"ok": False, "error": "charge object required"})
     from . import vector, adk_agent
     q = f"{charge.get('merchant', '')} {charge.get('title', '')} {charge.get('kind', '')}".strip()
-    mcp = await adk_agent.mcp_probe(charge)
+    # FREE-TIER HOT PATH = exactly ONE Gemini turn. The MongoDB-MCP tool-call proof is a multi-turn
+    # run, so it's computed once at warmup and served from cache here (deliberately re-run live via
+    # /api/mcp/proof). plan_charge runs tool-less: the playbook is already injected, so attaching the
+    # toolset would only add turns + burn quota without changing the draft.
     pb = await run_in_threadpool(vector.retrieve_playbook, q, str(charge.get("kind") or ""))
-    ts = adk_agent.mongodb_toolset()
-    tools = [ts] if ts is not None else None
-    res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""), tools=tools)
-    return _ok(request, charge=charge, mcp=mcp, playbook=pb, **res)
+    res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""))
+    return _ok(request, charge=charge, mcp=adk_agent.last_mcp_proof(), playbook=pb, **res)
+
+
+@app.post("/api/mcp/proof")
+async def mcp_proof(request: Request):
+    """Deliberately exercise the official mongodb-mcp-server through ADK as a real multi-turn
+    tool-call run (kept OFF the hot path for free-tier latency). Returns the live tool_calls."""
+    from . import adk_agent
+    res = await adk_agent.mcp_probe({"merchant": "FitLife Gym", "kind": "dead_subscription"})
+    return _ok(request, mcp=res)
 
 
 # (voice TTS is browser-native Web Speech only — no server-side / non-Google TTS)
