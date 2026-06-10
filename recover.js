@@ -21,6 +21,62 @@ window.RecoupScan = (function () {
       .replace(/\d{2,}/g, "").replace(/[^A-Z& ]/g, " ").replace(/\s+/g, " ").trim();
   }
 
+  // ---- real-bank CSV support (Chase / Wells Fargo / Amex / Monzo exports) ----
+  function splitCSV(line) {
+    // quote-aware: '"AMAZON, INC",12.99' is TWO fields, not three
+    const out = []; let cur = "", inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === "," && !inQ) { out.push(cur); cur = ""; }
+      else cur += ch;
+    }
+    out.push(cur);
+    return out.map((s) => s.trim());
+  }
+
+  function detectHeader(line) {
+    // map a real bank export's header row -> column indexes. Returns null if it isn't a header.
+    const cols = splitCSV(line.toLowerCase());
+    if (cols.length < 2) return null;
+    const find = (...keys) => cols.findIndex((c) => keys.some((k) => c.replace(/[^a-z ]/g, "").includes(k)));
+    const map = {
+      date: find("transaction date", "posted date", "post date", "date"),
+      desc: find("description", "merchant", "payee", "name", "details", "memo"),
+      amount: find("amount"),
+      debit: find("debit", "withdrawal", "money out"),
+      credit: find("credit", "deposit", "money in"),
+    };
+    // a header needs at least a description column and some amount-ish column
+    if (map.desc < 0 || (map.amount < 0 && map.debit < 0)) return null;
+    return map;
+  }
+
+  function parseCSVRows(lines, hdr) {
+    // sign convention: card exports list purchases as NEGATIVE (payments positive); bank debits
+    // sometimes positive. Detect from the data: if most amount values are negative, purchases are
+    // the negative ones (use abs); otherwise purchases are the positives.
+    const rows = [];
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const f = splitCSV(line);
+      const desc = (f[hdr.desc] || "").trim();
+      if (!desc) continue;
+      let amt = null;
+      if (hdr.debit >= 0 && f[hdr.debit] && f[hdr.debit].replace(/[^0-9.]/g, "")) amt = parseFloat(f[hdr.debit].replace(/[^0-9.-]/g, ""));
+      else if (hdr.amount >= 0 && f[hdr.amount]) amt = parseFloat(f[hdr.amount].replace(/[^0-9.-]/g, ""));
+      if (amt == null || isNaN(amt) || amt === 0) continue;
+      rows.push({ date: hdr.date >= 0 ? (f[hdr.date] || null) : null, desc, amt });
+    }
+    if (!rows.length) return [];
+    const negShare = rows.filter((r) => r.amt < 0).length / rows.length;
+    const purchasesNegative = negShare > 0.5; // card convention: charges negative, payments positive
+    return rows
+      .filter((r) => (purchasesNegative ? r.amt < 0 : r.amt > 0))
+      .map((r) => ({ date: r.date, merchant: norm(r.desc) || r.desc.toUpperCase(),
+                     raw: r.desc.replace(/\s+/g, " ").trim(), amount: round2(Math.abs(r.amt)) }));
+  }
+
   function parseLine(line) {
     line = line.trim(); if (!line || /^(date|merchant|description|amount)/i.test(line)) return null;
     let amount = null, date = null, nameBits = [], amtDecimal = false;
@@ -87,7 +143,13 @@ window.RecoupScan = (function () {
 
   function scan(text) {
     _uid = 0;
-    const txns = (text || "").split(/\r?\n/).map(parseLine).filter(Boolean);
+    const lines = (text || "").split(/\r?\n/);
+    // real bank CSV export? (header row -> column-mapped, quote-aware, sign-convention-detecting)
+    let txns = null;
+    const hdrIdx = lines.findIndex((l) => l.trim());
+    const hdr = hdrIdx >= 0 ? detectHeader(lines[hdrIdx]) : null;
+    if (hdr) txns = parseCSVRows(lines.slice(hdrIdx + 1), hdr);
+    if (!txns || !txns.length) txns = lines.map(parseLine).filter(Boolean); // free-text fallback
     if (!txns.length) return { findings: [], txns: 0 };
     const hasDates = txns.filter((t) => t.date).length >= txns.length * 0.3;
     const byMerch = {};
