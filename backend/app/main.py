@@ -284,7 +284,9 @@ async def magic_verify(code: str):
 
 @app.get("/api/auth/google/start")
 async def google_start():
-    url = auth.google_auth_url(state=auth.issue_oauth_state("google"))
+    # ONE-TAP: a single consent both signs the user in and grants read-only Gmail,
+    # so their REAL subscriptions load immediately after sign-in (no second flow).
+    url = auth.google_auth_url(state=auth.issue_oauth_state("google"), include_gmail=True)
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured"})
     return RedirectResponse(url)
@@ -295,10 +297,22 @@ async def google_cb(code: str = "", state: str = ""):
     fe = get_settings().frontend_url.rstrip("/")  # redirect to the FRONTEND, not the backend host (which has no "/" route -> 404)
     if not auth.verify_oauth_state(state, "google"):
         return RedirectResponse(f"{fe}/login.html?err=state")
-    token = auth.google_callback(code)
+    token, access = auth.google_callback_full(code)
     if not token:
         return RedirectResponse(f"{fe}/login.html?err=google")
-    resp = RedirectResponse(f"{fe}/?signed_in=1")
+    # same-pass real-inbox scan (only if the gmail scope was granted; never blocks sign-in)
+    dest = f"{fe}/?signed_in=1"
+    if access:
+        try:
+            from . import gmail as gm
+            msgs = await run_in_threadpool(gm.fetch_subscription_emails, access)
+            findings = gm.to_findings(gm.detect(msgs))
+            if findings:
+                handoff = _store_gmail_findings(findings)
+                dest = f"{fe}/?signed_in=1#gmail={handoff}"
+        except Exception:
+            pass  # scan is best-effort; sign-in always completes
+    resp = RedirectResponse(dest)
     _set_session(resp, token)
     return resp
 

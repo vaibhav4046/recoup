@@ -162,15 +162,17 @@ def verify_captcha(token: str, ip: str = "") -> bool:
 
 
 # ---- Google OAuth ----
-def google_auth_url(state: str, gmail: bool = False) -> str | None:
+def google_auth_url(state: str, gmail: bool = False, include_gmail: bool = False) -> str | None:
     s = get_settings()
     if not s.google_oauth_client_id:
         return None
     from urllib.parse import urlencode
     scope, redirect = "openid email profile", "/api/auth/google/callback"
-    if gmail:  # read-only subscription emails only
+    if gmail:  # standalone Gmail connect: read-only subscription emails only
         scope += " https://www.googleapis.com/auth/gmail.readonly"
         redirect = "/api/gmail/callback"
+    elif include_gmail:  # ONE-TAP: sign-in AND read-only Gmail scan in a single consent
+        scope += " https://www.googleapis.com/auth/gmail.readonly"
     q = urlencode({
         "client_id": s.google_oauth_client_id,
         "redirect_uri": f"{s.base_url.rstrip('/')}{redirect}",
@@ -192,9 +194,16 @@ def google_exchange(code: str, redirect_path: str = "/api/auth/google/callback")
 
 
 def google_callback(code: str) -> str | None:
+    token, _access = google_callback_full(code)
+    return token
+
+
+def google_callback_full(code: str) -> tuple[str | None, str | None]:
+    """Exchange the auth code -> (session_token, google_access_token). The access token lets the
+    one-tap flow read subscription emails in the same pass (when the gmail scope was granted)."""
     s = get_settings()
     if not s.google_oauth_client_id:
-        return None
+        return None, None
     try:
         import httpx
         tok = httpx.post("https://oauth2.googleapis.com/token", data={
@@ -202,11 +211,12 @@ def google_callback(code: str) -> str | None:
             "client_secret": s.google_oauth_client_secret,
             "redirect_uri": f"{s.base_url.rstrip('/')}/api/auth/google/callback",
             "grant_type": "authorization_code"}, timeout=10).json()
+        access = tok.get("access_token")
         prof = httpx.get("https://www.googleapis.com/oauth2/v2/userinfo",
-                         headers={"Authorization": f"Bearer {tok['access_token']}"}, timeout=10).json()
-        return create_session(prof["email"], prof.get("name", ""))
+                         headers={"Authorization": f"Bearer {access}"}, timeout=10).json()
+        return create_session(prof["email"], prof.get("name", "")), access
     except Exception:
-        return None
+        return None, None
 
 
 def status() -> dict:
