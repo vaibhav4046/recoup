@@ -250,6 +250,26 @@ body{
 .reel-gate-text b{color:#f5c518}
 @media(prefers-reduced-motion:reduce){.phone{transform:none}.phone-glow,.reel-radar span,.reel-live i{animation:none}.reel-scene{transition:none}.reel-row{opacity:1;transform:none;animation:none}.reel-bar i{width:100%;animation:none}.reel-reason-box div{opacity:1;animation:none}}
 @media(max-width:900px){.phone{transform:none}.phone-glow{animation:none;opacity:.6}}
+/* real unclaimed-money search (official CA public records) */
+.uc-badge{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#1a1402;background:var(--grad);border-radius:20px;padding:3px 9px;vertical-align:middle;margin-left:8px}
+.uc-sub{color:var(--muted);font-size:13.5px;line-height:1.55;margin:4px 0 14px;max-width:74ch}
+.uc-form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.uc-input{flex:1;min-width:240px;padding:12px 15px;border-radius:12px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px}
+.uc-input:focus{outline:none;border-color:var(--emerald)}
+.uc-results{display:flex;flex-direction:column;gap:8px}
+.uc-row{display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--panel2)}
+.uc-row-main{flex:1;min-width:0}
+.uc-row-main b{font-size:14px}
+.uc-city{color:var(--muted);font-size:12.5px;margin-left:6px}
+.uc-holder{color:var(--dim);font-size:12px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uc-amt{font-weight:900;font-size:17px;background:var(--grad-money);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.uc-claim{padding:8px 13px;font-size:12.5px;white-space:nowrap}
+.uc-empty{color:var(--muted);font-size:13px;padding:10px 2px}
+.uc-total{color:var(--dim);font-size:12px;padding-top:6px}
+.uc-meta{color:var(--dim);font-size:12px;margin:14px 0 0}
+.uc-meta a{color:var(--cyan)}
+@media(max-width:560px){.uc-row{flex-wrap:wrap}.uc-amt{order:-1;width:100%}}
+
 /* hero */
 .hero{display:grid;grid-template-columns:1.4fr .9fr;gap:24px;padding:clamp(22px,3vw,38px)}
 .eyebrow{font-size:12px;font-weight:750;letter-spacing:0;color:var(--muted)}
