@@ -545,6 +545,10 @@ body{
 .audit-verify{display:inline-block;margin-top:12px;font-size:11.5px;color:var(--cyan);text-decoration:none;font-weight:600}
 .audit-verify:hover{text-decoration:underline}
 .foot-legal{display:block;margin-top:8px;font-size:11px;line-height:1.5;max-width:80ch;opacity:.85}
+.fc-sendnote{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.4}
+.fc-sendnote svg{width:13px;height:13px;flex:none;color:var(--emerald)}
+.fc-juris{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:#e9c75a;line-height:1.4}
+.fc-juris svg{width:13px;height:13px;flex:none}
 .divider{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:12px;margin:16px 0}
 .divider::before,.divider::after{content:"";height:1px;flex:1;background:var(--border)}
 

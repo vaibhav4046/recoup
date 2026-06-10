@@ -282,7 +282,12 @@
     const sendRow = `<div class="fc-send">
         <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text">${icon('copy')} Copy</button>
         ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form ${icon('upRight')}</a>` : `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft">${icon('mail')} Email</button>`}
-      </div>`;
+      </div>
+      <div class="fc-sendnote">${icon('lock')} Recoup never sends this — you send it yourself on the vendor's/official site. No money has moved.</div>`;
+    // region-specific claims (flight/settlement) carry a jurisdiction caveat so a user in the wrong
+    // region doesn't file an inapplicable claim — the #1 round-3 credibility ask.
+    const jurisNote = (a.kind === "flight_comp" || a.kind === "settlement")
+      ? `<div class="fc-juris">${icon('alert')} Region-specific: confirm this rule applies where you live/flew before filing.</div>` : "";
     let actions;
     if (a.approvalState === "rejected") {
       actions = `<div class="fc-actions"><button class="btn btn-approve" data-approve="${aid}">${icon('check')} Approve instead</button><button class="btn btn-view" data-view="${aid}">Show work</button></div>`;
@@ -313,6 +318,7 @@
       <div class="fc-amount">${esc(a.amount_label)} <small>· ${esc(a.unit_note)}</small></div>
       <div class="fc-ev">${esc(a.evidence)}</div>
       <div class="fc-rule">${esc(RULES[a.rule] || a.rule)}</div>
+      ${jurisNote}
       ${a.timeline ? `<div class="fc-expect">${icon('clock')} ${esc(a.timeline)} · <b>${esc(a.odds || "")}</b> to land</div>` : ""}
       ${a.agent_name ? `<div class="fc-agent">${icon('diamond')} ${esc(a.agent_name)}${a.verify ? (a.verify.needs_confirm ? ` · <span class="needs-confirm">${icon('alert')} confirm eligibility</span>` : (a.verify.ok ? " · rule-checked" : "")) : ""} · <button class="linklike" data-view="${aid}">show work</button></div>` : ""}
       ${actions}`;
