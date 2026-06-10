@@ -488,22 +488,18 @@
 <!-- scan-your-own-data modal -->
 <div class="modal-scrim" id="scan-scrim"></div>
 <div class="modal glass" id="scan-modal" role="dialog" aria-modal="true" aria-labelledby="scan-title" aria-describedby="scan-desc" aria-hidden="true">
-  <div class="modal-head"><h3 id="scan-title">Scan a statement — no sign-in</h3><button class="x" id="scan-x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <p class="modal-sub" id="scan-desc"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Paste a card/bank statement or subscription list. It runs <b>100% in your browser</b> — nothing is uploaded, no account needed. Close the tab and it's gone.</p>
+  <div class="modal-head"><h3 id="scan-title">Scan your real money — two ways</h3><button class="x" id="scan-x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <button class="btn gbtn full" id="gmail-connect" type="button">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.8 37.9 46.5 31.8 46.5 24.5z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3.1-.8-4.9s.3-3.4.8-4.9l-7.9-6.2C1 15.6 0 19.7 0 24s1 8.4 2.6 11.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.6-4-13.5-9.6l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
+    Scan my Gmail — find my real subscriptions
+  </button>
+  <p class="ga-desc"><b>Read-only</b> — it reads subscription receipts and renewal emails from the Google account you pick (one account per connect), never sends or deletes anything, and you can erase the results anytime. Google shows an <b>"unverified app"</b> screen: click <b>Advanced → Continue</b>.</p>
+  <div class="modal-divider">or paste a statement — 100% in your browser, no sign-in</div>
   <textarea id="scan-input" class="scan-input" spellcheck="false" aria-label="Paste your statement" placeholder="Paste a card/bank statement or subscription list — one per line:&#10;&#10;Netflix, 19.99&#10;2026-01-12, SPOTIFY, 11.99&#10;Gym membership 49.99&#10;..."></textarea>
   <div class="modal-actions">
     <button class="btn btn-ghost" id="scan-sample">Try a sample</button>
     <button class="btn btn-primary" id="scan-run">Scan privately</button>
   </div>
-  <details class="gmail-advanced">
-    <summary>Prefer to connect Gmail? <span class="ga-tag">advanced · testers only</span></summary>
-    <p class="ga-desc"><b>Read-only</b> Google OAuth — subscriptions/receipts only, never your bank or card data. Processes on our server, deletable anytime.</p>
-    <div class="gmail-testnote" id="scan-gmail-note"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg> Gmail connect is in Google's <b>test mode</b> — only approved testers can sign in, and Google shows an <b>"unverified app"</b> screen (Advanced → Continue). The paste scan above needs no sign-in.</div>
-    <button class="btn gbtn full" id="gmail-connect" type="button">
-      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 3-2.2 5.5-4.7 7.2l7.3 5.7C43.8 37.9 46.5 31.8 46.5 24.5z"/><path fill="#FBBC05" d="M10.5 28.4c-.5-1.5-.8-3.1-.8-4.9s.3-3.4.8-4.9l-7.9-6.2C1 15.6 0 19.7 0 24s1 8.4 2.6 11.6l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.6-2.1 15.5-5.6l-7.3-5.7c-2 1.4-4.7 2.3-8.2 2.3-6.3 0-11.6-4-13.5-9.6l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg>
-      Connect your Gmail
-    </button>
-  </details>
 </div>
 
 <!-- drawer for drafted message -->
@@ -520,15 +516,11 @@
   </div>
 </aside>
 
-<button id="voice-btn" class="voice-btn" type="button" aria-label="Ask Recoup by voice" aria-pressed="false" title="Ask Recoup — voice command"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 19v3"/></svg></button>
-<div id="voice-label" class="voice-label" role="status" aria-live="polite"></div>
-<div id="voice-filter-indicator" class="voice-filter-indicator" role="status" aria-live="polite"></div>
 <script src="config.js"></script>
 <script src="data.js"></script>
 <script src="recover.js"></script>
 <script src="app.js"></script>
 <script src="reel.js"></script>
-<script src="voice.js"></script>
 <script src="agent-timeline.js"></script>
 </body>
 </html>
