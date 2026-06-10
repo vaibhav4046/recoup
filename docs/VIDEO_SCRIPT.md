@@ -1,7 +1,9 @@
 # Recoup - 3-minute demo video script
 
-Setup before recording:
-- Deploy the backend to Google Cloud Run and open `/api/health` once so it is warm.
+Setup before recording (do these IN ORDER — they make every claim in the script true on camera):
+- Redeploy Cloud Run with the pinned deps + `--min-instances 1` (see docs/SUBMISSION.md), then **verify the MCP toolset is actually live**: `curl -X POST $URL/api/agent/recover -d '{"charge":{"merchant":"FitLife Gym","kind":"dead_subscription","amount":480}}'` must return `"mcp":{"live":true,...}`. Do NOT narrate the MCP line below until this returns true.
+- **Pre-warm Gemini** right before recording: `curl -X POST $URL/api/agent/plan -d '{"charge":{"merchant":"FitLife Gym","kind":"dead_subscription","amount":480}}'` once, so the first on-camera reasoning call is fast and `live:true` (not a cold-start 429 fallback).
+- Open `/api/health` once so it is warm; confirm `gemini:live`, `mongodb:live`, `audit.intact:true`.
 - Open the Cloud Run URL; it serves both the frontend and API.
 - Have one real subscription or refund example ready if you can show a real confirmation.
 

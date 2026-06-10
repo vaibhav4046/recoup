@@ -298,9 +298,12 @@ async def magic_verify(code: str):
 
 @app.get("/api/auth/google/start")
 async def google_start():
-    # ONE-TAP: a single consent both signs the user in and grants read-only Gmail,
-    # so their REAL subscriptions load immediately after sign-in (no second flow).
-    url = auth.google_auth_url(state=auth.issue_oauth_state("google"), include_gmail=True)
+    # CLEAN sign-in: request only openid/email/profile — NON-sensitive scopes that do NOT
+    # trigger Google's "unverified app" interstitial, so the user signs in in one tap with no
+    # Advanced -> Continue. Read-only Gmail is a SEPARATE opt-in (/api/gmail/start); that path
+    # does show the unverified screen until the OAuth app is Google-verified (unavoidable for a
+    # restricted scope on an unverified app).
+    url = auth.google_auth_url(state=auth.issue_oauth_state("google"))
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured"})
     return RedirectResponse(url)

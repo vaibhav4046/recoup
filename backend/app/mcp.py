@@ -106,7 +106,7 @@ def _call_tool(name: str, args: dict) -> dict:
         scan = snapshot.scan()            # deterministic rule engine only — no Gemini, no global-state mutation for anon callers
         findings = scan.get("findings", [])
         once = [f for f in findings if f.get("cadence") == "once"]
-        once_sym = "≈$" if len({(f.get("currency") or "$") for f in once}) > 1 else "$"  # honest mixed-currency marker
+        once_sym = "~$" if len({(f.get("currency") or "$") for f in once}) > 1 else "$"  # honest mixed-currency marker
         return {
             **_text(
                 f"Found {len(findings)} recoverable actions: "

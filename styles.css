@@ -163,12 +163,14 @@ body{
 .landing{min-height:calc(88vh - 76px);padding:92px 0 18px}
 .landing-hero{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(440px,1.05fr);align-items:start;gap:34px;margin-bottom:60px}
 .landing-copy{max-width:570px;padding:10px 0 16px;animation:heroIn .75s var(--ease) both}
-.landing-h1{font-size:var(--font-hero);font-weight:850;letter-spacing:0;line-height:.98;margin:16px 0 18px;text-wrap:balance;
-  background:linear-gradient(110deg,#f5c518,#ffd84d 28%,#ff8a3d 52%,#ff5e8a 72%,#f5c518 96%);
-  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-  animation:gradPan 9s ease-in-out infinite}
+.landing-h1{font-family:'Sora','Inter',system-ui,sans-serif;font-size:var(--font-hero);font-weight:700;
+  letter-spacing:-2px;line-height:1.0;margin:16px 0 20px;text-wrap:balance;color:#fbfbfd}
+/* one word in gold — the emotional hook ("owed"). Pure black & gold, no rainbow. */
+.landing-h1 .hl{background:linear-gradient(110deg,#f5c518,#ffd84d 45%,#d4af37);
+  background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:gradPan 7s ease-in-out infinite}
 @keyframes gradPan{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-@media(prefers-reduced-motion:reduce){.landing-h1{animation:none}}
+@media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none}}
 .landing-sub{color:#a7afc1;font-size:18px;max-width:58ch;margin:0 0 28px;line-height:1.55}
 .landing-sub b{color:var(--text)}
 .landing-cta{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap}
@@ -191,6 +193,7 @@ body{
 .phone-screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;background:radial-gradient(120% 80% at 50% 0%,rgba(245,197,24,.09),transparent 55%),var(--bg2);display:flex;flex-direction:column;padding:16px 14px 12px}
 .reel-top{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.2px}
 .reel-logo{width:22px;height:22px;border-radius:7px;background:var(--grad);display:grid;place-items:center;box-shadow:0 4px 12px -3px rgba(245,197,24,.6)}
+.reel-logo img{width:15px;height:15px;object-fit:contain;display:block}
 .reel-live{margin-left:auto;font-size:9px;font-weight:800;color:#ffd84d;display:flex;align-items:center;gap:4px;text-transform:uppercase;letter-spacing:.07em}
 .reel-live i{width:6px;height:6px;border-radius:50%;background:var(--emerald);box-shadow:0 0 7px var(--emerald);animation:pulse 2s infinite}
 .reel-stage{position:relative;flex:1;margin-top:15px}
