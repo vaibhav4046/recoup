@@ -121,13 +121,22 @@ PRECEDENT_VARIANTS = [
 
 
 def _embed(text: str, task: str = "RETRIEVAL_DOCUMENT") -> list[float]:
+    # query-embedding cache: retrieval queries are low-cardinality (kind+merchant), so a cached
+    # vector skips a live embed call and keeps the hot path off the free-tier quota.
+    from . import llm_cache
+    ck = f"{task}|{text[:2000]}"
+    hit = llm_cache.get_vec(EMBED_MODEL, ck)
+    if hit is not None:
+        return hit
     import httpx
     s = get_settings()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{EMBED_MODEL}:embedContent"
     body = {"model": f"models/{EMBED_MODEL}", "content": {"parts": [{"text": text[:2000]}]}, "taskType": task, "outputDimensionality": DIM}
     r = httpx.post(url, params={"key": s.google_api_key}, json=body, timeout=20)
     r.raise_for_status()
-    return r.json()["embedding"]["values"]
+    vec = r.json()["embedding"]["values"]
+    llm_cache.put_vec(EMBED_MODEL, ck, vec)
+    return vec
 
 
 def _coll():

@@ -20,6 +20,15 @@ _toolset_error = ""  # last reason mongodb_toolset() returned None (surfaced for
 _quota_block_until = 0.0  # circuit breaker: after a 429/ResourceExhausted, skip Gemini for a while
 
 
+_last_mcp_proof: dict = {"live": False, "tool_calls": [], "note": "not_yet_probed"}
+
+
+def last_mcp_proof() -> dict:
+    """The most recent real mongodb-mcp-server tool-call result (a multi-turn run). Computed at
+    warmup / via /api/mcp/proof and served on the hot path so a single user click stays 1 Gemini turn."""
+    return dict(_last_mcp_proof)
+
+
 def quota_blocked() -> bool:
     return _time.time() < _quota_block_until
 
@@ -163,12 +172,16 @@ async def mcp_probe(charge: dict) -> dict:
                 "note": "mongodb_mcp_toolset_unavailable", "reason": _toolset_error}
     merchant = charge.get("merchant") or charge.get("title") or "unknown merchant"
     kind = charge.get("kind") or "unknown"
-    return await run_query(
+    result = await run_query(
         "Use the MongoDB tools to inspect the Recoup Atlas database. List available "
         "collections, then look for one recovery playbook or precedent relevant to "
         f"merchant={merchant!r}, kind={kind!r}. Return only the collection name and title.",
         tools=[ts],
     )
+    global _last_mcp_proof
+    if result.get("live") and result.get("tool_calls"):
+        _last_mcp_proof = result  # cache the genuine tool-call run for the hot path
+    return result
 
 
 def _deterministic_plan(charge: dict, playbook: str) -> str:
