@@ -504,6 +504,30 @@ body{
   .window-status{display:none}
   .claim-actions{flex-direction:column}
 }
+/* small phones (<=480px): single-column, full-width tappable everything, no overlap/cutoff */
+@media(max-width:480px){
+  :root{--font-hero:34px;--font-display:34px}
+  .wrap{padding:14px}
+  .btn{min-height:48px;padding:13px 16px}            /* WCAG 2.5.5 touch target */
+  .hero-actions{flex-direction:column;align-items:stretch;gap:10px}
+  .hero-actions .btn{width:100%;justify-content:center}
+  .uc-form{flex-direction:column}
+  .uc-input{min-width:0;width:100%}
+  .uc-form .btn{width:100%}
+  .uc-row{flex-wrap:wrap;gap:8px;padding:12px}
+  .uc-amt{order:-1;width:100%}
+  .uc-claim{width:100%;justify-content:center;min-height:44px}
+  .uc-holder{white-space:normal}                     /* don't clip the holder line on mobile */
+  .calc-options{grid-template-columns:1fr}
+  .au-row,.audit-row{font-size:12px}
+  .figure .fig-amount{font-size:40px}
+  .reel-stage,.reel-row{font-size:12px}
+}
+@media(max-width:380px){
+  :root{--font-hero:30px;--font-display:30px}
+  .landing-h1{line-height:1.02}
+  .uc-row-main b{font-size:13px}
+}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg2);border:1px solid rgba(245,197,24,.4);
   color:#ffd84d;padding:13px 22px;border-radius:12px;font-weight:600;font-size:14px;z-index:50;opacity:0;transition:.3s;box-shadow:var(--shadow)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}

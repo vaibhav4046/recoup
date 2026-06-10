@@ -105,9 +105,14 @@ window.RecoupScan = (function () {
         // tightly-clustered repeat charges = a genuine recurring subscription
         findings.push(mk(m, name, "dead_subscription", round2(monthly * 12), `${list.length} recurring charges of ~$${monthly.toFixed(2)} to ${name}`, 0.8, `$${monthly.toFixed(2)}/mo`));
       } else if (list.length === 1 && !hasDates) {
-        // a single line explicitly pasted as a subscription (>=2 charges with wild amount scatter are
-        // intentionally NOT flagged — that's variable spend, and flagging it would inflate the total)
-        findings.push(mk(m, name, "dead_subscription", round2(monthly * 12), `$${monthly.toFixed(2)}/mo to ${name} — listed as a subscription`, 0.7, `$${monthly.toFixed(2)}/mo`));
+        // a single line explicitly pasted as a subscription. ONE charge is not proof of a monthly
+        // cadence, so we annualize only as a clearly-flagged ESTIMATE: review-band confidence + a
+        // caveat that says we saw one charge. (>=2 charges with wild scatter stay unflagged.)
+        const f1 = mk(m, name, "dead_subscription", round2(monthly * 12), `one $${monthly.toFixed(2)} charge to ${name} — listed as a subscription (annualized estimate)`, 0.45, `$${monthly.toFixed(2)}/mo`);
+        f1.caveat = "Only ONE charge seen — is this really monthly? The /yr figure is an estimate; confirm the cadence before acting.";
+        f1.verify.review = true;
+        f1.verify.checks[2] = { label: "recurring cadence confirmed", ok: false };
+        findings.push(f1);
       }
       // duplicate = same amount within 3 days (NOT the normal monthly cadence)
       if (hasDates) {

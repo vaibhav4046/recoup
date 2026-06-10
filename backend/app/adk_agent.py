@@ -180,7 +180,8 @@ async def mcp_probe(charge: dict) -> dict:
     )
     global _last_mcp_proof
     if result.get("live") and result.get("tool_calls"):
-        _last_mcp_proof = result  # cache the genuine tool-call run for the hot path
+        from datetime import datetime, timezone
+        _last_mcp_proof = {**result, "captured_at": datetime.now(timezone.utc).strftime("%H:%M UTC")}
     return result
 
 

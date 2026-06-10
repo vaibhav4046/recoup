@@ -4,8 +4,14 @@ Covers the hackathon acceptance criteria: deterministic money math, one-time pay
 never annualized, per-currency split, approval writes an audit block, tamper detection,
 idempotent recovery, and ASCII-clean MCP output.
 """
+import os
 import sys
 from pathlib import Path
+
+# Hermetic by design: force the in-memory audit/vector path so the suite is deterministic and
+# independent of any local MongoDB state (the audit chain persists in prod; a unit test must not
+# inherit a previously-persisted chain). Set BEFORE importing app so get_settings() caches it.
+os.environ["MONGODB_URI"] = ""
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
@@ -71,6 +77,19 @@ except PermissionError:
 res = mcpmod._call_tool("recoup_scan_demo", {})
 text = res["content"][0]["text"]
 ok("MCP scan text is ASCII (no mojibake glyphs)", text.isascii())
+
+# --- input validation at the money boundary (round-1 user-test fix) ---
+from app.main import _validate_charge  # noqa: E402
+ok("rejects negative amount", _validate_charge({"merchant": "Gym", "kind": "dead_subscription", "amount": -500})[1] != "")
+ok("rejects empty merchant", _validate_charge({"merchant": "", "kind": "dead_subscription"})[1] != "")
+ok("rejects oversized amount", _validate_charge({"merchant": "Gym", "kind": "dead_subscription", "amount": 9e9})[1] != "")
+ok("rejects unknown kind", _validate_charge({"merchant": "Gym", "kind": "haxxor"})[1] != "")
+ok("accepts a valid charge", _validate_charge({"merchant": "Gym", "kind": "dead_subscription", "amount": 480})[0] is not None)
+
+# --- currencies are NEVER blended into one number (accountant-trust fix) ---
+sc = snapshot.scan()
+ok("legacy one_time is $-only (no $+EUR blend)", abs(sc["one_time"] - sc["one_time_by_currency"].get("$", 0)) < 0.01)
+ok("total_recoverable never blends currencies", sc["total_recoverable"] == round(sc["recurring_year"] + sc["one_time"], 2))
 
 print("\n%d passed, %d failed" % (PASS, FAIL))
 sys.exit(1 if FAIL else 0)
