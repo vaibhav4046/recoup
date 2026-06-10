@@ -713,12 +713,12 @@
     const ssc = $("#scan-scrim"); if (ssc) ssc.onclick = closeScan;
     const sr = $("#scan-run"); if (sr) sr.onclick = runScan;
     const sm = $("#scan-sample"); if (sm) sm.onclick = () => { const i = $("#scan-input"); if (i && window.RecoupScan) i.value = window.RecoupScan.SAMPLE; };
-    const gc = $("#gmail-connect"); if (gc) gc.onclick = async () => {
-      // Read-only Gmail uses a RESTRICTED scope, which shows Google's "unverified app" screen until
-      // Google completes OAuth verification (a multi-week review). Until then we don't launch that
-      // flow — the private paste scan does the full thing with no account and no warning.
-      openScan();
-      toast("Gmail auto-scan is pending Google verification. Paste your statement here — it runs 100% in your browser, no account, no warning.");
+    const gc = $("#gmail-connect"); if (gc) gc.onclick = () => {
+      // Real read-only Gmail scan. The RESTRICTED gmail.readonly scope shows Google's
+      // "unverified app" interstitial until OAuth verification completes — the modal copy
+      // explains the Advanced -> Continue step honestly. Read-only; nothing sends or deletes.
+      if (!API) { toast("Gmail scan needs the live backend."); return; }
+      window.location.href = API + "/api/gmail/start";
     };
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
