@@ -164,7 +164,7 @@ Frontend → Cloud Run [ Gemini + Google ADK ] → MongoDB MCP (official) → At
 
 - **Google ADK + Gemini** (`app/adk_agent.py`): an ADK `LlmAgent` with Gemini as the reasoner runs a **plan → tool → act → human-gate** loop. Runtime AI is **Google-only** (no non-Google AI deps).
 - **Official MongoDB MCP toolset**: the official `mongodb-mcp-server` is registered as an ADK `MCPToolset` (stdio / `npx`) — the agent's tool bridge into Atlas, with its tool calls reported in the API response. (Vector retrieval itself runs native `$vectorSearch` aggregations for latency; the MCP toolset gives the agent general Atlas access.)
-- **Atlas Vector Search as memory**: recovery **playbooks** + consumer-protection **precedents** are embedded with Google `gemini-embedding-001` (768-d) and retrieved with Atlas `$vectorSearch` (cosine fallback while an index builds).
+- **Atlas Vector Search as memory**: **41 grounded documents** — 30 consumer-protection **precedents** (14 kind-tagged + **16 untagged variants reachable only by semantic similarity**, so retrieval is load-bearing, not a dict lookup) + 11 recovery **playbooks** — embedded with Google `gemini-embedding-001` (768-d) and retrieved with Atlas `$vectorSearch`. Falls back to in-process cosine, then to embedding-free keyword/kind match, so the legal basis survives even a total Gemini outage.
 - **Deterministic + human gate**: every dollar amount is computed in code (never invented); every action stops at `pending_approval`.
 
 ### Hackathon tool boundary
