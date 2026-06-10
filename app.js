@@ -533,6 +533,25 @@
       (a.claim_url ? `<a class="btn btn-mail full" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ${icon('upRight')}</a>` : "") +
       `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
     $("#drawer-body").textContent = a.draft || "(no draft)";
+    // live AI plan on THIS charge (your real scanned data included) — one call, honest model label
+    const aiOut = $("#drawer-ai-out"), aiBtn = $("#drawer-ai-btn");
+    if (aiOut) aiOut.innerHTML = "";
+    if (aiBtn) {
+      aiBtn.style.display = API ? "" : "none";
+      aiBtn.disabled = false;
+      aiBtn.onclick = async () => {
+        aiBtn.disabled = true;
+        aiOut.innerHTML = '<div class="ai-thinking">Agent reasoning on this charge…</div>';
+        try {
+          const charge = { merchant: (a.raw || a.title || "charge").slice(0, 90), kind: a.kind || "", amount: Math.abs(a.amount || 0) || undefined };
+          const d = await fetch(API + "/api/agent/recover", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ charge }) }).then((r) => r.json());
+          if (d && d.plan) {
+            const pb = d.playbook || {};
+            aiOut.innerHTML = `<div class="ai-model">${esc(modelLabel(d))}${pb.basis ? " · grounded in: " + esc(pb.basis).slice(0, 70) : ""}</div><pre class="ai-plan">${esc(d.plan)}</pre>`;
+          } else aiOut.innerHTML = '<div class="ai-thinking">' + esc((d && d.error) || "Agent unavailable — try again.") + "</div>";
+        } catch (e3) { aiOut.innerHTML = '<div class="ai-thinking">Backend waking — try again in a few seconds.</div>'; aiBtn.disabled = false; }
+      };
+    }
     const ab = $("#drawer-approve"), sb = $("#drawer-skip");
     ab.style.display = a.approvalState === "approved" ? "none" : "";
     ab.onclick = () => { approve(id); closeDrawer(); };
@@ -738,6 +757,18 @@
     const ob = $("#open-scan"); if (ob) ob.onclick = openScan;
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
+
+    // REAL-MONEY HUB — live paths above the sample demo
+    const rs = $("#rh-scan"); if (rs) rs.onclick = openScan;
+    const rg = $("#rh-gmail"); if (rg) rg.onclick = () => { if (API) window.location.href = API + "/api/gmail/start"; else toast("Gmail scan needs the live backend."); };
+    if (API && $("#rh-total")) {
+      fetch(API + "/api/unclaimed/stats").then((r) => r.json()).then((d) => {
+        if (d && d.total_amount) {
+          $("#rh-total").textContent = "$" + (d.total_amount / 1e6).toFixed(1) + "M";
+          $("#rh-records").textContent = Number(d.records || 0).toLocaleString();
+        }
+      }).catch(() => {});
+    }
 
     // REAL owed-money search — official CA unclaimed-property records (live Atlas query)
     const ucf = $("#uc-form"); if (ucf) ucf.onsubmit = async (e) => {

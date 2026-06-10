@@ -567,6 +567,30 @@ body{
 .audit-verify{display:inline-block;margin-top:12px;font-size:11.5px;color:var(--cyan);text-decoration:none;font-weight:600}
 .audit-verify:hover{text-decoration:underline}
 .foot-legal{display:block;margin-top:8px;font-size:11px;line-height:1.5;max-width:80ch;opacity:.85}
+
+/* real-money hub — the live paths, visually distinct from the labeled sample demo below */
+.real-hub{border:1px solid rgba(245,197,24,.35);background:linear-gradient(180deg,rgba(245,197,24,.06),rgba(0,0,0,0))}
+.rh-head{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.rh-head b{color:#ffd84d}
+.rh-live{color:var(--emerald);font-size:11px;margin-right:6px}
+.rh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.rh-card{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border-radius:14px;cursor:pointer;
+  border:1px solid var(--border2);background:var(--panel2);color:var(--text);font-family:inherit;text-decoration:none;
+  transition:transform .25s var(--ease),border-color .25s,box-shadow .25s}
+.rh-card:hover{transform:translateY(-2px);border-color:rgba(245,197,24,.5);box-shadow:0 14px 30px -14px rgba(245,197,24,.35)}
+.rh-big{font-size:15px;font-weight:800}
+.rh-big #rh-total{background:var(--grad-money);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.rh-sub{font-size:12px;color:var(--muted);line-height:1.45}
+@media(max-width:760px){.rh-grid{grid-template-columns:1fr}}
+
+/* live AI plan inside the drawer */
+.drawer-ai{padding:0 22px 8px}
+.drawer-ai .btn{width:100%;justify-content:center}
+.ai-thinking{color:var(--muted);font-size:12.5px;padding:10px 2px}
+.ai-model{font-size:11.5px;color:var(--cyan);margin:10px 0 6px;font-weight:600}
+.ai-plan{white-space:pre-wrap;font-size:12.5px;line-height:1.55;color:var(--text);background:var(--panel2);
+  border:1px solid var(--border);border-radius:10px;padding:12px;max-height:260px;overflow:auto}
+
 .fc-sendnote{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.4}
 .fc-sendnote svg{width:13px;height:13px;flex:none;color:var(--emerald)}
 .fc-juris{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;color:#e9c75a;line-height:1.4}

@@ -36,6 +36,31 @@ def stats() -> dict:
         return {"records": 0}
 
 
+_stats_cache: dict = {}
+
+
+def stats_full() -> dict:
+    """REAL aggregate over the indexed slice of official CA records: total $ sitting unclaimed,
+    record count, and the largest single records. Cached in-process (the slice changes only on
+    re-seed) so the landing page can show it without an aggregation per pageview."""
+    global _stats_cache
+    if _stats_cache:
+        return _stats_cache
+    try:
+        coll = _coll()
+        agg = list(coll.aggregate([{"$group": {"_id": None, "total": {"$sum": "$amount"},
+                                               "n": {"$sum": 1}, "max": {"$max": "$amount"}}}]))
+        top = list(coll.find({}, {"_id": 0, "owner_name": 1, "owner_city": 1, "amount": 1, "holder": 1})
+                   .sort("amount", -1).limit(3))
+        a = agg[0] if agg else {}
+        _stats_cache = {"ok": True, "records": a.get("n", 0), "total_amount": round(a.get("total", 0.0), 2),
+                        "largest": round(a.get("max", 0.0), 2), "top": top,
+                        "segment": "$500 and up (CA)", "source": SOURCE_PAGE}
+        return _stats_cache
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "error": type(e).__name__, "records": 0, "total_amount": 0}
+
+
 def search(name: str, limit: int = 10) -> dict:
     """Anchored-prefix match on the normalized owner name (CA records are 'LAST FIRST M').
     Searching 'Garcia' or 'Garcia Maria' both work. Returns top hits by amount."""
