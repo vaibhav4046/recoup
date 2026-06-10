@@ -221,6 +221,16 @@ cd ..
 python -m http.server 8123    # open http://localhost:8123
 ```
 
+## Tests (zero-dependency, reproducible)
+
+```bash
+node tests/recover.test.mjs          # parser: gateway split, annualization, scatter rejection, duplicate=one-time (8 checks)
+cd backend && python ../tests/backend_test.py   # money math, currency split, audit chain + tamper detection, idempotency, MCP ASCII (11 checks)
+python backend/scripts/mcp_smoke.py  # MCP JSON-RPC initialize/list/call
+```
+
+All 19 checks pass with no secrets or live services required (deterministic paths only).
+
 ## Roadmap
 
 - **More recovery rules** — warranty claims, medical-bill errors, deposit returns, FX/foreign-transaction refunds.
