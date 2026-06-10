@@ -54,6 +54,24 @@ TOOLS = [
         },
     },
     {
+        "name": "recoup_plan_recovery",
+        "description": "Plan a recovery for one charge: retrieve the best-matching recovery playbook from "
+                       "Atlas Vector Search and return a deterministic, legally-grounded recovery plan with "
+                       "status pending_approval. Read-only and safe: it NEVER sends, cancels, or moves money, "
+                       "and approval is intentionally not exposed over MCP (the human approval gate lives in the app).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "merchant": {"type": "string"},
+                "kind": {"type": "string"},
+                "amount": {"type": "number"},
+                "amount_label": {"type": "string"},
+            },
+            "required": ["merchant"],
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "gmail_connection_status",
         "description": "Report whether Google OAuth is configured and which read-only Gmail scope Recoup uses.",
         "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
@@ -126,6 +144,26 @@ def _call_tool(name: str, args: dict) -> dict:
         return {
             **_text(f"Detected {len(findings)} Gmail subscription findings from supplied metadata."),
             "structuredContent": {"findings": findings},
+        }
+    if name == "recoup_plan_recovery":
+        from . import vector, adk_agent
+        charge = {k: args.get(k) for k in ("merchant", "kind", "amount", "amount_label") if args.get(k) is not None}
+        q = f"{charge.get('merchant', '')} {charge.get('kind', '')}".strip()
+        pb = None
+        try:
+            pb = vector.retrieve_playbook(q)  # Atlas $vectorSearch (cosine fallback); None without creds
+        except Exception:
+            pb = None
+        plan = adk_agent._deterministic_plan(charge, (pb or {}).get("text", ""))  # deterministic; amounts from the charge
+        return {
+            **_text(f"Drafted a recovery plan for {charge.get('merchant', 'the charge')} - status pending_approval (you approve in-app)."),
+            "structuredContent": {
+                "charge": charge,
+                "playbook": {k: (pb or {}).get(k) for k in ("id", "title", "basis", "score", "via")} if pb else None,
+                "plan": plan,
+                "status": "pending_approval",
+                "note": "Read-only: nothing is sent and no money moves; approval happens only in the Recoup app.",
+            },
         }
     if name == "gmail_connection_status":
         s = get_settings()

@@ -202,31 +202,3 @@ def draft_plan(scan: dict) -> dict:
         return {"reasoning": plan_line + meta["trace"] + vlines + closing, "actions": actions, **sw,
                 "model": "deterministic-fallback", "latency_ms": 0, "live": False,
                 "note": f"Gemini fallback ({type(e).__name__}): {str(e)[:90]}"}
-
-
-VOICE_SYSTEM = (
-    "You are Recoup's voice assistant — a money-recovery agent that helps everyday people find money "
-    "they're OWED (refunds, class-action settlements, EU261/UK261 flight-delay compensation, unclaimed "
-    "property) and money they're LOSING (dead subscriptions, silent price hikes, billing errors), and "
-    "drafts every claim for the human to approve (nothing is ever sent automatically). "
-    "Answer the spoken question in 1-3 short, warm, concrete sentences. NO markdown, NO bullet lists, "
-    "NO emojis — your text is read ALOUD. If asked something off-topic, answer briefly then steer back "
-    "to recovering their money."
-)
-
-
-def voice_answer(question: str, context: str = "") -> dict:
-    """A concise, spoken-style Gemini answer for the voice agent. Free (AI Studio key)."""
-    s = get_settings()
-    if not s.gemini_ready:
-        return {"answer": "", "live": False, "note": "gemini_not_configured"}
-    try:
-        ctx = f"\nThe user's current screen: {context[:400]}" if context else ""
-        prompt = f"{VOICE_SYSTEM}{ctx}\n\nUser said: \"{question[:400]}\"\n\nSpoken answer:"
-        t0 = time.perf_counter()
-        text = _generate(s.gemini_model, prompt, json_mode=False)
-        latency = round((time.perf_counter() - t0) * 1000)
-        ans = " ".join((text or "").split())[:600]
-        return {"answer": ans, "live": True, "latency_ms": latency}
-    except Exception as e:  # noqa: BLE001
-        return {"answer": "", "live": False, "note": f"{type(e).__name__}"}

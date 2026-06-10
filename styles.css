@@ -20,16 +20,6 @@
 .x .ico{width:17px;height:17px;vertical-align:middle}
 .theme-toggle .ico{width:18px;height:18px}
 .btn .ico{vertical-align:-0.16em}
-/* zero-cost voice agent button (gold accent) */
-.voice-btn{position:fixed;right:22px;bottom:22px;z-index:60;width:58px;height:58px;border-radius:50%;border:1px solid rgba(245,197,24,.55);background:radial-gradient(120% 120% at 30% 20%,#1c1605,#0a0a0c);color:#f5c518;display:grid;place-items:center;cursor:pointer;box-shadow:0 12px 32px -8px rgba(0,0,0,.7),inset 0 1px 0 rgba(245,197,24,.25);transition:transform .22s var(--ease),box-shadow .3s,border-color .2s}
-.voice-btn:hover{transform:translateY(-3px) scale(1.06);border-color:#f5c518;box-shadow:0 16px 40px -8px rgba(245,197,24,.45),inset 0 1px 0 rgba(245,197,24,.4)}
-.voice-btn svg{width:25px;height:25px}
-.voice-btn.listening{border-color:#f5c518;color:#ffd84d;animation:voicePulse 1.25s infinite}
-@keyframes voicePulse{0%{box-shadow:0 0 0 0 rgba(245,197,24,.55)}70%{box-shadow:0 0 0 18px rgba(245,197,24,0)}100%{box-shadow:0 0 0 0 rgba(245,197,24,0)}}
-.voice-label{position:fixed;right:90px;bottom:34px;z-index:60;max-width:260px;background:rgba(10,10,12,.96);border:1px solid rgba(245,197,24,.3);color:var(--text);font-size:13px;font-weight:600;padding:9px 13px;border-radius:12px;opacity:0;transform:translateX(8px);pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:var(--shadow-sm)}
-.voice-label.show{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.voice-btn.listening{animation:none}}
-@media(max-width:560px){.voice-btn{width:52px;height:52px;right:16px;bottom:16px}.voice-label{display:none}}
 /* ===== Agent Run Timeline (black + gold) ===== */
 .agent-timeline{margin:30px 0;padding:26px;border-radius:20px;background:linear-gradient(180deg,#0a0a0c,#070708);border:1px solid rgba(245,197,24,.18);box-shadow:0 20px 60px -30px rgba(0,0,0,.8),inset 0 1px 0 rgba(245,197,24,.08)}
 .atl-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:20px}
@@ -983,29 +973,6 @@ body{
 }
 .chk-item svg {
   flex: 0 0 auto;
-}
-
-/* Audio indicator */
-.voice-filter-indicator {
-  position: fixed;
-  right: 90px;
-  bottom: 80px;
-  z-index: 60;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--dim);
-  background: rgba(0,0,0,.85);
-  border: 1.5px solid var(--border);
-  padding: 5px 10px;
-  border-radius: 20px;
-  opacity: 0;
-  transform: translateY(5px);
-  pointer-events: none;
-  transition: opacity .25s, transform .25s;
-}
-.voice-filter-indicator.active {
-  opacity: 1;
-  transform: none;
 }
 
 @media(max-width:860px){
