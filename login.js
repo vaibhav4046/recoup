@@ -1,29 +1,31 @@
 /* Recoup — login page logic, externalized so login.html needs no inline <script> (enables a strict CSP). */
 (function () {
   const API = (window.RO_CONFIG.apiBase || "").replace(/\/+$/, "");
-  let _signinReady = false;
-  let _statusLoaded = false;
   const msg = (t, c) => { const m = document.getElementById("msg"); m.className = "msg " + (c || ""); m.innerHTML = t; };
+  const googleBtn = document.getElementById("google");
+  const magicForm = document.getElementById("magic");
+  const divider = document.querySelector(".divider");
+
   const err = new URLSearchParams(location.search).get("err");
   if (err === "expired") msg("That link expired — request a new one.", "err");
   if (err === "google") msg("Google sign-in failed — try again.", "err");
   if (err === "state") msg("That sign-in attempt expired — just try again.", "err");
 
+  // Email sign-in is off until /api/auth/status confirms a mail provider, so we hide it by
+  // default and lead with Google. This holds even if the status fetch is blocked/unreachable.
+  function hideMagic() { if (magicForm) magicForm.style.display = "none"; if (divider) divider.textContent = "Google sign-in — one tap, no password"; }
+  function showMagic() { if (magicForm) magicForm.style.display = ""; if (divider) divider.textContent = "or use a magic link"; }
+  hideMagic();
+
+  // Continue with Google is ALWAYS available: it's a top-level navigation to the backend's OAuth
+  // start (not a fetch), so it works even when a cross-origin /api/auth/status probe is blocked.
+  // The backend returns 503 only if OAuth isn't configured — which it is on the live deployment.
+  if (googleBtn) googleBtn.onclick = () => { location.href = API + "/api/auth/google/start"; };
+
   function applyStatus(d) {
-    _statusLoaded = true;
-    _signinReady = !!(d && d.signin_ready);
-    const canEmail = !!(d && d.providers && d.providers.magic_link_email);
-    // honesty by construction: never show a path that can't succeed.
-    const magic = document.getElementById("magic");
-    const divider = document.querySelector(".divider");
-    if (!canEmail) {
-      if (magic) magic.style.display = "none";
-      if (divider) { divider.textContent = "email sign-in coming soon — Google works now"; }
-    } else {
-      if (magic) magic.style.display = "";
-      if (divider) divider.textContent = "or use a magic link";
-    }
-    if (!d || !d.providers || !d.providers.google) document.getElementById("google").style.display = "none";
+    if (d && d.providers && d.providers.magic_link_email) showMagic(); else hideMagic();
+    // only hide Google if the backend EXPLICITLY reports it unconfigured; never hide on a failed probe
+    if (d && d.providers && d.providers.google === false && googleBtn) googleBtn.style.display = "none";
     const k = d && d.turnstile_site_key;
     if (k && !window._tsLoaded) {
       window._tsLoaded = true;
@@ -35,20 +37,12 @@
   }
   function loadStatus() {
     return fetch(API + "/api/auth/status").then((r) => r.json()).then((d) => { applyStatus(d); return d; })
-      .catch(() => { document.getElementById("google").style.display = "none"; return null; });
+      .catch(() => null); // never hide the Google button just because a cross-origin probe failed
   }
 
-  document.getElementById("google").onclick = async () => {
-    if (!_signinReady && !_statusLoaded) { msg("Waking the backend…", "ok"); await loadStatus(); } // never gate on a stale flag
-    if (!_signinReady) { msg('Backend is still waking up — try again in a few seconds, or use the no-sign-in <a href="/">paste scan</a>.', "ok"); return; }
-    location.href = API + "/api/auth/google/start";
-  };
-
-  document.getElementById("magic").onsubmit = async (e) => {
+  if (magicForm) magicForm.onsubmit = async (e) => {
     e.preventDefault();
-    if (!_signinReady) { await loadStatus(); }
-    if (!_signinReady) { msg('Backend is still waking up — try again in a few seconds, or use the no-sign-in <a href="/">paste scan</a>.', "ok"); return; }
-    const email = document.getElementById("email").value.trim();
+    const email = (document.getElementById("email").value || "").trim();
     const captcha = window._tsToken || "";
     msg("Sending…");
     try {
@@ -61,7 +55,7 @@
       else if (d.dev_link) msg('Dev mode — <a class="devlink" href="' + d.dev_link + '">click here to sign in</a>.', "ok");
       else msg('Email sign-in isn\'t enabled on this demo — use <b>Continue with Google</b> or the no-account <a href="/">paste scan</a>.', "ok");
     } catch (e2) {
-      msg("Backend not reachable — try again in a few seconds.", "err");
+      msg("Backend not reachable — use <b>Continue with Google</b> or the no-account <a href=\"/\">paste scan</a>.", "err");
     }
   };
 
