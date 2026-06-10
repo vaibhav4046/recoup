@@ -320,19 +320,24 @@ def retrieve_playbook(query: str, kind: str = "") -> dict | None:
         coll = _pb_coll()
         try:
             cur = coll.aggregate([
-                {"$vectorSearch": {"index": PLAYBOOK_INDEX, "path": "embedding", "queryVector": qv, "numCandidates": 50, "limit": 1}},
+                {"$vectorSearch": {"index": PLAYBOOK_INDEX, "path": "embedding", "queryVector": qv, "numCandidates": 50, "limit": 4}},
                 {"$project": {"_id": 0, "id": 1, "title": 1, "basis": 1, "kind": 1, "text": 1, "score": {"$meta": "vectorSearchScore"}}},
             ])
             hits = list(cur)
             if hits:
-                hits[0]["via"] = "atlas_vector_search"
-                return hits[0]
+                # kind-aware rerank: a generic merchant name can sit semantically closer to the WRONG
+                # playbook (verified: a 'settlement' charge matched a utility playbook). When the
+                # charge's kind is known and a kind-tagged playbook is in the top hits, prefer it.
+                pick = next((h for h in hits if kind and h.get("kind") == kind), hits[0])
+                pick["via"] = "atlas_vector_search"
+                return pick
         except Exception:
             pass
         docs = list(coll.find({"embedding": {"$exists": True}}, {"_id": 0, "id": 1, "title": 1, "basis": 1, "kind": 1, "text": 1, "embedding": 1}))
         if not docs:
             return _keyword_best(PLAYBOOKS, query, kind)
-        best = max(docs, key=lambda d: _cosine(qv, d["embedding"]))
+        ranked = sorted(docs, key=lambda d: _cosine(qv, d["embedding"]), reverse=True)[:4]
+        best = next((d for d in ranked if kind and d.get("kind") == kind), ranked[0])
         return {**{kk: best[kk] for kk in ("id", "title", "basis", "kind", "text")}, "score": round(_cosine(qv, best["embedding"]), 4), "via": "cosine_fallback"}
     except Exception:
         # embedding call failed (quota/network) -> grounded keyword fallback, never None-grounding
