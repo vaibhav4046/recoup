@@ -64,5 +64,28 @@ const find = (r, pred) => r.findings.find(pred);
   ok("bundled SAMPLE yields findings + txn count", r.findings.length >= 3 && r.txns > 0);
 }
 
+// 9) REAL bank CSV: Chase export — purchases NEGATIVE, quoted desc with comma, payment row skipped
+{
+  const chase = ["Transaction Date,Post Date,Description,Category,Type,Amount",
+    "01/05/2026,01/06/2026,NETFLIX.COM,Entertainment,Sale,-15.49",
+    "02/05/2026,02/06/2026,NETFLIX.COM,Entertainment,Sale,-15.49",
+    '02/07/2026,02/08/2026,"AMAZON MKTPL, INC",Shopping,Sale,-42.10',
+    "02/10/2026,02/11/2026,Payment Thank You,Payment,Payment,200.00"].join("\n");
+  const r = scan(chase);
+  ok("Chase CSV: negative purchases parsed, payment excluded", r.txns === 3 && !!find(r, (f) => /NETFLIX/i.test(f.title)));
+}
+
+// 10) REAL bank CSV: Wells Fargo (all-quoted, Date,Amount,*,*,Description) + Amex (positive charges)
+{
+  const wells = ['Date,Amount,*,*,Description', '"01/03/2026","-9.99","*","","SPOTIFY USA"',
+    '"02/03/2026","-9.99","*","","SPOTIFY USA"', '"02/05/2026","1500.00","*","","DIRECT DEPOSIT PAYROLL"'].join("\n");
+  const w = scan(wells);
+  ok("Wells Fargo CSV: deposit excluded, Spotify found", !!find(w, (f) => /SPOTIFY/i.test(f.title)) && !find(w, (f) => /PAYROLL/i.test(f.title)));
+  const amex = ["Date,Description,Amount", "01/15/2026,HULU LLC,17.99", "02/15/2026,HULU LLC,17.99",
+    "02/16/2026,AMEX EPAYMENT ACH PYMT,-300.00"].join("\n");
+  const a = scan(amex);
+  ok("Amex CSV: positive charges parsed, ACH payment excluded", !!find(a, (f) => /HULU/i.test(f.title)) && !find(a, (f) => /EPAYMENT/i.test(f.title)));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
