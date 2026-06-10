@@ -158,15 +158,36 @@ body{
   letter-spacing:-2px;line-height:1.0;margin:16px 0 20px;text-wrap:balance;color:#fbfbfd}
 /* one word in gold — the hook ("owed"). A sleek light glint sweeps across the gold letters,
    like light catching coins. Pure black & gold, minimal — no underline, no arrow. */
-.landing-h1 .hl{display:inline-block;
+.landing-h1 .hl{display:inline-block;position:relative;
   background:linear-gradient(100deg,#d4af37 0%,#f5c518 30%,#fff6cf 48%,#ffd84d 60%,#d4af37 100%);
   background-size:260% 100%;-webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;
   animation:goldShimmer 5s ease-in-out infinite}
 @keyframes goldShimmer{0%{background-position:130% 50%}60%,100%{background-position:-30% 50%}}
 
+/* cinematic anamorphic lens flare — sweeps over "owed" once: comes in small, peaks, gone by 4s */
+.landing-h1 .hl::before,.landing-h1 .hl::after{content:"";position:absolute;left:50%;top:62%;
+  pointer-events:none;z-index:-1;opacity:0;transform:translate(-50%,-50%);
+  animation:flareIn 4s cubic-bezier(.2,.7,.2,1) .35s 1 both}
+/* warm core + vertical anamorphic streak */
+.landing-h1 .hl::before{width:120px;height:120px;
+  background:
+    radial-gradient(closest-side,rgba(255,221,150,.95),rgba(255,150,60,.5) 35%,transparent 70%),
+    linear-gradient(0deg,transparent,rgba(255,200,120,.55) 50%,transparent) center/3px 130px no-repeat;
+  filter:blur(.4px)}
+/* wide horizontal anamorphic streak (the classic lens stretch) */
+.landing-h1 .hl::after{width:340px;height:8px;
+  background:linear-gradient(90deg,transparent,rgba(255,210,140,.65) 35%,#fff 50%,rgba(255,210,140,.65) 65%,transparent);
+  border-radius:8px;filter:blur(1px)}
+@keyframes flareIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.18)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(.7)}
+  32%{opacity:.95;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+
 .landing-copy{position:relative}
-@media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none;background-position:0 50%}}
+@media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none;background-position:0 50%}
+  .landing-h1 .hl::before,.landing-h1 .hl::after{display:none}}
 .landing-sub{color:#a7afc1;font-size:18px;max-width:58ch;margin:0 0 28px;line-height:1.55}
 .landing-sub b{color:var(--text)}
 .landing-cta{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap}
