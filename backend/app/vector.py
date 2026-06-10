@@ -66,6 +66,60 @@ PRECEDENTS = [
 ]
 
 
+# UNTAGGED variants — no `kind` field on purpose: these are retrievable ONLY by semantic /
+# token similarity, so vector search is load-bearing (a kind-keyed dict lookup cannot find them).
+PRECEDENT_VARIANTS = [
+    {"id": "v_ca_arl", "title": "California Automatic Renewal Law (ARL)", "jurisdiction": "US-CA",
+     "basis": "Cal. Bus. & Prof. Code 17600-17606",
+     "text": "California requires clear-and-conspicuous disclosure of auto-renewal terms, affirmative consent, and an online cancellation path. Charges after a non-compliant signup are recoverable as unconditional gifts under the statute."},
+    {"id": "v_chargeback_window", "title": "Card-network chargeback time limits", "jurisdiction": "US/Global",
+     "basis": "Visa/Mastercard dispute rules; FCBA backstop",
+     "text": "Most card networks allow disputes 60-120 days from the statement or expected-delivery date. Missing the network window does not extinguish FCBA billing-error rights if written notice reaches the issuer within 60 days of the statement."},
+    {"id": "v_gym_cooloff", "title": "Health-club cooling-off and pro-rata refund statutes", "jurisdiction": "US states/UK",
+     "basis": "State health-club acts (e.g. NY GBL 627a); UK CRA 2015",
+     "text": "Many states give 3-10 day cooling-off rights on gym contracts and mandate pro-rata refunds on cancellation for relocation or medical reasons. Clubs that obstruct cancellation often owe the post-notice charges back."},
+    {"id": "v_resort_fee", "title": "Hotel resort/junk-fee disclosure", "jurisdiction": "US",
+     "basis": "FTC Junk Fees Rule; state UDAP",
+     "text": "Mandatory resort or destination fees not included in the advertised room rate are challengeable as deceptive drip pricing; the undisclosed portion is refundable on dispute."},
+    {"id": "v_downgrade", "title": "Airline involuntary downgrade reimbursement", "jurisdiction": "EU/UK",
+     "basis": "EC 261/2004 Art. 10; UK261",
+     "text": "A passenger seated in a lower class than booked is owed 30-75% of the ticket price back within 7 days, scaled by flight distance — separate from delay compensation."},
+    {"id": "v_bank_fee", "title": "Bank fee goodwill-refund practice", "jurisdiction": "US/UK",
+     "basis": "Reg E error resolution; FCA fair-treatment guidance",
+     "text": "Overdraft and NSF fees triggered by bank-side errors, double-pulls, or misposted transactions are refundable on written dispute; first-instance goodwill reversals are routine when requested promptly."},
+    {"id": "v_price_match", "title": "Retail price-adjustment windows", "jurisdiction": "US/UK",
+     "basis": "Merchant price-protection policies",
+     "text": "Large retailers refund the difference if the same item's price drops within a stated window (commonly 14-30 days). The claim is contractual: cite the policy, the order number, and the dated lower price."},
+    {"id": "v_gift_card", "title": "Gift-card balance escheat and fee limits", "jurisdiction": "US",
+     "basis": "Federal CARD Act; state escheat laws",
+     "text": "Gift cards cannot expire before five years and dormancy fees are restricted; lapsed balances often escheat to the state where they remain claimable by the owner indefinitely."},
+    {"id": "v_etf", "title": "Telecom early-termination fee proration", "jurisdiction": "US",
+     "basis": "FCC consumer rules; carrier contracts",
+     "text": "Early-termination fees must generally prorate down over the contract term; a flat ETF charged late in the term is challengeable, and carrier-caused service failures support full waiver."},
+    {"id": "v_app_store", "title": "App store accidental/duplicate purchase refunds", "jurisdiction": "Global",
+     "basis": "Apple/Google refund policies; EU CRD 14-day right",
+     "text": "In-app and app purchases are refundable for accidental buys, duplicates, or non-delivery via the platform's refund flow; EU consumers additionally hold a 14-day withdrawal right on digital purchases not yet consumed."},
+    {"id": "v_auth_hold", "title": "Duplicate authorization holds vs posted charges", "jurisdiction": "US/Global",
+     "basis": "Network authorization rules",
+     "text": "A pending authorization alongside a posted charge usually self-reverses in 1-7 days; a duplicate that POSTS is a billing error disputable with the merchant first, then the issuer."},
+    {"id": "v_trial_dark", "title": "Negative-option dark patterns enforcement", "jurisdiction": "US",
+     "basis": "FTC Act Sec. 5; ROSCA",
+     "text": "Pre-checked boxes, hidden tick-to-cancel terms, and obstructed cancellation flows are deceptive practices; charges flowing from them are refundable and the FTC actively enforces against them."},
+    {"id": "v_deposit_interest", "title": "Security-deposit interest obligations", "jurisdiction": "US states",
+     "basis": "State landlord-tenant statutes",
+     "text": "Several states require landlords to hold deposits in interest-bearing accounts and return the accrued interest with the deposit; failure can trigger statutory multiples as penalties."},
+    {"id": "v_sub_pause", "title": "Subscription pause and downgrade rights", "jurisdiction": "US/EU",
+     "basis": "FTC Click-to-Cancel; EU UCPD",
+     "text": "Where a service advertises pause or downgrade options, refusing them while continuing to bill full price supports a partial-refund claim for the difference."},
+    {"id": "v_rental_damage", "title": "Rental-car damage claim documentation burden", "jurisdiction": "US/EU",
+     "basis": "Rental agreements; card CDW benefits",
+     "text": "Damage claims require condition reports, repair invoices, and fleet-utilization logs on request; undocumented claims are routinely reversed, and card collision-damage coverage often pays what remains."},
+    {"id": "v_wage_unclaimed", "title": "Unclaimed final wages and payroll checks", "jurisdiction": "US",
+     "basis": "State wage payment laws; escheat",
+     "text": "Uncashed paychecks and final wages owed by former employers escheat to the state after the dormancy period and remain claimable by the worker through the state unclaimed-property portal."},
+]
+
+
 def _embed(text: str, task: str = "RETRIEVAL_DOCUMENT") -> list[float]:
     import httpx
     s = get_settings()
@@ -104,7 +158,8 @@ def seed() -> dict:
     try:
         coll = _coll()
         n = 0
-        for p in PRECEDENTS:
+        corpus = PRECEDENTS + PRECEDENT_VARIANTS  # variants are untagged -> reachable only by vector/keyword similarity
+        for p in corpus:
             doc = coll.find_one({"id": p["id"]}, {"embedding": 1})
             if doc and doc.get("embedding"):
                 continue
@@ -112,7 +167,7 @@ def seed() -> dict:
             coll.update_one({"id": p["id"]}, {"$set": {**p, "embedding": emb}}, upsert=True)
             n += 1
         indexed = _ensure_index(coll)
-        return {"ok": True, "embedded": n, "total": len(PRECEDENTS), "atlas_index": indexed}
+        return {"ok": True, "embedded": n, "total": len(corpus), "atlas_index": indexed}
     except Exception as e:  # noqa: BLE001
         return {"ok": False, "reason": f"{type(e).__name__}: {str(e)[:80]}", "indexed": 0}
 
@@ -130,7 +185,7 @@ def retrieve(query: str, k: int = 2, kind: str = "") -> list[dict]:
     Returns [{id,title,basis,jurisdiction,score,via}]."""
     s = get_settings()
     if not (s.mongodb_ready and s.gemini_ready):
-        kb = _keyword_best(PRECEDENTS, query, kind)
+        kb = _keyword_best(PRECEDENTS + PRECEDENT_VARIANTS, query, kind)
         return [kb] if kb else []
     try:
         qv = _embed(query, task="RETRIEVAL_QUERY")
@@ -152,7 +207,7 @@ def retrieve(query: str, k: int = 2, kind: str = "") -> list[dict]:
         scored = sorted(({**{kk: d[kk] for kk in ("id", "title", "basis", "jurisdiction")}, "score": round(_cosine(qv, d["embedding"]), 4), "via": "cosine_fallback"} for d in docs), key=lambda x: -x["score"])
         return scored[:k]
     except Exception:
-        kb = _keyword_best(PRECEDENTS, query, kind)  # embedding/DB down -> stay grounded
+        kb = _keyword_best(PRECEDENTS + PRECEDENT_VARIANTS, query, kind)  # embedding/DB down -> stay grounded
         return [kb] if kb else []
 
 

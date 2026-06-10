@@ -37,7 +37,7 @@ words, the rules compute the amounts.
 - **Clean Google sign-in** — `/api/auth/google/start` requests only `openid/email/profile`
   (non-sensitive → no "unverified app" screen). Gmail is a separate opt-in.
 - **Premium UI** — Sora hero font, black-and-gold with one gold word, brand mark in the phone frame.
-- **Deeper MongoDB corpus** — 14 precedents + 11 playbooks across US/UK/EU (was 9 + 6).
+- **Deeper MongoDB corpus** — 41 grounded docs: 30 precedents (14 tagged + 16 untagged semantic variants) + 11 playbooks across US/UK/EU (was 9 + 6). Embedding-free keyword/kind fallback keeps the legal basis alive through a total Gemini outage.
 
 ## 4. Tests (reproducible, zero deps — 19 checks, all green)
 - `node tests/recover.test.mjs` — parser: gateway split (`PAYPAL *NYTIMES` ≠ `PAYPAL *SPOTIFY`),

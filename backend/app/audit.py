@@ -31,6 +31,42 @@ class AuditLog:
     def __init__(self) -> None:
         self._events: list[dict] = []
         self._lock = threading.Lock()  # serialize read-modify-append across run_in_threadpool threads
+        self._restore()  # tamper-evidence must survive restarts: rebuild the chain from MongoDB
+
+    def _coll(self):
+        from .config import get_settings
+        if not get_settings().mongodb_ready:
+            return None
+        from . import mongodb
+        return mongodb.db()["audit_chain"]
+
+    def _restore(self) -> None:
+        """Rehydrate the chain from MongoDB so a process restart/redeploy cannot silently
+        reset the tamper-evident record (the easiest tamper of all). Best-effort: with no
+        MongoDB configured the chain is in-memory, exactly as before."""
+        try:
+            coll = self._coll()
+            if coll is None:
+                return
+            docs = list(coll.find({}, {"_id": 0}).sort("seq", 1))
+            events = [{k: v for k, v in d.items() if k != "seq"} for d in docs]
+            # only adopt a chain that verifies — a corrupt/tampered store must not poison the log
+            prev = self.GENESIS
+            for e in events:
+                if e.get("prev_hash") != prev or event_hash(prev, e) != e.get("hash"):
+                    return
+                prev = e["hash"]
+            self._events = events
+        except Exception:
+            pass  # Mongo down at boot -> start in-memory; appends will still try to persist
+
+    def _persist(self, evt: dict, seq: int) -> None:
+        try:
+            coll = self._coll()
+            if coll is not None:
+                coll.update_one({"seq": seq}, {"$set": {**evt, "seq": seq}}, upsert=True)
+        except Exception:
+            pass  # persistence is best-effort; the in-memory chain stays authoritative
 
     def append(self, *, actor_type: str, actor_name: str, event_type: str,
                label: str, evidence_ref: str = "", amount: float = 0.0,
@@ -46,6 +82,7 @@ class AuditLog:
             }
             evt["hash"] = event_hash(prev, evt)
             self._events.append(evt)
+            self._persist(evt, len(self._events))
             return evt
 
     def list(self) -> list[dict]:
