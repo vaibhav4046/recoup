@@ -1,0 +1,14 @@
+# Never let a build context bake secrets or cruft into an image layer.
+backend/.env
+**/.env
+*.key
+*.pem
+**/__pycache__/
+**/*.pyc
+.venv/
+venv/
+.chrome-data/
+.vercel/
+node_modules/
+.git/
+screens/

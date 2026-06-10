@@ -70,7 +70,7 @@ flowchart LR
 - **Amounts are deterministic.** The model writes prose, not numbers — no hallucinated payouts.
 - **One-time money is never annualized.** A €250 flight refund is shown as `€250`, never `€250/yr`.
   Totals are split: *recurring $/yr* vs *one-time owed now*.
-- **Nothing sends without you.** The approval gate is enforced server-side in `state.py`.
+- **Nothing sends without you.** The approval gate is enforced in the API (`state.py` — `mark_sent`/`mark_paid` refuse to advance an unapproved claim) and mirrored client-side in the demo so a per-visitor run never mutates shared state.
 - **Honest about state.** "Ready to claim" ≠ "recovered." Live vs. fallback is labelled everywhere.
 - **Tamper-evident.** Real SHA-256 in both the backend and the in-browser chain (proves ordering + integrity).
 - **Your data never leaves your device.** The **"Scan your statement"** path runs the entire rule engine *100% in your browser* (`recover.js`) — no upload, no account, no server. It detects your real recurring subscriptions, silent price hikes, and duplicate charges, then surfaces them in the same audited approve→recover flow.
@@ -97,6 +97,29 @@ recoup/
 The frontend runs fully standalone on embedded demo data (`data.js`, generated from a
 real backend run — including a real SHA-256 audit chain). Point `RO_CONFIG.apiBase` at a
 deployed backend to overlay live Gemini reasoning and persisted MongoDB cases.
+
+## Data model — MongoDB Atlas
+
+Three collections in database `recoup`, all on the free **M0** tier:
+
+| Collection | Written by | Shape | Read path |
+|---|---|---|---|
+| `precedents` | `vector.seed()` | `{ id, kind, title, jurisdiction, basis, text, embedding:[768] }` | agent grounding |
+| `playbooks` | `vector.seed_playbooks()` | `{ id, kind, title, basis, text, embedding:[768] }` | `/api/agent/recover` |
+| `cases` | `state._store()` on approve/recover | `{ id, kind, title, amount, cadence, currency, status, approvalState, claimedAt, sentAt, paidAt }` | `/api/state`, MCP `recoup_get_state` |
+
+**Vector indexes** (one per corpus, created idempotently by `_ensure_index`):
+
+```jsonc
+// recoup_vector_index on precedents · recoup_playbook_index on playbooks
+{ "fields": [ { "type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine" } ] }
+```
+
+Embeddings are `gemini-embedding-001` (768-d). Retrieval runs an Atlas `$vectorSearch`
+aggregation (`numCandidates: 50`), and **falls back to in-process cosine over the same
+stored embeddings** while an index is still building — so retrieval never breaks mid-demo.
+The official **`mongodb-mcp-server`** is also registered as an ADK `MCPToolset`, giving the
+Gemini agent tool-level access to these same collections.
 
 ## API
 
@@ -130,10 +153,9 @@ Frontend → Cloud Run [ Gemini + Google ADK ] → MongoDB MCP (official) → At
 
 Use only the stack the hackathon rewards:
 
-- **Google:** Gemini, Google ADK / Agent Builder family, Cloud Run.
+- **Google:** Gemini 3, Google ADK / Agent Builder family, Cloud Run.
 - **Partner bucket:** official `mongodb-mcp-server` plus MongoDB Atlas Vector Search.
-- **Frontend voice:** browser Web Speech API only.
-- **Out of scope:** non-Google AI or voice vendors, non-Google backend hosting, autonomous money movement.
+- **Out of scope:** non-Google runtime AI, autonomous money movement (Recoup only ever *drafts* — the human submits on the official portal).
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -180,9 +202,9 @@ Secrets come from environment variables — never hardcoded.
 |---|---|
 | ![desktop](screens/desktop.png) | ![provenance](screens/prov-drawer.png) |
 
-| Mobile | Light mode |
+| Mobile | Agent run timeline (live) |
 |---|---|
-| ![mobile](screens/mobile.png) | ![light](screens/light.png) |
+| ![mobile](screens/mobile.png) | ![timeline](screens/timeline.png) |
 
 ## Run locally
 

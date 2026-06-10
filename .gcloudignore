@@ -6,4 +6,7 @@ __pycache__
 **/__pycache__
 *.pyc
 backend/.env
+**/.env
+.vercel
+.chrome-data
 recover-*.png

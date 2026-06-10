@@ -1,5 +1,5 @@
 /* Recoup — hero Google Pixel phone "demo reel"
-   Cycles through a 5-step showcase: Scan → Vector Match → Gemini Reasoning → Voice Assist → Recovered
+   Cycles through a 5-step showcase: Scan → Vector Match → Gemini Reasoning → Human Approval Gate → Recovered
    Bulletproof: scene is visible, pauses off-screen, handles reduced-motion. */
 (function () {
   "use strict";

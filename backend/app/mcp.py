@@ -116,8 +116,8 @@ def _call_tool(name: str, args: dict) -> dict:
             "structuredContent": {"findings": findings, "recurring_year": scan.get("recurring_year"), "one_time": scan.get("one_time"), "total": scan.get("total_recoverable")},
         }
     if name == "recoup_get_state":
-        if not APP.actions:
-            APP.run_scan()                # deterministic only — never run the LLM for an anonymous MCP caller
+        # read-only: never mutate the shared audit chain on an anonymous call (run_scan would
+        # append a SCAN_RUN event every time, since run_scan never drafts actions anyway)
         return {**_text("Current Recoup state returned."), "structuredContent": _state_payload()}
     if name == "gmail_detect_subscriptions":
         messages = args.get("messages") or []

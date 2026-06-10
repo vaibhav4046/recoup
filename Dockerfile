@@ -12,8 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 WORKDIR /app
 COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-# pre-fetch the MongoDB MCP server so the first tool call is fast
-RUN npx -y mongodb-mcp-server --version || true
+# pre-fetch the MongoDB MCP server so the first tool call is fast (pinned == the runtime spawn version)
+RUN npx -y mongodb-mcp-server@1.12.0 --version || true
 
 COPY backend/app ./app
 RUN mkdir -p ./static

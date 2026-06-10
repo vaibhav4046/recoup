@@ -46,7 +46,7 @@ official `mongodb-mcp-server` subprocess:
 ```bash
 gcloud run deploy recoup-agent \
   --source . --region us-central1 --allow-unauthenticated --memory 1Gi \
-  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
+  --set-env-vars "GOOGLE_API_KEY=$GOOGLE_API_KEY,MONGODB_URI=$MONGODB_URI,MONGODB_DB=recoup,GEMINI_MODEL=gemini-3-flash-preview,GOOGLE_GENAI_USE_VERTEXAI=FALSE"
 
 gcloud run services update recoup-agent --region us-central1 \
   --set-env-vars "BASE_URL=$URL,FRONTEND_URL=$URL"

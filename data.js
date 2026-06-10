@@ -1,8 +1,8 @@
 window.RO_FALLBACK = {
-  "mode": "partial",
+  "mode": "live",
   "integrations": {
     "gemini": "live",
-    "mongodb": "fallback"
+    "mongodb": "live"
   },
   "scan": {
     "findings": [
@@ -519,6 +519,11 @@ window.RO_FALLBACK = {
     ],
     "recurring_year": 755.76,
     "one_time": 1555.0,
+    "one_time_by_currency": {
+      "$": 1305.0,
+      "€": 250.0
+    },
+    "one_time_label": "$1,305 + €250",
     "total_recoverable": 2310.76,
     "surface": {
       "subscriptions": [
@@ -1188,18 +1193,22 @@ window.RO_FALLBACK = {
     }
   ],
   "run": {
-    "run_id": "run_88ce65",
+    "run_id": "run_954cf0",
     "model": "deterministic-fallback",
     "live": false,
-    "latency_ms": 5016,
+    "latency_ms": 9949,
     "actions": 10,
     "agents": 4,
     "verified": 5,
     "needs_confirm": 5,
     "flagged": 5,
-    "created_at": "2026-06-08T21:44:55.769312+00:00"
+    "created_at": "2026-06-10T01:15:23.922824+00:00"
   },
   "reasoning": [
+    {
+      "t": "Plan: classify 10 charges, retrieve each one's legal basis via MongoDB Atlas Vector Search, then draft a claim you approve.",
+      "tone": "cyan"
+    },
     {
       "t": "Coordinator dispatched 4 specialist agents in parallel",
       "tone": "cyan"
@@ -1217,7 +1226,7 @@ window.RO_FALLBACK = {
       "tone": "warn"
     },
     {
-      "t": "Entitlement Finder → 4 found (≈$1,365)",
+      "t": "Entitlement Finder → 4 found ($1,365)",
       "tone": "warn"
     },
     {
@@ -1297,9 +1306,9 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 2310.76,
       "trace_id": "",
-      "timestamp": "2026-06-08T21:44:50.753412+00:00",
+      "timestamp": "2026-06-10T01:15:13.973301+00:00",
       "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hash": "9d4a754141223280ab7367689fd0487a1406ef2cb0e5c40effbc1c7e11b6d847"
+      "hash": "90ffb12fec928cf3f73f75cc647259ef75e6eccd7100ddf35e10f0329aaf48f4"
     },
     {
       "event_id": "au_0002",
@@ -1310,15 +1319,15 @@ window.RO_FALLBACK = {
       "evidence_ref": "",
       "amount": 0.0,
       "trace_id": "",
-      "timestamp": "2026-06-08T21:44:55.769246+00:00",
-      "prev_hash": "9d4a754141223280ab7367689fd0487a1406ef2cb0e5c40effbc1c7e11b6d847",
-      "hash": "72f521abf5b940c28a56b87eedcce5aa57cace1bfdce6e45e1a373e5c5f62061"
+      "timestamp": "2026-06-10T01:15:23.922766+00:00",
+      "prev_hash": "90ffb12fec928cf3f73f75cc647259ef75e6eccd7100ddf35e10f0329aaf48f4",
+      "hash": "12bfa0120a654a9cf96143c07c7c815e6f0bf35181ae6bd66c52152596c812ca"
     }
   ],
   "auditIntegrity": {
     "intact": true,
     "count": 2,
-    "head": "72f521abf5b940c28a56b87eedcce5aa57cace1bfdce6e45e1a373e5c5f62061"
+    "head": "12bfa0120a654a9cf96143c07c7c815e6f0bf35181ae6bd66c52152596c812ca"
   },
   "generated": "static-fallback"
 };

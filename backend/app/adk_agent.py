@@ -13,7 +13,8 @@ import os
 from .config import get_settings
 
 _APP = "recoup"
-_agent = None
+_agent_plain = None  # cached tools-less planner
+_toolset_error = ""  # last reason mongodb_toolset() returned None (surfaced for debugging, never silent)
 
 INSTRUCTION = (
     "You are Recoup's recovery-planner agent. You are given a detected CHARGE (merchant, amount, "
@@ -34,39 +35,51 @@ def _build_agent(tools=None):
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "FALSE")
     return LlmAgent(
         name="recoup_planner",
-        model=s.gemini_model or "gemini-2.5-flash",
+        model=s.gemini_model or "gemini-3-flash-preview",
         instruction=INSTRUCTION,
         tools=tools or [],
     )
 
 
 def get_agent(tools=None):
-    global _agent
-    if _agent is None or tools is not None:
-        _agent = _build_agent(tools)
-    return _agent
+    # A tools-less call gets a cached plain planner; a tooled call always builds fresh so a
+    # dead/stale MCP stdio session is never cached and reused by a later tools-less plan.
+    global _agent_plain
+    if tools:
+        return _build_agent(tools)
+    if _agent_plain is None:
+        _agent_plain = _build_agent(None)
+    return _agent_plain
 
 
 def mongodb_toolset():
     """The OFFICIAL MongoDB MCP server (`mongodb-mcp-server`) registered as an ADK MCP toolset.
     The Gemini agent queries Atlas THROUGH this tool — not hand-rolled DB calls. URI from env."""
+    global _toolset_error
     s = get_settings()
     if not s.mongodb_uri:
+        _toolset_error = "mongodb_uri_unset"
         return None
     try:
-        from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        # Public re-exports first; fall back to the deep module paths for older/newer ADK layouts.
+        try:
+            from google.adk.tools.mcp_tool import MCPToolset, StdioConnectionParams
+        except Exception:  # noqa: BLE001
+            from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+            from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
         from mcp import StdioServerParameters
-        mcp_args = ["-y", "mongodb-mcp-server"]
+        mcp_args = ["-y", "mongodb-mcp-server@1.12.0"]  # pinned to the version pre-warmed in the Dockerfile
         if os.name == "nt":  # Windows can't exec the npx .cmd shim directly from a stdio spawn
             cmd, args = "cmd", ["/c", "npx", *mcp_args]
         else:                # Linux / Cloud Run
             cmd, args = "npx", mcp_args
         # URI via the official env var (no deprecated flag noise on stdio, no URI on the command line)
         env = {**os.environ, "MDB_MCP_CONNECTION_STRING": s.mongodb_uri}
+        _toolset_error = ""
         return MCPToolset(connection_params=StdioConnectionParams(
             server_params=StdioServerParameters(command=cmd, args=args, env=env), timeout=60))
-    except Exception:
+    except Exception as e:  # noqa: BLE001 — record why, never fail silently
+        _toolset_error = f"{type(e).__name__}: {e}"[:200]
         return None
 
 
@@ -111,7 +124,8 @@ async def mcp_probe(charge: dict) -> dict:
     Vector Search retrieval still owns semantic memory; this call proves partner-MCP use."""
     ts = mongodb_toolset()
     if ts is None:
-        return {"live": False, "tool_calls": [], "note": "mongodb_mcp_toolset_unavailable"}
+        return {"live": False, "tool_calls": [],
+                "note": "mongodb_mcp_toolset_unavailable", "reason": _toolset_error}
     merchant = charge.get("merchant") or charge.get("title") or "unknown merchant"
     kind = charge.get("kind") or "unknown"
     return await run_query(

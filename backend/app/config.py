@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # --- Gemini (free Google AI Studio key) ---
     google_api_key: str = ""
     use_vertex: bool = False
-    gemini_model: str = "gemini-2.5-flash"  # free tier; gemini-3-pro-preview with billing
+    gemini_model: str = "gemini-3-flash-preview"  # hackathon headline model; falls back to gemini-2.5-flash if unavailable
     google_cloud_project: str = ""
     google_cloud_region: str = "us-central1"
 

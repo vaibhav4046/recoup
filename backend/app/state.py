@@ -31,11 +31,12 @@ class AppState:
 
     def run_scan(self, trace_id: str = "") -> dict:
         self.scan_result = snapshot.scan()
-        rec, one = self.scan_result["recurring_year"], self.scan_result["one_time"]
+        rec = self.scan_result["recurring_year"]
+        one_label = self.scan_result.get("one_time_label") or f"${self.scan_result['one_time']:,.0f}"
         n = len(self.scan_result["findings"])
         self.audit.append(actor_type="system", actor_name="Recoup scanner",
                           event_type="SCAN_RUN",
-                          label=f"Scanned money surface — {n} items: ${rec:,.0f}/yr recurring + ${one:,.0f} one-time",
+                          label=f"Scanned money surface — {n} items: ${rec:,.0f}/yr recurring + {one_label} one-time",
                           amount=self.scan_result["total_recoverable"], trace_id=trace_id)
         return self.scan_result
 
@@ -48,12 +49,16 @@ class AppState:
 
         prev = {a["id"]: a for a in self.actions}
         self.actions = plan["actions"]
-        for a in self.actions:  # preserve prior human decisions across re-runs
+        for a in self.actions:  # preserve prior human decisions (and their timestamps) across re-runs
             old = prev.get(a["id"])
             if old and old["approvalState"] in ("approved", "rejected"):
                 a["approvalState"] = old["approvalState"]
                 a["status"] = old["status"]
                 a["claimedAt"] = old.get("claimedAt")
+                if old.get("sentAt"):
+                    a["sentAt"] = old["sentAt"]
+                if old.get("paidAt"):
+                    a["paidAt"] = old["paidAt"]
         self.last_plan = plan
         self.audit.append(actor_type="agent", actor_name="Gemini agent",
                           event_type="PLAN_DRAFTED",
@@ -95,6 +100,11 @@ class AppState:
 
     def reject_action(self, action_id: str, trace_id: str = "") -> dict:
         a = self._find(action_id)
+        if a.get("status") in ("sent", "paid"):
+            # never demote a sent/paid claim back to drafted (would drop it from paid totals)
+            raise PermissionError("already_actioned")
+        if a["approvalState"] == "rejected":
+            return a
         a["approvalState"] = "rejected"
         a["status"] = "drafted"
         self.audit.append(actor_type="human", actor_name="You", event_type="ACTION_REJECTED",
@@ -106,6 +116,8 @@ class AppState:
         a = self._find(action_id)
         if a["approvalState"] != "approved":
             raise PermissionError("approval_required")
+        if a.get("status") in ("sent", "paid"):
+            return a  # idempotent: no duplicate CLAIM_SENT audit events on repeat calls
         a["status"] = "sent"
         a["sentAt"] = _now_iso()
         self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_SENT",
@@ -117,6 +129,8 @@ class AppState:
         a = self._find(action_id)
         if a["approvalState"] != "approved":
             raise PermissionError("approval_required")
+        if a.get("status") == "paid":
+            return a  # idempotent: no duplicate CLAIM_PAID events inflating the audit ledger
         a["status"] = "paid"
         a["paidAt"] = _now_iso()
         self.audit.append(actor_type="human", actor_name="You", event_type="CLAIM_PAID",
