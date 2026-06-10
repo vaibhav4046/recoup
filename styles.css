@@ -161,6 +161,36 @@ body{
   animation:gradPan 7s ease-in-out infinite}
 @keyframes gradPan{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @media(prefers-reduced-motion:reduce){.landing-h1 .hl{animation:none}}
+
+/* signature mark: a gold "return" swoosh that draws itself under the word "owed" —
+   money coming BACK (the brand verb), one elegant stroke, no clutter */
+.landing-h1 .hl{position:relative;display:inline-block}
+.hl-swoosh{position:absolute;left:-7%;bottom:-0.26em;width:114%;height:.5em;overflow:visible;pointer-events:none}
+.hl-swoosh-path{stroke-dasharray:260;stroke-dashoffset:260;animation:swooshDraw 1.1s .45s var(--ease) forwards;
+  filter:drop-shadow(0 2px 8px rgba(245,197,24,.45))}
+.hl-swoosh-head{opacity:0;animation:swooshHead .3s 1.35s var(--ease) forwards}
+@keyframes swooshDraw{to{stroke-dashoffset:0}}
+@keyframes swooshHead{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+
+/* faint gold coin glints drifting UP behind the hero copy — recovered money rising, barely-there */
+.hero-coins{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.landing-copy{position:relative}
+.coin{position:absolute;width:10px;height:10px;border-radius:50%;opacity:0;
+  background:radial-gradient(circle at 32% 30%,#ffe98a,#f5c518 55%,#8a6d00);
+  box-shadow:0 0 12px 2px rgba(245,197,24,.35);animation:coinRise 9s linear infinite}
+.coin.c1{left:6%;bottom:8%;animation-delay:0s}
+.coin.c2{left:84%;bottom:2%;width:7px;height:7px;animation-delay:2.6s}
+.coin.c3{left:58%;bottom:-4%;width:6px;height:6px;animation-delay:5s}
+.coin.c4{left:30%;bottom:-2%;width:8px;height:8px;animation-delay:7.2s}
+@keyframes coinRise{
+  0%{transform:translateY(0) scale(.9);opacity:0}
+  12%{opacity:.5}
+  60%{opacity:.35}
+  100%{transform:translateY(-340px) scale(1.05);opacity:0}}
+@media(prefers-reduced-motion:reduce){
+  .hl-swoosh-path{animation:none;stroke-dashoffset:0}
+  .hl-swoosh-head{animation:none;opacity:1}
+  .coin{animation:none;opacity:0}}
 .landing-sub{color:#a7afc1;font-size:18px;max-width:58ch;margin:0 0 28px;line-height:1.55}
 .landing-sub b{color:var(--text)}
 .landing-cta{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap}
