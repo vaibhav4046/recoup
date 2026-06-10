@@ -48,6 +48,21 @@ PRECEDENTS = [
     {"id": "deposit", "kind": "deposit", "title": "Overdue security-deposit return",
      "jurisdiction": "US/UK", "basis": "State landlord-tenant statutes; UK Tenancy Deposit Scheme",
      "text": "A landlord must return a security deposit within a statutory window (often 14-30 days) minus itemized lawful deductions. Late or wrongful retention can trigger statutory penalties of up to three times the deposit."},
+    {"id": "train_delay", "kind": "train_delay", "title": "Train delay refund (Delay Repay)",
+     "jurisdiction": "UK", "basis": "National Rail Conditions of Travel; Delay Repay scheme",
+     "text": "UK rail passengers can claim compensation under Delay Repay when a train is delayed, typically from 15 or 30 minutes, scaled to the delay length and ticket price. It is a one-time refund claimed from the operating train company, not a recurring saving."},
+    {"id": "telecom_overcharge", "kind": "telecom", "title": "Telecom / broadband billing error or mid-contract hike",
+     "jurisdiction": "US/UK", "basis": "FCC Truth-in-Billing rules; UK Ofcom General Conditions C1",
+     "text": "Carriers must bill accurately and disclose price changes. Undisclosed mid-contract increases or erroneous line items can be disputed; in the UK an unexpected price rise outside the contract terms can be a right-to-exit trigger. Recoverable value is the disputed delta."},
+    {"id": "insurance_renewal", "kind": "insurance", "title": "Insurance auto-renewal loyalty penalty",
+     "jurisdiction": "UK", "basis": "FCA General Insurance Pricing Practices (PS21/5)",
+     "text": "Insurers may not quote a renewal price higher than they would offer an equivalent new customer (the 'loyalty penalty' ban). A renewal priced above the new-customer rate can be challenged and re-priced; the recoverable amount is the one-time premium difference."},
+    {"id": "missing_refund", "kind": "missing_refund", "title": "Promised refund never received",
+     "jurisdiction": "US/UK/EU", "basis": "Fair Credit Billing Act; UK Consumer Rights Act 2015; chargeback rights",
+     "text": "When a merchant confirms a refund but no credit appears within their stated window (often 5-10 business days), the customer can follow up citing the confirmation and, if unresolved, raise a card chargeback. Recoverable value is the one-time refund amount."},
+    {"id": "tax_overpayment", "kind": "tax_overpayment", "title": "Overpaid tax / unclaimed tax refund",
+     "jurisdiction": "US/UK", "basis": "IRS refund claims (US); HMRC overpayment relief (UK)",
+     "text": "Overpaid income tax or unclaimed allowances can be reclaimed directly from the tax authority within statutory time limits (generally up to 3-4 years). It is a one-time recovery filed on the official government portal — never through a third party that takes a cut."},
 ]
 
 
@@ -168,6 +183,16 @@ PLAYBOOKS = [
      "text": "1) Find the date the trial converted to a paid charge. 2) Email within the window: you did not intend to continue and consent was unclear. 3) Demand a full refund of the first charge + immediate cancellation. 4) Cite ROSCA / negative-option clear-consent rules. 5) If refused, dispute it as an unauthorized recurring charge."},
     {"id": "pb_utility_overpay", "kind": "overpayment", "title": "Reclaim an overpaid / credit-balance utility bill", "basis": "Utility regulator rules (Ofgem/PUC); credit-balance refund rights",
      "text": "1) Check the utility account for a credit balance or estimated-vs-actual overbilling. 2) Submit an up-to-date meter reading to correct estimates. 3) Request the credit balance back as CASH, not 'rolled forward'. 4) Cite the regulator's credit-balance refund rule. 5) Escalate to the energy/utility ombudsman if not refunded in their window."},
+    {"id": "pb_train_delay", "kind": "train_delay", "title": "Claim a UK train Delay Repay refund", "basis": "National Rail Conditions of Travel; Delay Repay",
+     "text": "1) Note the booked vs actual arrival time and the delay length. 2) Keep your ticket / booking reference. 3) File the operating train company's Delay Repay form within 28 days. 4) The payout scales with the delay band (e.g. 15-29 / 30-59 / 60+ min). 5) Escalate to the Rail Ombudsman if rejected unfairly."},
+    {"id": "pb_telecom", "kind": "telecom", "title": "Dispute a telecom / broadband overcharge or hike", "basis": "FCC Truth-in-Billing; UK Ofcom General Conditions",
+     "text": "1) Identify the disputed line item or the mid-contract increase. 2) Notify the provider in writing and ask for the prior or new-customer rate. 3) In the UK, check whether the rise grants a penalty-free right to exit. 4) If unresolved, file with the regulator/ombudsman. 5) Keep the bill showing the change as evidence."},
+    {"id": "pb_insurance_renewal", "kind": "insurance", "title": "Challenge an insurance loyalty-penalty renewal", "basis": "FCA General Insurance Pricing Practices (PS21/5)",
+     "text": "1) Get the renewal quote and an equivalent new-customer quote. 2) If the renewal is higher, cite the FCA loyalty-penalty ban and ask them to match the new-customer price. 3) If they refuse, switch and/or complain. 4) Escalate to the Financial Ombudsman Service. 5) The recoverable amount is the one-time premium difference."},
+    {"id": "pb_missing_refund", "kind": "missing_refund", "title": "Follow up on a promised refund that never arrived", "basis": "Fair Credit Billing Act; UK Consumer Rights Act 2015",
+     "text": "1) Find the merchant's refund confirmation (email/order ID) and the promised date. 2) Email referencing the confirmation and the elapsed window. 3) If still unpaid after their stated window, raise a card chargeback for the agreed amount. 4) Attach the confirmation as evidence. 5) The issuer must investigate a documented non-receipt."},
+    {"id": "pb_student_deposit", "kind": "deposit", "title": "Recover a student accommodation deposit", "basis": "UK Tenancy Deposit Schemes (TDP); state landlord-tenant statutes",
+     "text": "1) Confirm the deposit was protected in a government-approved scheme (UK) and note the protected amount. 2) Request return in writing at tenancy end, with your forwarding address. 3) Dispute any deduction lacking itemized evidence via the scheme's free ADR. 4) Unprotected deposits can trigger statutory penalties. 5) Keep the inventory/check-out report as evidence."},
 ]
 
 

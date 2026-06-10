@@ -8,7 +8,7 @@ Architecture: **Frontend → Cloud Run [Gemini + Google ADK] → MongoDB MCP →
 |---|---|---|
 | 1 | **ADK Gemini agent** `backend/app/adk_agent.py` (`LlmAgent`) + `POST /api/agent/plan` | ✅ verified local (charge→plan, `pending_approval`, deterministic $) |
 | 2 | **Official MongoDB MCP** as ADK `MCPToolset` (`mongodb_toolset()` → `npx mongodb-mcp-server`) | ✅ code; server pre-warmed v1.12.0; live tool call needs `MONGODB_URI` |
-| 3 | **Atlas Vector Search playbooks** (6 docs: gym/streaming cancel, EU261, duplicate-charge, free-trial refund, overpaid utility) + `POST /api/agent/recover` | ✅ code; live run needs `MONGODB_URI` |
+| 3 | **Atlas Vector Search corpus** (14 consumer-protection precedents + 11 recovery playbooks across US/UK/EU: subscription cancel, EU261/UK261, duplicate charge, free-trial refund, utility credit, train Delay Repay, telecom overcharge, insurance loyalty penalty, missing refund, student deposit, tax overpayment) + `POST /api/agent/recover` | ✅ code; live run needs `MONGODB_URI` |
 | 4 | **Agent Run Timeline UI** (Plan→MCP→Vector[playbook+score]→Draft→Awaiting approval→Action link) + Google Pixel 9 Pro mockup, 5-scene showcase, interactive calculator, workflow diagram, precedent directory, cryptoledger, user reviews | ✅ fully styled, wired, and integrated in the served frontend |
 | 5 | **Cloud Run** image — root `Dockerfile` (Python + Node) + `.gcloudignore` | ✅ code; deploy = your gcloud |
 | 6 | **LICENSE** (MIT) + README architecture + this HANDOFF | ✅ |
