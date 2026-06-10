@@ -50,7 +50,7 @@
 .atl-summary{align-self:start;background:linear-gradient(180deg,#0d0d10,#08080a);border:1px solid rgba(245,197,24,.22);border-radius:16px;padding:20px;text-align:center}
 .atl-charge{font-size:12.5px;font-weight:700;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:14px}
 .atl-metric{margin:12px 0}
-.atl-num{display:block;font-size:34px;font-weight:900;letter-spacing:-1px;color:var(--text)}
+.atl-num{display:block;font-size:34px;font-weight:900;letter-spacing:-1px;background:linear-gradient(110deg,#fff,#ffd84d 55%,#ff8a3d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .atl-metric.gold .atl-num{background:linear-gradient(90deg,#f5c518,#ffd84d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .atl-cap{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
 .atl-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:10px;font-weight:700;color:#d4af37;letter-spacing:.03em}
@@ -75,6 +75,16 @@ body{
     linear-gradient(180deg,rgba(255,255,255,.03) 1px,transparent 1px) 50% 0/96px 96px,
     linear-gradient(120deg,rgba(245,197,24,.10),transparent 38%,rgba(255,216,77,.07) 70%,transparent),
     linear-gradient(180deg,transparent 0%,rgba(7,8,12,.78) 72%,var(--bg) 100%)}
+/* ambient color field — vivid analytics-dashboard glows drifting behind the black canvas */
+#bg-field::before{content:"";position:absolute;inset:-12%;pointer-events:none;
+  background:
+    radial-gradient(34% 26% at 82% 12%,rgba(192,132,252,.16),transparent 70%),
+    radial-gradient(30% 24% at 10% 18%,rgba(255,106,61,.13),transparent 70%),
+    radial-gradient(26% 22% at 70% 86%,rgba(255,94,138,.10),transparent 70%),
+    radial-gradient(24% 20% at 22% 78%,rgba(20,184,255,.08),transparent 70%);
+  filter:blur(28px);animation:fieldDrift 26s ease-in-out infinite alternate}
+@keyframes fieldDrift{from{transform:translate3d(-2.5%,-2%,0) scale(1)}to{transform:translate3d(2.5%,2.5%,0) scale(1.07)}}
+@media(prefers-reduced-motion:reduce){#bg-field::before{animation:none}}
 
 .glass{background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
@@ -146,7 +156,12 @@ body{
 .landing{min-height:calc(88vh - 76px);padding:92px 0 18px}
 .landing-hero{display:grid;grid-template-columns:minmax(0,0.95fr) minmax(440px,1.05fr);align-items:start;gap:34px;margin-bottom:60px}
 .landing-copy{max-width:570px;padding:10px 0 16px;animation:heroIn .75s var(--ease) both}
-.landing-h1{font-size:var(--font-hero);font-weight:850;letter-spacing:0;line-height:.98;margin:16px 0 18px;text-wrap:balance;background:var(--grad-money);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.landing-h1{font-size:var(--font-hero);font-weight:850;letter-spacing:0;line-height:.98;margin:16px 0 18px;text-wrap:balance;
+  background:linear-gradient(110deg,#f5c518,#ffd84d 28%,#ff8a3d 52%,#ff5e8a 72%,#f5c518 96%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:gradPan 9s ease-in-out infinite}
+@keyframes gradPan{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){.landing-h1{animation:none}}
 .landing-sub{color:#a7afc1;font-size:18px;max-width:58ch;margin:0 0 28px;line-height:1.55}
 .landing-sub b{color:var(--text)}
 .landing-cta{display:flex;gap:12px;justify-content:flex-start;flex-wrap:wrap}
@@ -181,7 +196,7 @@ body{
 @keyframes radar{0%{transform:scale(.3);opacity:.9}100%{transform:scale(1);opacity:0}}
 .reel-scan-label{font-size:15px;font-weight:800;color:var(--text)}
 .reel-bar{width:78%;height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin:14px 0 9px;overflow:hidden}
-.reel-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:6px}
+.reel-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f5c518,#ff8a3d 55%,#ff5e8a);border-radius:6px}
 .reel-scene.is-active .reel-bar i{animation:fillbar 2.4s var(--ease) forwards}
 @keyframes fillbar{from{width:0}to{width:100%}}
 .reel-scan-sub{font-size:11px;color:var(--muted)}
@@ -268,7 +283,7 @@ body{
 .figure{display:flex;flex-direction:column;gap:5px}
 .fig-amount{font-size:var(--font-display);font-weight:900;letter-spacing:0;line-height:1}
 .fig-amount.owed{background:var(--grad-money);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.fig-amount.leak{color:#fde6a8}
+.fig-amount.leak{background:linear-gradient(110deg,#ff8a3d,#ff5e8a 60%,#c084fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .fig-amount .per{font-size:.34em;color:var(--muted);-webkit-text-fill-color:var(--muted);letter-spacing:0;margin-left:4px;font-weight:700}
 .fig-label{font-size:12.5px;color:var(--muted)}
 .fig-label b{color:var(--text);font-weight:700}
@@ -306,7 +321,7 @@ body{
 .ring svg{transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-width:9}
 .ring-bg{stroke:rgba(255,255,255,.07)}
-.ring-fg{stroke:url(#g);stroke:var(--emerald);stroke-linecap:round;stroke-dasharray:326.7;stroke-dashoffset:326.7;transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1)}
+.ring-fg{stroke:url(#g);stroke-linecap:round;stroke-dasharray:326.7;stroke-dashoffset:326.7;transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 6px rgba(255,138,61,.45))}
 .ring-pct{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:20px}
 .recovered-foot{font-size:12px;color:var(--muted)}
 .rc-mini{font-size:.85em;color:var(--dim);font-weight:600}
