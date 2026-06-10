@@ -4,12 +4,12 @@
    prevents a poisoned ?api= link from redirecting credentialed/Gmail-handoff calls to
    an attacker origin. On a same-origin Cloud Run host the API is always the origin itself. */
 (function () {
-  // Trusted backends. Same-origin (the Cloud Run service serving this file) is always allowed.
+  // Trusted backend = the Google Cloud Run service (serves frontend + API same-origin).
+  // Google-only stack per hackathon rules; no non-Google / competing host is used.
   var ALLOW = [
     "https://recoup-agent-681822930558.us-central1.run.app",
-    "https://vaibhav3313-recoup.hf.space",
   ];
-  var FALLBACK = "https://vaibhav3313-recoup.hf.space";
+  var FALLBACK = "https://recoup-agent-681822930558.us-central1.run.app";
 
   function clean(u) { return (u || "").replace(/\/+$/, ""); }
   function originOf(u) { try { return new URL(u).origin; } catch (e) { return ""; } }
