@@ -30,6 +30,9 @@ gemini, google-adk, google-cloud-run, mongodb-atlas, vector-search, mcp, fastapi
 ### Inspiration
 Every year people leave billions on the table — expiring refunds, class-action funds, unclaimed property, plus the quiet bleed of forgotten subscriptions, silent price hikes and duplicate charges. The #1 reason people don't let AI near their money is trust. So we built an agent that does the tedious finding-and-drafting work but **never acts on its own** — the human approves every dollar.
 
+### Real, not simulated
+Recoup searches a live slice of the **official California State Controller unclaimed-property database** (the $500-and-up public records, updated weekly) indexed in MongoDB Atlas — type a last name and it returns *real* money held under that name (holder, amount, property ID), with the claim linking only to the official state site. A judge can paste the same name into claimit.ca.gov and find the same record. That's genuine owed-money discovery against real government data, not a fixture.
+
 ### What it does
 Recoup turns a messy financial footprint into recovered money through one audited loop:
 1. **Scan** — paste a statement (100% in-browser, nothing uploaded) or connect read-only Gmail. A deterministic rule engine finds money you're losing (dead subscriptions, price creep, duplicate charges) and money you're owed (refunds, EU261 flight compensation, settlements, unclaimed property).
