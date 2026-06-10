@@ -58,7 +58,7 @@
           <div class="phone-frame">
             <div class="phone-camera" aria-hidden="true"></div>
             <div class="phone-screen">
-              <div class="reel-top"><span class="reel-logo"><img src="mark.png" alt="" width="15" height="15" /></span> Recoup <span class="reel-live"><i></i>live</span></div>
+              <div class="reel-top"><span class="reel-logo"><img src="mark.png" alt="" width="15" height="15" /></span> Recoup <span class="reel-live"><i></i>preview</span></div>
               <div class="reel-stage" id="reel-stage">
                 <!-- scene 1: scanning -->
                 <section class="reel-scene reel-scan is-active" data-scene="0">
@@ -140,7 +140,7 @@
               <span class="calc-val">$240/yr</span>
             </label>
             <label class="calc-opt">
-              <input type="checkbox" data-amount="600" class="calc-cb" />
+              <input type="checkbox" data-amount="600" data-currency="€" class="calc-cb" />
               <span class="calc-custom-cb"></span>
               <div class="calc-label-wrap">
                 <span class="calc-title">EU261 Flight Delay compensation</span>
@@ -169,7 +169,7 @@
           </div>
           <div class="calc-result">
             <div class="result-label">ESTIMATED RECOVERY POTENTIAL</div>
-            <div class="result-val">$<span id="calc-total">720</span></div>
+            <div class="result-val"><span id="calc-total">$720</span></div>
             <div class="result-note">Grounded in FTC, EU261 &amp; Fair Credit Billing Act precedents in MongoDB Atlas. Recurring leaks shown per year; one-time payouts counted once.</div>
             <button class="btn btn-primary full btn-xl" id="calc-cta-btn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Verify this recovery</button>
           </div>
@@ -474,7 +474,7 @@
       <span class="audit-badge" id="audit-badge">● verifying…</span>
     </div>
     <div class="audit" id="audit"><!-- injected --></div>
-    <a class="audit-verify" id="audit-verify-link" href="#agent-timeline">Deploy Cloud Run, then verify the live chain head &amp; integrity at /api/health <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
+    <a class="audit-verify" id="audit-verify-link" href="#agent-timeline">Verify the live chain head &amp; integrity at /api/health <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></a>
   </section>
 
   </div><!-- /#results -->

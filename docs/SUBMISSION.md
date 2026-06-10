@@ -5,7 +5,7 @@
 - 🔗 **Live demo:** Google Cloud Run URL after deploy
 - 💻 **Code:** https://github.com/vaibhav4046/recoup
 - 🤖 **Live API:** Google Cloud Run `/api/health` after deploy
-- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 3 (gemini-3-flash-preview)** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · Recoup is **also an MCP server itself** (4 JSON-RPC tools at `/mcp`)
+- **Built with:** **MongoDB Atlas Vector Search** (the agent's retrieval brain) · Google **Gemini 3 (gemini-3-flash-preview)** + **gemini-embedding-001** · Google **ADK** · the official **MongoDB MCP server** · FastAPI and static frontend on **Cloud Run** · Recoup is **also an MCP server itself** (5 JSON-RPC tools at `/mcp`, incl. `recoup_plan_recovery`)
 
 ---
 

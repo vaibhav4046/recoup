@@ -96,10 +96,14 @@ async def trace_mw(request: Request, call_next):
 @app.get("/api/health")
 async def health(request: Request):
     s = get_settings()
-    from . import vector
+    from . import vector, adk_agent
     vstatus = await run_in_threadpool(vector.status)  # touches Atlas — keep it off the event loop
+    integrations = s.integration_status()
+    # honest: never report gemini "live" while the quota circuit-breaker is open
+    if integrations.get("gemini") == "live" and adk_agent.quota_blocked():
+        integrations["gemini"] = "rate-limited"
     return _ok(request, service="recoup-api", version=app.version, mode=s.mode,
-               integrations=s.integration_status(),
+               integrations=integrations,
                gemini_model=s.gemini_model if s.gemini_ready else None,
                vector=vstatus,  # MongoDB Atlas Vector Search — the agent's retrieval brain
                audit=APP.audit.verify(),  # SHA-256 chain state {intact,count,head} — externally verifiable
@@ -142,7 +146,7 @@ async def agent_recover(request: Request):
     from . import vector, adk_agent
     q = f"{charge.get('merchant', '')} {charge.get('title', '')} {charge.get('kind', '')}".strip()
     mcp = await adk_agent.mcp_probe(charge)
-    pb = await run_in_threadpool(vector.retrieve_playbook, q)
+    pb = await run_in_threadpool(vector.retrieve_playbook, q, str(charge.get("kind") or ""))
     ts = adk_agent.mongodb_toolset()
     tools = [ts] if ts is not None else None
     res = await adk_agent.plan_charge(charge, playbook=(pb or {}).get("text", ""), tools=tools)

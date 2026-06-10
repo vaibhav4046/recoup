@@ -124,12 +124,14 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / (na * nb)
 
 
-def retrieve(query: str, k: int = 2) -> list[dict]:
+def retrieve(query: str, k: int = 2, kind: str = "") -> list[dict]:
     """Atlas $vectorSearch for the most relevant precedent(s); cosine fallback if the
-    index isn't provisioned yet. Returns [{id,title,basis,jurisdiction,score,via}]."""
+    index isn't provisioned yet; keyword fallback if embeddings are unavailable.
+    Returns [{id,title,basis,jurisdiction,score,via}]."""
     s = get_settings()
     if not (s.mongodb_ready and s.gemini_ready):
-        return []
+        kb = _keyword_best(PRECEDENTS, query, kind)
+        return [kb] if kb else []
     try:
         qv = _embed(query, task="RETRIEVAL_QUERY")
         coll = _coll()
@@ -150,7 +152,8 @@ def retrieve(query: str, k: int = 2) -> list[dict]:
         scored = sorted(({**{kk: d[kk] for kk in ("id", "title", "basis", "jurisdiction")}, "score": round(_cosine(qv, d["embedding"]), 4), "via": "cosine_fallback"} for d in docs), key=lambda x: -x["score"])
         return scored[:k]
     except Exception:
-        return []
+        kb = _keyword_best(PRECEDENTS, query, kind)  # embedding/DB down -> stay grounded
+        return [kb] if kb else []
 
 
 def status() -> dict:
@@ -222,11 +225,32 @@ def seed_playbooks() -> dict:
         return {"ok": False, "reason": f"{type(e).__name__}: {str(e)[:80]}", "embedded": 0}
 
 
-def retrieve_playbook(query: str) -> dict | None:
-    """Atlas $vectorSearch the single best recovery playbook for a charge (cosine fallback)."""
+def _tokens(t: str) -> set:
+    return {w for w in "".join(c if c.isalnum() else " " for c in t.lower()).split() if len(w) > 2}
+
+
+def _keyword_best(corpus: list[dict], query: str, kind: str = "") -> dict | None:
+    """Embedding-free last resort: kind match first, then token overlap on title+basis+kind.
+    Keeps the legal basis + playbook text alive through a TOTAL Gemini outage (429/quota)."""
+    q = _tokens(query)
+    best, best_score = None, -1.0
+    for p in corpus:
+        score = 3.0 if (kind and p.get("kind") == kind) else 0.0
+        score += len(q & _tokens(f"{p.get('title','')} {p.get('basis','')} {p.get('kind','')}")) * 0.5
+        if score > best_score:
+            best, best_score = p, score
+    if best is None or best_score <= 0:
+        return None
+    return {**{k: best.get(k) for k in ("id", "title", "basis", "kind", "text") if k in best},
+            "score": round(min(best_score / 6.0, 0.99), 4), "via": "keyword_fallback"}
+
+
+def retrieve_playbook(query: str, kind: str = "") -> dict | None:
+    """Atlas $vectorSearch the single best recovery playbook for a charge (cosine fallback;
+    embedding-free keyword fallback if Gemini embeddings are unavailable, e.g. quota-exhausted)."""
     s = get_settings()
     if not (s.mongodb_ready and s.gemini_ready):
-        return None
+        return _keyword_best(PLAYBOOKS, query, kind)
     try:
         qv = _embed(query, task="RETRIEVAL_QUERY")
         coll = _pb_coll()
@@ -243,8 +267,9 @@ def retrieve_playbook(query: str) -> dict | None:
             pass
         docs = list(coll.find({"embedding": {"$exists": True}}, {"_id": 0, "id": 1, "title": 1, "basis": 1, "kind": 1, "text": 1, "embedding": 1}))
         if not docs:
-            return None
+            return _keyword_best(PLAYBOOKS, query, kind)
         best = max(docs, key=lambda d: _cosine(qv, d["embedding"]))
         return {**{kk: best[kk] for kk in ("id", "title", "basis", "kind", "text")}, "score": round(_cosine(qv, best["embedding"]), 4), "via": "cosine_fallback"}
     except Exception:
-        return None
+        # embedding call failed (quota/network) -> grounded keyword fallback, never None-grounding
+        return _keyword_best(PLAYBOOKS, query, kind)

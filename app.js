@@ -323,7 +323,8 @@
     });
     const badge = $("#audit-badge");
     badge.className = "audit-badge ok";
-    badge.textContent = `● SHA-256 hash-chained · ${(S.audit || []).length} events`;
+    const nAudit = (S.audit || []).length;
+    badge.textContent = `● SHA-256 hash-chained · ${nAudit} event${nAudit === 1 ? "" : "s"}`;
   }
 
   // ---- actions ----
@@ -723,13 +724,18 @@
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
 
-    // savings estimator checkboxes
+    // savings estimator checkboxes — NEVER blend currencies into one figure (core product rule)
     const cbs = document.querySelectorAll(".calc-cb");
     const calcTotal = $("#calc-total");
     const updateCalc = () => {
-      let sum = 0;
-      cbs.forEach(cb => { if (cb.checked) sum += parseFloat(cb.getAttribute("data-amount") || "0"); });
-      if (calcTotal) calcTotal.textContent = sum.toString();
+      const per = {};
+      cbs.forEach(cb => {
+        if (!cb.checked) return;
+        const ccy = cb.getAttribute("data-currency") || "$";
+        per[ccy] = (per[ccy] || 0) + parseFloat(cb.getAttribute("data-amount") || "0");
+      });
+      const parts = Object.entries(per).sort((a, b) => b[1] - a[1]).map(([c, v]) => c + v.toLocaleString());
+      if (calcTotal) calcTotal.textContent = parts.length ? parts.join(" + ") : "0";
     };
     cbs.forEach(cb => cb.onchange = updateCalc);
     const ctaBtn = $("#calc-cta-btn");

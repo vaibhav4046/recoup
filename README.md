@@ -33,6 +33,24 @@ The #1 reason people don't use AI for money is **trust**. Recoup's answer is a
 **human-in-the-loop approval gate**: the agent does the finding and drafting; *you*
 decide what actually gets sent.
 
+## Why this doesn't already exist
+
+| | Data access | Cut taken | Legal basis shown | Who acts |
+|---|---|---|---|---|
+| Rocket Money / Trim | full bank link | subscription fee + % of savings | no | they negotiate for you |
+| DoNotPay | account + payment | subscription | **FTC-sanctioned (2024)** for unverifiable claims | bot files for you |
+| Property-finder firms | your ID | 10–30% of recovery | no | they file for you |
+| **Recoup** | **in-browser paste / read-only Gmail** | **free — official portals only** | **every claim cites its statute** | **you approve, you file** |
+
+The gap is deliberate: incumbents monetize by inserting themselves between you and your
+money. Recoup's design — deterministic amounts, statute-cited claims, a human gate, and a
+tamper-evident audit chain — only makes sense if the product *never* touches the money.
+That's the anti-DoNotPay position, and it's why every claim here is checkable.
+
+**Sustainability:** the private scan stays free forever. The honest monetization path is an
+*optional* success fee (5–10%) only on confirmation-backed recoveries — never data sales,
+never a bank login, never a cut of money you recovered yourself.
+
 ## What it does (the flow)
 
 ```mermaid
@@ -145,7 +163,7 @@ Frontend → Cloud Run [ Gemini + Google ADK ] → MongoDB MCP (official) → At
 ```
 
 - **Google ADK + Gemini** (`app/adk_agent.py`): an ADK `LlmAgent` with Gemini as the reasoner runs a **plan → tool → act → human-gate** loop. Runtime AI is **Google-only** (no non-Google AI deps).
-- **Official MongoDB MCP toolset**: the agent queries Atlas through the official `mongodb-mcp-server` registered as an ADK `MCPToolset` (stdio / `npx`) — not hand-rolled DB calls.
+- **Official MongoDB MCP toolset**: the official `mongodb-mcp-server` is registered as an ADK `MCPToolset` (stdio / `npx`) — the agent's tool bridge into Atlas, with its tool calls reported in the API response. (Vector retrieval itself runs native `$vectorSearch` aggregations for latency; the MCP toolset gives the agent general Atlas access.)
 - **Atlas Vector Search as memory**: recovery **playbooks** + consumer-protection **precedents** are embedded with Google `gemini-embedding-001` (768-d) and retrieved with Atlas `$vectorSearch` (cosine fallback while an index builds).
 - **Deterministic + human gate**: every dollar amount is computed in code (never invented); every action stops at `pending_approval`.
 
