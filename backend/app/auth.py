@@ -173,12 +173,20 @@ def google_auth_url(state: str, gmail: bool = False, include_gmail: bool = False
         redirect = "/api/gmail/callback"
     elif include_gmail:  # ONE-TAP: sign-in AND read-only Gmail scan in a single consent
         scope += " https://www.googleapis.com/auth/gmail.readonly"
-    q = urlencode({
+    params = {
         "client_id": s.google_oauth_client_id,
         "redirect_uri": f"{s.base_url.rstrip('/')}{redirect}",
         "response_type": "code", "scope": scope,
-        "state": state, "access_type": "online", "prompt": "consent select_account",
-    })
+        "state": state, "access_type": "online",
+    }
+    # CRITICAL UX: never force prompt=consent. With it, Google re-shows the consent (and, for the
+    # restricted Gmail scope on a not-yet-verified app, the harsh interstitial) on EVERY connect.
+    # Without it, a user who already granted the scope is silently re-approved — the Gmail scan
+    # runs with ZERO screens from the second connect onward. Sign-in keeps the account chooser
+    # only (no re-consent), so repeat sign-in stays one tap.
+    if not gmail:
+        params["prompt"] = "select_account"
+    q = urlencode(params)
     return f"https://accounts.google.com/o/oauth2/v2/auth?{q}"
 
 

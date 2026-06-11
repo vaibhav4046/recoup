@@ -616,6 +616,26 @@ body{
 .ap-boundary code{color:var(--cyan)}
 @media(prefers-reduced-motion:reduce){.ap-phase{animation:none;opacity:1;transform:none}.ap-spin{animation:none}}
 
+/* top money drains — ranked cancel-first recommendations */
+.drains-list{display:flex;flex-direction:column;gap:10px}
+.drain-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border:1px solid rgba(245,90,90,.25);border-radius:13px;
+  background:linear-gradient(95deg,rgba(245,90,90,.07),transparent)}
+.drain-rank{font-weight:900;font-size:15px;color:#ff7d6b;flex:none}
+.drain-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.drain-main b{font-size:14px}
+.drain-why{font-size:11.5px;color:var(--muted)}
+.drain-amt{font-weight:900;font-size:18px;color:#ff7d6b;white-space:nowrap}
+.drain-amt small{font-size:11px;font-weight:600;color:var(--muted)}
+.drain-cancel{padding:8px 14px;font-size:12.5px;white-space:nowrap}
+.drain-view{padding:8px 12px;font-size:12px}
+@media(max-width:560px){.drain-row{flex-wrap:wrap}.drain-amt{order:-1;width:100%}}
+
+/* signed-in auto-scan banner */
+.autoscan{display:flex;align-items:center;gap:12px;padding:13px 16px;margin-bottom:14px;border-radius:13px;
+  border:1px solid rgba(52,211,153,.35);background:linear-gradient(95deg,rgba(52,211,153,.08),transparent);font-size:13px;color:var(--muted)}
+.autoscan b{color:var(--text)}
+.autoscan .btn{margin-left:auto;white-space:nowrap}
+
 /* in-dashboard AI guide (chatbot) */
 .guide-fab{position:fixed;right:22px;bottom:22px;width:54px;height:54px;border-radius:50%;z-index:80;cursor:pointer;
   border:1px solid rgba(245,197,24,.55);background:var(--grad);color:#1a1402;font-size:22px;font-weight:900;
