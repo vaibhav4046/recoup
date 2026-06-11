@@ -650,6 +650,16 @@
     }
     toast("Signed in as " + (u.email || who));
     showResults(); // the command center IS the signed-in dashboard — land there, not on the marketing page
+    // SIGNED IN = YOUR DATA: if no real surface is loaded yet (no fresh scan, nothing restored),
+    // auto-run the inbox scan once per tab session — sample data is for anonymous visitors only.
+    // Silent for already-granted accounts (no prompt param on the gmail flow).
+    try {
+      if (API && !S._real && !localStorage.getItem("ro_user_surface") && !sessionStorage.getItem("ro_autoscan")) {
+        sessionStorage.setItem("ro_autoscan", "1");
+        toast("Scanning your inbox for real subscriptions…");
+        setTimeout(() => { window.location.href = API + "/api/gmail/start"; }, 900);
+      }
+    } catch (e3) {}
   }
   function showResults() {
     const r = $("#results"), l = $("#landing");
@@ -757,6 +767,13 @@
   async function loadGmail(token) {
     try {
       const d = await gmailFindings(token);
+      // multi-inbox: an "Add another inbox" pass MERGES with the existing real surface
+      const adding = sessionStorage.getItem("ro_gmail_add") === "1" && S._real && S.actions.length;
+      sessionStorage.removeItem("ro_gmail_add");
+      if (adding && d.findings && d.findings.length) {
+        d.findings.forEach((f, i) => { f.id = "b_" + i + "_" + (f.id || i); });
+        d.findings = S.actions.concat(d.findings);
+      }
       if (d.findings && d.findings.length) {
         const recur = r2(d.findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + (a.amount || 0), 0));
         await applyFindings(d.findings, {
@@ -972,7 +989,17 @@
 
     // REAL-MONEY HUB — live paths above the sample demo
     const rs = $("#rh-scan"); if (rs) rs.onclick = openScan;
-    const rg = $("#rh-gmail"); if (rg) rg.onclick = () => { if (API) window.location.href = API + "/api/gmail/start"; else toast("Gmail scan needs the live backend."); };
+    const rg = $("#rh-gmail"); if (rg) {
+      // after the first real scan this card becomes "Add another inbox" (multi-email, like an MCP
+      // over all your mailboxes) — forces the account chooser and MERGES the new inbox's findings
+      const rgLabel = () => { const b = rg.querySelector(".rh-big"); if (b && S._real) b.textContent = "Add another inbox"; };
+      rgLabel(); setTimeout(rgLabel, 1500);
+      rg.onclick = () => {
+        if (!API) { toast("Gmail scan needs the live backend."); return; }
+        if (S._real) { sessionStorage.setItem("ro_gmail_add", "1"); window.location.href = API + "/api/gmail/start?add=1"; }
+        else window.location.href = API + "/api/gmail/start";
+      };
+    }
     if (API && $("#rh-total")) {
       fetch(API + "/api/unclaimed/stats").then((r) => r.json()).then((d) => {
         if (d && d.total_amount) {

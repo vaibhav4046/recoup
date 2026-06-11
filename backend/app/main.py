@@ -449,13 +449,14 @@ async def magic_verify(code: str):
 
 
 @app.get("/api/auth/google/start")
-async def google_start():
-    # CLEAN sign-in: request only openid/email/profile — NON-sensitive scopes that do NOT
-    # trigger Google's "unverified app" interstitial, so the user signs in in one tap with no
-    # Advanced -> Continue. Read-only Gmail is a SEPARATE opt-in (/api/gmail/start); that path
-    # does show the unverified screen until the OAuth app is Google-verified (unavoidable for a
-    # restricted scope on an unverified app).
-    url = auth.google_auth_url(state=auth.issue_oauth_state("google"))
+async def google_start(scan: str = "1"):
+    # ONE-TAP: sign-in AND a same-pass read-only inbox scan in a single consent, so a signed-in
+    # user lands in the command center with their REAL subscriptions already loaded (the founder's
+    # core UX: sign in -> your email is scanned at once — no second click, no sample data).
+    # First-ever grant of the restricted Gmail scope shows Google's unverified-app screen (policy
+    # until verification review); already-granted accounts sail through silently. ?scan=0 gives
+    # the old profile-only sign-in.
+    url = auth.google_auth_url(state=auth.issue_oauth_state("google"), include_gmail=(scan != "0"))
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured"})
     return RedirectResponse(url)
@@ -523,8 +524,10 @@ def _take_gmail_findings(key: str, pop: bool = True) -> list:
 
 
 @app.get("/api/gmail/start")
-async def gmail_start():
-    url = auth.google_auth_url(state=auth.issue_oauth_state("gmail"), gmail=True)
+async def gmail_start(add: str = ""):
+    # ?add=1 -> force the account chooser so the user can connect ANOTHER inbox (multi-email
+    # scanning); default keeps silent re-approval for the already-granted account.
+    url = auth.google_auth_url(state=auth.issue_oauth_state("gmail"), gmail=True, force_chooser=bool(add))
     if not url:
         return JSONResponse(status_code=503, content={"ok": False, "error": "Google OAuth not configured — set GOOGLE_OAUTH_CLIENT_ID"})
     return RedirectResponse(url)
