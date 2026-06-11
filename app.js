@@ -417,7 +417,28 @@
     await appendAudit("human", "You", "ACTION_APPROVED", "Approved (claim ready): " + a.title, a.amount);
     recompute(); renderHero(); renderBreakdown(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
-    toast(`Claim drafted — ready to send: ${a.title}`);
+    // APPROVE = ACT. Your one approval triggers the execution sequence (Claude-style narrated
+    // steps): claim copied -> the vendor's REAL portal opens beside this tab -> the audit chain
+    // logs the execution. The only click the agent never takes is the final one inside YOUR
+    // logged-in vendor account — that stays yours, by design.
+    const cu = cancelUrl(a);
+    if (cu && !fromDemo) {
+      try { await navigator.clipboard.writeText(a.draft || ""); } catch (e) {}
+      const vendor = (a.raw || a.title || "vendor").split(/[—(]/)[0].trim().split(" ")[0];
+      await appendAudit("agent", "Action Agent", "EXECUTION_STARTED",
+        `Executing approved cancellation: ${vendor} — claim copied, vendor portal opened`, a.amount);
+      renderAudit();
+      const ex = el("div", "exec-steps");
+      ex.innerHTML = `<div class="ap-step ok"><span class="ap-tick">✓</span><span class="ap-t">Approved — execution started</span></div>
+        <div class="ap-step ok"><span class="ap-tick">✓</span><span class="ap-t">Claim copied to your clipboard</span></div>
+        <div class="ap-step ok"><span class="ap-tick">✓</span><span class="ap-t">Opening ${esc(vendor)}'s own cancellation portal…</span></div>
+        <div class="ap-step warn"><span class="ap-tick">→</span><span class="ap-t">Finish the last click inside your ${esc(vendor)} account, then hit “Mark sent”</span></div>`;
+      const nc2 = $("#card-" + id); if (nc2) nc2.appendChild(ex);
+      setTimeout(() => { window.open(safeUrl(cu), "_blank", "noopener"); }, 600);
+      toast("Executing: portal opened + claim on your clipboard — one final click in your " + vendor + " account");
+    } else {
+      toast(`Claim drafted — ready to send: ${a.title}`);
+    }
   }
 
   // SELF-IMPROVING MEMORY: services you mark "I use it" are remembered on this device and never
