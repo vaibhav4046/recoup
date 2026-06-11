@@ -264,6 +264,21 @@ async def assistant_chat(request: Request):
     return _ok(request, **res)
 
 
+@app.post("/api/agent/execute")
+async def agent_execute(request: Request):
+    """Playwright execution agent: drive a REAL headless browser to the approved vendor's
+    cancellation portal and return the step log + live screenshots. Allowlisted domains only."""
+    body = await _json_obj(request)
+    url = str((body or {}).get("url") or "")[:300]
+    from . import executor
+    res = await run_in_threadpool(executor.run_preview, url)
+    evt_label = ("Browser execution: reached " + str(res.get("final_url_host") or "portal")) if res.get("ok") \
+        else "Browser execution attempt failed: " + str(res.get("error") or "")[:60]
+    APP.audit.append(actor_type="agent", actor_name="Execution Agent (Playwright)",
+                     event_type="BROWSER_EXECUTION", label=evt_label)
+    return _ok(request, **res)
+
+
 @app.post("/api/agent/autopilot")
 async def agent_autopilot(request: Request):
     """AUTOPILOT — the autonomous mission: scan -> ground (Atlas) -> draft -> verify -> queue at

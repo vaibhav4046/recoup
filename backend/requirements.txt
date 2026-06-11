@@ -17,3 +17,5 @@ pymongo>=4.6
 # rebuild and dropped `mcp`, killing the partner MongoDB MCP toolset. Explicit `mcp` pin = belt + braces.
 google-adk[mcp]>=1.34,<2
 mcp>=1.24,<2
+# Playwright execution agent: drives a real headless Chromium to vendor cancel portals
+playwright>=1.40,<2

@@ -436,6 +436,25 @@
       const nc2 = $("#card-" + id); if (nc2) nc2.appendChild(ex);
       setTimeout(() => { window.open(safeUrl(cu), "_blank", "noopener"); }, 600);
       toast("Executing: portal opened + claim on your clipboard — one final click in your " + vendor + " account");
+      // PLAYWRIGHT EXECUTION AGENT — a real headless browser walks the portal server-side and
+      // streams back screenshots: the live preview of the agent on the vendor's site.
+      if (API && !cu.includes("google.com/search")) {
+        const pw = el("div", "ap-step dim");
+        pw.innerHTML = `<span class="ap-tick">⟳</span><span class="ap-t">Execution Agent: driving a headless browser to the portal…</span>`;
+        ex.appendChild(pw);
+        fetch(API + "/api/agent/execute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: cu }) })
+          .then((r) => r.json()).then((d) => {
+            if (d && d.ok && d.shots && d.shots.length) {
+              pw.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">Execution Agent reached ${esc(d.final_url_host || "the portal")}${d.login_wall ? " — vendor login wall: your account, your final click" : ""} (${d.total_ms}ms, Playwright)</span>`;
+              const img = el("img", "exec-shot");
+              img.src = "data:image/jpeg;base64," + d.shots[0];
+              img.alt = "Live browser preview of the vendor portal";
+              ex.appendChild(img);
+            } else {
+              pw.innerHTML = `<span class="ap-tick">△</span><span class="ap-t">Execution preview unavailable (${esc((d && d.error) || "try again")}) — the portal tab is open beside you</span>`;
+            }
+          }).catch(() => { pw.innerHTML = `<span class="ap-tick">△</span><span class="ap-t">Execution preview unavailable — the portal tab is open beside you</span>`; });
+      }
     } else {
       toast(`Claim drafted — ready to send: ${a.title}`);
     }
