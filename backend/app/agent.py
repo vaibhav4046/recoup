@@ -142,7 +142,7 @@ def generate_any(prompt: str, json_mode: bool = True) -> tuple[str, str]:
             return hit, m
     for m in ladder[1:]:
         try:
-            return _generate(m, prompt, attempts=2, json_mode=json_mode and not m.startswith("gemma")), m
+            return _generate(m, prompt, attempts=1, json_mode=json_mode and not m.startswith("gemma")), m
         except Exception as e:  # noqa: BLE001 — 429/404/anything: try the next tier
             last = e
     raise last if last else RuntimeError("no models configured")
@@ -160,7 +160,9 @@ def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True
     import httpx
     s = get_settings()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-    gen_cfg = {"temperature": 0.4}
+    # CAVEMAN CONFIG: low temperature = accurate + less hallucination; capped output tokens =
+    # faster first-byte, lower cost, terse grounded answers (all prompts already demand brevity).
+    gen_cfg = {"temperature": 0.2, "maxOutputTokens": 640, "topP": 0.9}
     if json_mode:
         gen_cfg["responseMimeType"] = "application/json"
     body = {
@@ -172,7 +174,7 @@ def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True
         try:
             r = httpx.post(url, params={"key": s.google_api_key}, json=body, timeout=20)
             if r.status_code in (429, 503) and i < attempts - 1:
-                time.sleep(1.2 * (i + 1))
+                time.sleep(0.5)
                 continue
             r.raise_for_status()
             data = r.json()
@@ -186,13 +188,13 @@ def _generate(model: str, prompt: str, attempts: int = 3, json_mode: bool = True
         except httpx.TransportError as e:  # timeouts, connect/read errors
             last = e
             if i < attempts - 1:
-                time.sleep(1.0 * (i + 1))
+                time.sleep(0.5)
                 continue
             raise
         except Exception as e:  # noqa: BLE001
             last = e
             if i < attempts - 1 and any(t in str(e) for t in ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
-                time.sleep(1.0 * (i + 1))
+                time.sleep(0.5)
                 continue
             raise
     raise last  # pragma: no cover
