@@ -148,7 +148,7 @@
   }
 
   function renderAll(animateTrace) {
-    renderChips(); renderHero(); renderSwarm(); renderBreakdown(); renderFindings(); renderAudit();
+    renderChips(); renderHero(); renderSwarm(); renderBreakdown(); renderDrains(); renderFindings(); renderAudit();
     renderTrace(animateTrace); renderVrec();
   }
 
@@ -269,6 +269,35 @@
     });
   }
 
+  function renderDrains() {
+    const box = $("#drains-list"); if (!box) return;
+    const sec = $("#drains");
+    // rank the recurring leaks by annual cost — the agent's "cancel these first" recommendation
+    const drains = S.actions.filter((a) => a.cadence === "yearly" && a.approvalState !== "rejected")
+      .sort((x, y) => (y.amount || 0) - (x.amount || 0)).slice(0, 3);
+    if (!drains.length) { if (sec) sec.style.display = "none"; return; }
+    if (sec) sec.style.display = "";
+    const total = r2(drains.reduce((s, a) => s + (a.amount || 0), 0));
+    const sub = $("#drains-sub"); if (sub) sub.textContent = `— cancel these ${drains.length} and keep $${money(total)}/yr`;
+    box.innerHTML = "";
+    drains.forEach((a, i) => {
+      const cUrl = cancelUrl(a);
+      const row = el("div", "drain-row");
+      const name = esc((a.raw || a.title || "").replace(/^(Review|Challenge)\s+/i, "").replace(/\s+(subscription|price hike)$/i, ""));
+      row.innerHTML = `
+        <span class="drain-rank">#${i + 1}</span>
+        <div class="drain-main">
+          <b>${name}</b>
+          <span class="drain-why">${esc(a.kind === "price_creep" ? "price keeps climbing — challenge it or walk" : "auto-paying every cycle — if you're not using it, this is pure drain")}</span>
+        </div>
+        <span class="drain-amt">$${money(a.amount)}<small>/yr</small></span>
+        ${cUrl ? `<a class="btn btn-mail drain-cancel" href="${safeUrl(cUrl)}" target="_blank" rel="noopener">Cancel ${icon('upRight')}</a>` : ""}
+        <button class="btn btn-ghost drain-view" data-view="${esc(a.id)}">Why?</button>`;
+      box.appendChild(row);
+    });
+    box.querySelectorAll("[data-view]").forEach((b) => { b.onclick = () => openDrawer(b.dataset.view); });
+  }
+
   function renderFindings() {
     const box = $("#findings"); box.innerHTML = "";
     S.actions.forEach((a, i) => { const c = card(a); c.style.animationDelay = (i * 0.04) + "s"; box.appendChild(c); });
@@ -285,11 +314,14 @@
     const _stateWord = st === "paid" ? "recovered" : st === "sent" ? "claim sent" : approved ? "claim ready" : "needs your review";
     c.setAttribute("aria-label", [a.title, a.amount_label, _kindWord, a.confidence ? Math.round(a.confidence * 100) + "% confidence" : "", _stateWord].filter(Boolean).join(", "));
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
+    const cUrl = cancelUrl(a);
     const sendRow = `<div class="fc-send">
+        ${cUrl ? `<a class="btn btn-mail" href="${safeUrl(cUrl)}" target="_blank" rel="noopener" aria-label="Open the vendor's own cancellation page">Cancel on ${esc((a.raw || a.title || "vendor").split(" ")[0].slice(0, 14))} ${icon('upRight')}</a>` : ""}
         <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text">${icon('copy')} Copy</button>
-        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form ${icon('upRight')}</a>` : `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft">${icon('mail')} Email</button>`}
+        <a class="btn btn-copy" href="${gmailComposeUrl(a)}" target="_blank" rel="noopener" aria-label="Draft this claim in your Gmail">${icon('mail')} Draft in Gmail</a>
+        ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form ${icon('upRight')}</a>` : (!cUrl ? `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft">${icon('mail')} Email</button>` : "")}
       </div>
-      <div class="fc-sendnote">${icon('lock')} Recoup never sends this — you send it yourself on the vendor's/official site. No money has moved.</div>`;
+      <div class="fc-sendnote">${icon('lock')} Cancel/claim happens on the vendor's or government's OWN site; the Gmail draft opens in YOUR compose window — you press send. No money moves through Recoup.</div>`;
     // region-specific claims (flight/settlement) carry a jurisdiction caveat so a user in the wrong
     // region doesn't file an inapplicable claim — the #1 round-3 credibility ask.
     const jurisNote = (a.kind === "flight_comp" || a.kind === "settlement")
@@ -972,6 +1004,56 @@
   // dark-only — theme toggle removed
 
   let toastT;
+  // REAL vendor cancellation portals — the cancel button takes you to the ACTUAL service's
+  // cancel page (matched on the normalized merchant), not to anything of ours.
+  const CANCEL_URLS = {
+    NETFLIX: "https://www.netflix.com/cancelplan",
+    SPOTIFY: "https://www.spotify.com/account/subscription/",
+    HULU: "https://secure.hulu.com/account",
+    "DISNEY": "https://www.disneyplus.com/account",
+    "AMAZON": "https://www.amazon.com/gp/primecentral",
+    PRIME: "https://www.amazon.com/gp/primecentral",
+    ADOBE: "https://account.adobe.com/plans",
+    LINKEDIN: "https://www.linkedin.com/psettings/manage-premium",
+    ZOOM: "https://zoom.us/billing",
+    DROPBOX: "https://www.dropbox.com/account/plan",
+    CHEGG: "https://www.chegg.com/my/subscriptions",
+    "YOUTUBE": "https://www.youtube.com/paid_memberships",
+    APPLE: "https://support.apple.com/118428",
+    AUDIBLE: "https://www.audible.com/account/overview",
+    NYTIMES: "https://myaccount.nytimes.com/seg/subscription",
+    "NEW YORK TIMES": "https://myaccount.nytimes.com/seg/subscription",
+    PARAMOUNT: "https://www.paramountplus.com/account/",
+    MAX: "https://www.max.com/account",
+    HBO: "https://www.max.com/account",
+    CRUNCHYROLL: "https://www.crunchyroll.com/account/membership",
+    XBOX: "https://account.microsoft.com/services",
+    MICROSOFT: "https://account.microsoft.com/services",
+    PLAYSTATION: "https://www.playstation.com/acct/management",
+    NOTION: "https://www.notion.so/my-account",
+    CANVA: "https://www.canva.com/settings/billing",
+    GRAMMARLY: "https://account.grammarly.com/subscription",
+    NORTON: "https://my.norton.com/extspa/account",
+    MCAFEE: "https://home.mcafee.com/secure/protected/dashboard.aspx",
+    STREAMMAX: "https://www.google.com/search?q=cancel+StreamMax+subscription",
+    GYM: "https://www.google.com/search?q=how+to+cancel+gym+membership+by+letter",
+  };
+  function cancelUrl(a) {
+    if (!a || (a.kind !== "dead_subscription" && a.kind !== "price_creep")) return null;
+    const name = String(a.raw || a.title || "").toUpperCase();
+    for (const k in CANCEL_URLS) if (name.includes(k)) return CANCEL_URLS[k];
+    const m = name.replace(/^(REVIEW|CANCEL|CHALLENGE)\s+|\s+(SUBSCRIPTION|PRICE HIKE)$/g, "").trim();
+    return "https://www.google.com/search?q=" + encodeURIComponent("cancel " + (m || name) + " subscription");
+  }
+  // "Draft in Gmail" — opens the user's OWN Gmail compose window pre-filled with the claim
+  // (no extra OAuth scope needed; the user reviews and presses send themselves).
+  function gmailComposeUrl(a) {
+    const draft = a.draft || "";
+    const subj = (draft.match(/^Subject:\s*(.+)$/m) || [])[1] || ("Regarding my " + (a.raw || a.title || "subscription"));
+    const body = draft.replace(/^Subject:.*\n+/, "");
+    return "https://mail.google.com/mail/?view=cm&su=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(body);
+  }
+
   // Honest model badge: name the actual tier that produced the reasoning (never imply Gemini 3
   // when a free-tier fallback ran). Mirrors the backend resilience ladder.
   function modelLabel(run) {
