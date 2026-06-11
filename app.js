@@ -930,6 +930,22 @@
             p.steps.map((s) => `<div class="ap-step ${esc(s.tone || "ok")}"><span class="ap-tick">${s.tone === "warn" ? "△" : "✓"}</span><span class="ap-t">${esc(s.t)}</span>${s.detail ? `<span class="ap-d">${esc(s.detail)}</span>` : ""}${s.ms ? `<span class="ap-ms">${s.ms}ms</span>` : ""}</div>`).join("");
           out.appendChild(ph);
         });
+        // NEEDS YOU — supervised autonomy: the agent did everything it can alone; this digest is
+        // the ONLY list the human must look at (urgent windows, eligibility confirmations,
+        // signature-level approvals). Everything else is drafted, verified and queued.
+        const pendingA = S.actions.filter((x) => x.approvalState === "pending");
+        const urgent = pendingA.filter((x) => /trial|before renewal/i.test((x.timeline || "") + (x.title || ""))).length;
+        const confirmN = pendingA.filter((x) => x.verify && (x.verify.needs_confirm || x.verify.review)).length;
+        const readyN = Math.max(0, pendingA.length - confirmN);
+        const ny = el("div", "ap-needsyou");
+        ny.innerHTML = `<div class="ny-h">🙋 Needs YOU (everything else is handled)</div>
+          <div class="ny-row">${urgent ? `<span class="ny-chip urgent">⏳ ${urgent} urgent — act before renewal</span>` : ""}
+          <span class="ny-chip">✍️ ${readyN} ready for your approval</span>
+          ${confirmN ? `<span class="ny-chip warn">❓ ${confirmN} need you to confirm eligibility/usage</span>` : ""}</div>
+          <button class="btn btn-primary ny-go" id="ny-go">Review them →</button>`;
+        out.appendChild(ny);
+        const nyBtn = ny.querySelector("#ny-go");
+        if (nyBtn) nyBtn.onclick = () => { const f = $("#findings"); if (f) f.scrollIntoView({ behavior: "smooth", block: "start" }); };
         const foot = el("div", "ap-boundary");
         foot.innerHTML = `🔒 ${esc(m.boundary)} · audit head <code>${esc(String((m.audit || {}).head || "").slice(0, 12))}…</code>`;
         out.appendChild(foot);
