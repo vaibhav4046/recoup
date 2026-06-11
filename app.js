@@ -838,6 +838,7 @@
         location.reload();
       };
     }
+    S._email = (u && u.email) || "";  // account tag for multi-inbox merges
     try { localStorage.setItem("ro_signed_in", "1"); } catch (e4) {}  // fast-path future page loads
     toast("Signed in as " + (u.email || who));
     showResults(); // the command center IS the signed-in dashboard — land there, not on the marketing page
@@ -962,13 +963,22 @@
   async function loadGmail(token) {
     try {
       const d = await gmailFindings(token);
-      // multi-inbox: an "Add another inbox" pass MERGES with the existing real surface
-      const adding = sessionStorage.getItem("ro_gmail_add") === "1" && S._real && S.actions.length;
       sessionStorage.removeItem("ro_gmail_add");
-      if (adding && d.findings && d.findings.length) {
-        d.findings.forEach((f, i) => { f.id = "b_" + i + "_" + (f.id || i); });
-        d.findings = S.actions.concat(d.findings);
+      // MULTI-INBOX, ALWAYS: every scan is tagged with the account it came from, and findings
+      // from OTHER connected accounts are always kept and merged — adding inbox B never wipes
+      // inbox A. Same-account re-scans refresh only that account's findings.
+      const me = S._email || "";
+      (d.findings || []).forEach((f) => { f._acct = me; });
+      let prev = [];
+      try { prev = (JSON.parse(localStorage.getItem("ro_user_surface") || "{}").actions) || []; } catch (e) {}
+      if (!prev.length && S._real) prev = S.actions || [];
+      const others = prev.filter((p) => p.source === "gmail" && p._acct && p._acct !== me);
+      if (others.length && d.findings) {
+        others.forEach((p, i) => { p.id = "x" + i + "_" + String(p.id || i).replace(/^x\d+_/, ""); });
+        d.findings = d.findings.concat(others);
       }
+      const inboxes = new Set((d.findings || []).map((f) => f._acct).filter(Boolean)).size;
+      if (inboxes > 1) setTimeout(() => toast("Merged " + inboxes + " inboxes into one money surface"), 1400);
       if (d.findings && d.findings.length) {
         const recur = r2(d.findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + (a.amount || 0), 0));
         await applyFindings(d.findings, {
