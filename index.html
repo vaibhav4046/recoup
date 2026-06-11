@@ -417,6 +417,11 @@
       <span class="ap-copy"><b>Run Autopilot</b> — the agent scans, grounds every claim in Atlas, drafts, verifies and queues — autonomously. You keep the approve button.</span>
       <span class="ap-go">Run →</span>
     </button>
+    <div class="rh-sentinel" id="rh-sentinel-row">
+      <button class="sentinel-toggle" id="sentinel-toggle" aria-pressed="false">🛡️ <b>Sentinel</b> · scheduled drain watch — <span class="st-state">off</span></button>
+      <span class="sentinel-sub">When on, the agent re-checks your drains on a schedule; if money keeps leaking to something you haven't confirmed using, it notifies you — one tap approves and the execution agent takes over.</span>
+    </div>
+    <div id="sentinel-alert"></div>
     <div class="ap-mission" id="ap-mission" aria-live="polite"></div>
     <div class="rh-grid">
       <button class="rh-card" id="rh-scan">

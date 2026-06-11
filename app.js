@@ -946,6 +946,61 @@
       try { if ("Notification" in window && Notification.permission === "granted" && document.hidden) new Notification(title, { body, icon: "/mark.png" }); } catch (e) {}
     };
 
+    // SENTINEL — the scheduled drain watch. While on, the agent re-analyzes your surface on a
+    // schedule (every 6h, survives reloads via localStorage); if a significant drain ($100+/yr)
+    // is still leaking and you haven't confirmed using it, it notifies you and offers one-tap
+    // approval — which hands straight to the execution agent (portal + Playwright preview).
+    const stBtn = $("#sentinel-toggle");
+    const stPaint = () => {
+      if (!stBtn) return;
+      const on = localStorage.getItem("ro_sentinel") === "1";
+      stBtn.classList.toggle("on", on); stBtn.setAttribute("aria-pressed", String(on));
+      const t = stBtn.querySelector(".st-state"); if (t) t.textContent = on ? "ON · watching" : "off";
+    };
+    const sentinelCheck = (force) => {
+      try {
+        if (localStorage.getItem("ro_sentinel") !== "1" || !S._real) return;
+        const last = +(localStorage.getItem("ro_sentinel_last") || 0);
+        if (!force && Date.now() - last < 6 * 3600e3) return;   // scheduled cadence: 6h
+        const kept = keptList();
+        const cand = (S.actions || [])
+          .filter((a) => a.cadence === "yearly" && a.approvalState === "pending" &&
+                         (a.kind === "dead_subscription" || a.kind === "price_creep") &&
+                         !kept.includes(keptKey(a)) && a.amount >= 100)
+          .sort((x, y) => y.amount - x.amount)[0];
+        if (!cand) return;
+        localStorage.setItem("ro_sentinel_last", String(Date.now()));
+        const vendor = (cand.raw || cand.title || "").split(/[—(]/)[0].trim();
+        try { if ("Notification" in window && Notification.permission === "granted") new Notification("Recoup Sentinel 🛡️", { body: vendor + " is still draining " + cand.amount_label + " and you haven't confirmed using it. Cancel it?", icon: "/mark.png" }); } catch (e) {}
+        const box = $("#sentinel-alert");
+        if (box) {
+          box.innerHTML = `<div class="sentinel-banner"><div class="sb-t">🛡️ Sentinel: <b>${esc(vendor)}</b> is still draining <b>${esc(cand.amount_label)}</b> — you haven't confirmed you use it. Proceed with the cancel?</div>
+            <div class="sb-row"><button class="btn btn-primary" id="sb-go">✓ Yes — cancel it (agent executes)</button>
+            <button class="btn btn-skip" id="sb-keep">I use it — keep</button></div></div>`;
+          const go = $("#sb-go"), keep = $("#sb-keep");
+          if (go) go.onclick = () => { box.innerHTML = ""; approve(cand.id); const c = $("#card-" + cand.id); if (c) c.scrollIntoView({ behavior: "smooth", block: "center" }); };
+          if (keep) keep.onclick = () => { box.innerHTML = ""; skip(cand.id); };
+        }
+        appendAudit("agent", "Sentinel", "SENTINEL_ALERT", "Scheduled watch flagged: " + vendor + " (" + cand.amount_label + ") — awaiting your decision", cand.amount);
+      } catch (e) {}
+    };
+    if (stBtn) {
+      stPaint();
+      stBtn.onclick = () => {
+        const on = localStorage.getItem("ro_sentinel") === "1";
+        localStorage.setItem("ro_sentinel", on ? "0" : "1");
+        stPaint();
+        if (!on) {
+          try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+          toast("Sentinel ON — I'll re-check your drains on a schedule and ping you before any cancel");
+          localStorage.removeItem("ro_sentinel_last");
+          setTimeout(() => sentinelCheck(true), 900);
+        } else { toast("Sentinel off"); const b = $("#sentinel-alert"); if (b) b.innerHTML = ""; }
+      };
+      setTimeout(() => sentinelCheck(false), 4000);            // on every boot
+      setInterval(() => sentinelCheck(false), 30 * 60e3);      // and while the app stays open
+    }
+
     // AUTOPILOT — the autonomous mission, rendered as a layered live timeline
     const apBtn = $("#rh-autopilot");
     if (apBtn) apBtn.onclick = async () => {
