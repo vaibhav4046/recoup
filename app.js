@@ -833,6 +833,49 @@
       ch.onclick = () => { const i = $("#scan-input"); if (i && PRESETS[ch.dataset.preset]) { i.value = PRESETS[ch.dataset.preset]; i.focus(); toast("Use-case loaded — hit Scan privately (parsed in your browser)"); } };
     });
 
+    // shared action runner — the guide chatbot + command palette both drive the app through this
+    const runAction = (name) => {
+      if (name === "autopilot") { showResults(); setTimeout(() => { const b = $("#rh-autopilot"); if (b) { b.scrollIntoView({ block: "center" }); b.click(); } }, 250); }
+      else if (name === "scan") openScan();
+      else if (name === "unclaimed") { showResults(); setTimeout(() => { const u = $("#unclaimed"); if (u) { u.scrollIntoView({ block: "start" }); const i = $("#uc-name"); if (i) i.focus(); } }, 250); }
+      else if (name === "gmail") { if (API) window.location.href = API + "/api/gmail/start"; else toast("Gmail scan needs the live backend."); }
+      else if (name === "audit") { if (API) window.open(API + "/api/health", "_blank", "noopener"); }
+    };
+
+    // in-dashboard AI guide — chatbot tone, product-aware, can DRIVE the app
+    const gFab = $("#guide-fab"), gBox = $("#guide"), gMsgs = $("#guide-msgs"), gForm = $("#guide-form"), gIn = $("#guide-in");
+    const gAdd = (who, text, meta) => {
+      const m = el("div", "gmsg " + who);
+      m.innerHTML = `<div class="gbubble">${esc(text)}</div>` + (meta ? `<div class="gmeta">${esc(meta)}</div>` : "");
+      gMsgs.appendChild(m); gMsgs.scrollTop = gMsgs.scrollHeight;
+      return m;
+    };
+    const gSend = async (text) => {
+      text = (text || "").trim(); if (!text) return;
+      gAdd("you", text);
+      const thinking = gAdd("bot", "…thinking");
+      try {
+        // one-line surface summary (counts only — no raw data leaves unless already server-known)
+        const surface = S._real ? `${S.actions.length} real findings, $${money(S.recurring_year)}/yr recurring + $${money(S.one_time)} one-time` : "sample demo surface";
+        const d = API ? await fetch(API + "/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface }) }).then((r) => r.json()) : null;
+        thinking.remove();
+        if (d && d.reply) {
+          gAdd("bot", d.reply, d.live ? ("answered by " + d.model) : "instant guide");
+          if (d.action && d.action !== "none") setTimeout(() => runAction(d.action), 700);
+        } else gAdd("bot", "I can run Autopilot, scan your statement, or search real unclaimed money — which one?");
+      } catch (e5) { thinking.remove(); gAdd("bot", "Backend waking up — ask me again in a few seconds."); }
+    };
+    if (gFab && gBox) {
+      const gOpen = () => { gBox.classList.add("open"); gBox.setAttribute("aria-hidden", "false"); gFab.setAttribute("aria-expanded", "true");
+        if (!gMsgs.childElementCount) gAdd("bot", "Hey! 👋 I'm your Recoup guide. I can run the autonomous Autopilot, scan your real statement, search $37.8M of real unclaimed money, or explain how the approval gate keeps you in control. What shall we find first?");
+        setTimeout(() => gIn.focus(), 60); };
+      const gClose = () => { gBox.classList.remove("open"); gBox.setAttribute("aria-hidden", "true"); gFab.setAttribute("aria-expanded", "false"); };
+      gFab.onclick = () => gBox.classList.contains("open") ? gClose() : gOpen();
+      const gx = $("#guide-x"); if (gx) gx.onclick = gClose;
+      gForm.onsubmit = (e) => { e.preventDefault(); const v = gIn.value; gIn.value = ""; gSend(v); };
+      document.querySelectorAll(".gchip").forEach((c) => { c.onclick = () => gSend(c.dataset.q); });
+    }
+
     // ⌘K / Ctrl-K command palette — every agent action one keystroke away
     const CMDS = [
       { t: "⚡ Run Autopilot (autonomous mission)", run: () => { showResults(); setTimeout(() => { const b = $("#rh-autopilot"); if (b) { b.scrollIntoView({ block: "center" }); b.click(); } }, 250); } },
