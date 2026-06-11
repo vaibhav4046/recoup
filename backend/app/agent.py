@@ -122,22 +122,29 @@ def generate_any(prompt: str, json_mode: bool = True) -> tuple[str, str]:
     from . import adk_agent as _adk
     s = get_settings()
     ladder = [s.gemini_model] + [m.strip() for m in (s.fallback_models or "").split(",") if m.strip()]
-    # serve a cache hit from ANY tier first — zero quota
     from . import llm_cache
-    for m in ladder:
+    # PRIMARY-FIRST ordering: a cached PRIMARY answer wins outright; otherwise try the primary
+    # LIVE before falling back to cached fallback-tier answers — so the moment Gemini 3 quota is
+    # healthy, the flagship model takes over again instead of being shadowed by older Gemma cache.
+    hit = llm_cache.get(s.gemini_model, prompt)
+    if hit is not None:
+        return hit, s.gemini_model
+    last: Exception | None = None
+    if not _adk.quota_blocked():
+        try:
+            return _generate(s.gemini_model, prompt, attempts=1, json_mode=json_mode), s.gemini_model
+        except Exception as e:  # noqa: BLE001
+            last = e
+            _adk._trip_breaker(f"{type(e).__name__}: {e}")
+    for m in ladder[1:]:
         hit = llm_cache.get(m, prompt)
         if hit is not None:
             return hit, m
-    last: Exception | None = None
-    for m in ladder:
-        if m == s.gemini_model and _adk.quota_blocked():
-            continue  # breaker open on the primary -> go straight to the Gemma tier
+    for m in ladder[1:]:
         try:
             return _generate(m, prompt, attempts=2, json_mode=json_mode and not m.startswith("gemma")), m
         except Exception as e:  # noqa: BLE001 — 429/404/anything: try the next tier
             last = e
-            if m == s.gemini_model:
-                _adk._trip_breaker(f"{type(e).__name__}: {e}")
     raise last if last else RuntimeError("no models configured")
 
 

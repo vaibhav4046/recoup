@@ -162,7 +162,8 @@ def verify_captcha(token: str, ip: str = "") -> bool:
 
 
 # ---- Google OAuth ----
-def google_auth_url(state: str, gmail: bool = False, include_gmail: bool = False) -> str | None:
+def google_auth_url(state: str, gmail: bool = False, include_gmail: bool = False,
+                    force_chooser: bool = False) -> str | None:
     s = get_settings()
     if not s.google_oauth_client_id:
         return None
@@ -184,8 +185,8 @@ def google_auth_url(state: str, gmail: bool = False, include_gmail: bool = False
     # Without it, a user who already granted the scope is silently re-approved — the Gmail scan
     # runs with ZERO screens from the second connect onward. Sign-in keeps the account chooser
     # only (no re-consent), so repeat sign-in stays one tap.
-    if not gmail:
-        params["prompt"] = "select_account"
+    if not gmail or force_chooser:
+        params["prompt"] = "select_account"  # chooser for sign-in / add-another-inbox; silent otherwise
     q = urlencode(params)
     return f"https://accounts.google.com/o/oauth2/v2/auth?{q}"
 
