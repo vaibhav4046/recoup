@@ -251,6 +251,18 @@ async def unclaimed_search(request: Request, name: str = ""):
     return _ok(request, **res)
 
 
+@app.post("/api/assistant")
+async def assistant_chat(request: Request):
+    """The in-dashboard AI guide: chatbot tone, product-aware, can drive the app via `action`.
+    Same honest model ladder; deterministic intent fallback so the guide never goes dead."""
+    body = await _json_obj(request)
+    msg = str((body or {}).get("message") or "")[:500]
+    surface = str((body or {}).get("surface") or "")[:300]
+    from . import assistant
+    res = await run_in_threadpool(assistant.respond, msg, surface)
+    return _ok(request, **res)
+
+
 @app.post("/api/agent/autopilot")
 async def agent_autopilot(request: Request):
     """AUTOPILOT — the autonomous mission: scan -> ground (Atlas) -> draft -> verify -> queue at

@@ -570,6 +570,26 @@
   </div>
 </aside>
 
+<!-- in-dashboard AI guide (chatbot) -->
+<button class="guide-fab" id="guide-fab" aria-label="Open the Recoup AI guide" aria-expanded="false">✦</button>
+<div class="guide" id="guide" role="dialog" aria-label="Recoup AI guide" aria-hidden="true">
+  <div class="guide-head">
+    <span class="guide-dot"></span> Recoup Guide <span class="guide-sub">· AI · can drive the app</span>
+    <button class="x" id="guide-x" aria-label="Close guide">✕</button>
+  </div>
+  <div class="guide-msgs" id="guide-msgs" aria-live="polite"></div>
+  <div class="guide-chips">
+    <button class="gchip" data-q="Run autopilot">⚡ Autopilot</button>
+    <button class="gchip" data-q="Scan my bank statement">📄 Scan</button>
+    <button class="gchip" data-q="Search unclaimed money">💰 Unclaimed</button>
+    <button class="gchip" data-q="How do approvals work?">🔒 Approvals</button>
+  </div>
+  <form class="guide-form" id="guide-form">
+    <input class="guide-in" id="guide-in" type="text" placeholder="Ask me anything — or tell me what to do…" maxlength="500" aria-label="Message the guide" autocomplete="off" />
+    <button class="btn btn-primary guide-send" type="submit" aria-label="Send">→</button>
+  </form>
+</div>
+
 <!-- command palette (Ctrl/Cmd+K) — every agent action, one keystroke away -->
 <div class="cmdk-scrim" id="cmdk-scrim" aria-hidden="true"></div>
 <div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Command palette" aria-hidden="true">
