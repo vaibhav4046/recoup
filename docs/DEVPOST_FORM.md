@@ -6,7 +6,7 @@
 Recoup — the AI agent that gets your money back
 
 ## Tagline (short)
-A Gemini 3 + ADK agent that finds money you're owed, grounds every claim in MongoDB Atlas Vector Search memory, and never acts without your approval.
+Budgeting apps show where your money went. Recoup gets it back - a Gemini 3 + ADK autonomous agent that scans your real Gmail/statements, grounds every claim in MongoDB Atlas Vector Search, and never acts without your approval. No bank login, ever.
 
 ## Track
 **MongoDB**

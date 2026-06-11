@@ -50,6 +50,17 @@ _FALLBACK = [
     (("approve", "send", "sent"),
      ("Recoup never sends anything itself — every claim stops at pending-approval. You review, "
       "you approve, and you send it on the vendor's or government's official site."), "none"),
+    (("recover this week", "what can i recover", "find money", "how much can i"),
+     ("Run Autopilot and I'll show you ⚡ — it scans your surface, ranks your top money drains, "
+      "drafts every claim, and queues them at your approve button. Your biggest leaks show up "
+      "first in the Top Money Drains strip."), "autopilot"),
+    (("don't use", "dont use", "cancel everything", "cancel subscriptions", "unused"),
+     ("Check your Top Money Drains strip — it ranks the subscriptions costing you most. Each one "
+      "has a Cancel button that opens the vendor's OWN cancellation page (Netflix, Spotify, "
+      "Adobe…), plus a pre-written cancellation email in your tone of choice."), "autopilot"),
+    (("tone", "firm", "polite", "rewrite"),
+     ("Open any claim's drawer ('Show work') — there's a tone selector: Polite, Firm, or Short. "
+      "The draft updates instantly and Copy / Draft-in-Gmail use whichever tone you pick."), "none"),
     (("hi", "hello", "hey", "help", "what can", "how do", "start"),
      ("Hey! 👋 I'm your Recoup guide. I can run the autonomous Autopilot, scan your real bank "
       "statement, search $37.8M of real unclaimed money, or scan your Gmail read-only. What "
