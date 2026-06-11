@@ -879,11 +879,19 @@
         const head = el("div", "ap-head");
         head.innerHTML = `<b>Mission ${esc(m.mission_id)}</b> · ${m.findings} findings → ${m.drafted} claims drafted → ${m.pending_approval} at your approval gate · ${m.total_ms}ms · ${esc(modelLabel(m))}`;
         out.appendChild(head);
+        // sleek per-phase glyphs (the mission payload names them: radar/db/pen/shield/lock)
+        const PHASE_ICO = {
+          radar: '<circle cx="12" cy="12" r="9"/><path d="M12 12l6-4M12 3v3m9 6h-3M12 18v3M6 12H3"/>',
+          db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+          pen: '<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/>',
+          shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+          lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+        };
         let delay = 0;
         m.phases.forEach((p, pi) => {
           const ph = el("div", "ap-phase");
           ph.style.animationDelay = (delay += 120) + "ms";
-          ph.innerHTML = `<div class="ap-phase-h"><span class="ap-num">${pi + 1}</span> ${esc(p.name)}</div>` +
+          ph.innerHTML = `<div class="ap-phase-h"><span class="ap-num">${pi + 1}</span><svg class="ap-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PHASE_ICO[p.icon] || PHASE_ICO.radar}</svg> ${esc(p.name)}</div>` +
             p.steps.map((s) => `<div class="ap-step ${esc(s.tone || "ok")}"><span class="ap-tick">${s.tone === "warn" ? "△" : "✓"}</span><span class="ap-t">${esc(s.t)}</span>${s.detail ? `<span class="ap-d">${esc(s.detail)}</span>` : ""}${s.ms ? `<span class="ap-ms">${s.ms}ms</span>` : ""}</div>`).join("");
           out.appendChild(ph);
         });
