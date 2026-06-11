@@ -540,10 +540,9 @@
           .then((r) => r.json()).then((d) => {
             if (d && d.ok && d.shots && d.shots.length) {
               pw.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">Execution Agent reached ${esc(d.final_url_host || "the portal")}${d.login_wall ? " — vendor login wall: your account, your final click" : ""} (${d.total_ms}ms, Playwright)</span>`;
-              const img = el("img", "exec-shot");
-              img.src = "data:image/jpeg;base64," + d.shots[0];
-              img.alt = "Live browser preview of the vendor portal";
-              ex.appendChild(img);
+              const sb = el("div", "exec-board");
+              d.shots.forEach((sh, si) => { const img = el("img", "exec-shot"); img.src = "data:image/jpeg;base64," + sh; img.alt = "Agent walk step " + (si + 1); sb.appendChild(img); });
+              ex.appendChild(sb);
             } else {
               pw.innerHTML = `<span class="ap-tick">△</span><span class="ap-t">Execution preview unavailable (${esc((d && d.error) || "try again")}) — the portal tab is open beside you</span>`;
             }
@@ -1066,7 +1065,9 @@
               if (d && d.ok && d.shots && d.shots.length) {
                 line.className = "ap-step ok";
                 line.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">Agent reached ${esc(d.final_url_host || "the portal")}${d.login_wall ? " — login wall: your account, your final click" : ""} (${d.total_ms}ms, Playwright)</span>`;
-                const img = el("img", "exec-shot"); img.src = "data:image/jpeg;base64," + d.shots[0]; img.alt = "Live browser preview"; exp.appendChild(img);
+                const sb2 = el("div", "exec-board");
+                d.shots.forEach((sh, si) => { const img = el("img", "exec-shot"); img.src = "data:image/jpeg;base64," + sh; img.alt = "Agent walk step " + (si + 1); sb2.appendChild(img); });
+                exp.appendChild(sb2);
                 exp.scrollIntoView({ behavior: "smooth", block: "nearest" });
               } else { exp.remove(); }
             }).catch(() => { exp.remove(); });
@@ -1231,6 +1232,12 @@
         out.appendChild(ny);
         const nyBtn = ny.querySelector("#ny-go");
         if (nyBtn) nyBtn.onclick = () => { const f = $("#findings"); if (f) f.scrollIntoView({ behavior: "smooth", block: "start" }); };
+        if (m.exec_shot) {
+          const ew = el("div", "exec-steps");
+          ew.innerHTML = `<div class="ap-step ok"><span class="ap-tick">✓</span><span class="ap-t">Live browser preview — the Execution Agent on the vendor's page (Playwright)</span></div>`;
+          const img = el("img", "exec-shot"); img.src = "data:image/jpeg;base64," + m.exec_shot; img.alt = "Execution agent live preview";
+          ew.appendChild(img); out.appendChild(ew);
+        }
         const foot = el("div", "ap-boundary");
         foot.innerHTML = `🔒 ${esc(m.boundary)} · audit head <code>${esc(String((m.audit || {}).head || "").slice(0, 12))}…</code>`;
         out.appendChild(foot);

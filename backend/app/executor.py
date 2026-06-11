@@ -52,9 +52,23 @@ def run_preview(url: str) -> dict:
                 steps.append({"t": "Headless Chromium launched (Playwright)", "ms": round((time.perf_counter() - t0) * 1000)})
                 page.goto(url, wait_until="domcontentloaded", timeout=20000)
                 steps.append({"t": f"Navigated to {urlparse(url).hostname}", "ms": round((time.perf_counter() - t0) * 1000)})
-                page.wait_for_timeout(2500)  # let the portal settle/redirect (often to the vendor's login wall)
-                shot = page.screenshot(type="jpeg", quality=60)
-                shots.append(base64.b64encode(shot).decode())
+                page.wait_for_timeout(2200)  # let the portal settle/redirect (often to the vendor's login wall)
+                shots.append(base64.b64encode(page.screenshot(type="jpeg", quality=55)).decode())
+                # MULTI-STEP WALK: like a human, the agent looks for the cancellation path on the
+                # public page and clicks one step deeper (never typing, never past a login form).
+                try:
+                    sel = ("a:has-text('Cancel'), button:has-text('Cancel'), a:has-text('cancel'), "
+                           "a:has-text('Manage'), button:has-text('Manage membership')")
+                    el = page.locator(sel).first
+                    if el.count() > 0 and el.is_visible(timeout=1500):
+                        label = (el.inner_text(timeout=1000) or "control").strip()[:40]
+                        el.click(timeout=3000)
+                        page.wait_for_timeout(2200)
+                        steps.append({"t": f"Clicked \"{label}\" — walked one step deeper into the cancel flow",
+                                      "ms": round((time.perf_counter() - t0) * 1000)})
+                        shots.append(base64.b64encode(page.screenshot(type="jpeg", quality=55)).decode())
+                except Exception:
+                    pass  # nothing clickable pre-login — the first screenshot already tells the story
                 title = (page.title() or "")[:120]
                 final_host = (urlparse(page.url).hostname or "")
                 login_wall = any(w in page.url.lower() or w in title.lower()

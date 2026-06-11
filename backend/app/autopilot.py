@@ -178,8 +178,45 @@ def run_mission(user_findings: list | None = None) -> dict:
         _step("Mission audit-chained", f"event {evt.get('event_id')} · head {str(ver.get('head', ''))[:12]}…", tone="cyan"),
     ]})
 
+    # ---- PHASE 6 · EXECUTE (real browser preview on the top drain — Playwright, time-budgeted) ----
+    exec_shot = None
+    try:
+        top = next((f for f in sorted((findings if on_user_data else actions), key=lambda x: -float(x.get("amount") or 0))
+                    if f.get("cadence") == "yearly"), None)
+        if top:
+            from . import executor
+            from .executor import ALLOWED_DOMAINS as _AD
+            name = str(top.get("title") or "").upper()
+            url = None
+            PORTALS = {"NETFLIX": "https://www.netflix.com/cancelplan", "SPOTIFY": "https://www.spotify.com/account/subscription/",
+                       "YOUTUBE": "https://www.youtube.com/paid_memberships", "DISNEY": "https://www.disneyplus.com/account/subscription",
+                       "LINKEDIN": "https://www.linkedin.com/psettings/manage-premium", "GOOGLE ONE": "https://one.google.com/settings",
+                       "AMAZON": "https://www.amazon.com/gp/primecentral", "ADOBE": "https://account.adobe.com/plans"}
+            for k, v in PORTALS.items():
+                if k in name:
+                    url = v
+                    break
+            if url:
+                from concurrent.futures import ThreadPoolExecutor as _TPE
+                _e = _TPE(max_workers=1)
+                try:
+                    res = _e.submit(executor.run_preview, url).result(timeout=18)
+                finally:
+                    _e.shutdown(wait=False, cancel_futures=True)
+                if res.get("ok"):
+                    exec_shot = (res.get("shots") or [None])[-1]
+                    phases.append({"name": "Execute", "icon": "pen", "steps": [
+                        _step("Execution Agent walked the top drain's portal",
+                              f"real headless browser · {res.get('final_url_host','')} · {res.get('total_ms',0)}ms · Playwright", tone="ok"),
+                        _step("Login wall reached — your account, your final click" if res.get("login_wall")
+                              else "Cancellation page reached — one click left, and it is yours", tone="warn"),
+                    ]})
+    except Exception:
+        pass  # execution preview is a bonus — the mission never fails because of it
+
     return {
         "mission_id": mission_id,
+        "exec_shot": exec_shot,
         "on_user_data": on_user_data,
         "phases": phases,
         "model": model,

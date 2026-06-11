@@ -652,6 +652,11 @@ body{
 .ny-chip.urgent{border-color:rgba(255,125,107,.5);color:#ff9d8b}
 .ny-chip.warn{border-color:rgba(245,197,24,.4);color:#e9c75a}
 .ny-go{align-self:flex-start;padding:9px 16px;min-height:0}
+.exec-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:8px}
+.exec-board .exec-shot{margin-top:0}
+.drawer-content,.drawer-body{padding-right:14px}
+.drawer .ai-plan{max-height:none;overflow:visible}
+.drawer{scroll-padding-bottom:24px}
 .exec-shot{width:100%;border-radius:10px;border:1px solid rgba(52,211,153,.35);margin-top:8px;display:block}
 .brand{font-weight:800}
 .exec-steps{margin-top:10px;padding:10px 12px;border:1px solid rgba(52,211,153,.3);border-radius:11px;background:rgba(52,211,153,.05);display:flex;flex-direction:column;gap:3px}
