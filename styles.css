@@ -684,6 +684,12 @@ body{
 .preset-chip{padding:7px 13px;border-radius:20px;border:1px solid var(--border2);background:var(--panel2);color:var(--muted);font-family:inherit;font-size:12.5px;cursor:pointer;transition:.2s}
 .preset-chip:hover{border-color:rgba(245,197,24,.5);color:var(--text)}
 
+/* tone selector in the claim drawer */
+.tone-row{display:flex;align-items:center;gap:7px;padding:0 22px 8px}
+.tone-label{font-size:11px;color:var(--dim)}
+.tone-chip{padding:5px 12px;border-radius:14px;border:1px solid var(--border2);background:var(--panel2);color:var(--muted);font-family:inherit;font-size:11.5px;cursor:pointer;text-transform:capitalize;transition:.2s}
+.tone-chip.on{border-color:rgba(245,197,24,.6);color:#ffd84d;background:rgba(245,197,24,.08)}
+
 /* live AI plan inside the drawer */
 .drawer-ai{padding:0 22px 8px}
 .drawer-ai .btn{width:100%;justify-content:center}

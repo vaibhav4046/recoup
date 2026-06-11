@@ -569,6 +569,32 @@
       (a.timeline ? `<div class="prov-sec"><div class="prov-h">What to expect</div><div class="prov-rule">${icon('clock')} Typically <b>${esc(a.timeline)}</b> · ${esc(a.odds || "")} to actually land — you file on the form, nothing is automatic.</div></div>` : "") +
       (a.claim_url ? `<a class="btn btn-mail full" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener">Open the official claim form ${icon('upRight')}</a>` : "") +
       `<div class="prov-h" style="margin-top:14px">The drafted claim</div>`;
+    // tone selector — Polite (default) / Firm / Short. Deterministic rewrites grounded in the
+    // claim's own fields (never invents amounts); Copy + Draft-in-Gmail pick up the chosen tone.
+    if (!a._draft0) a._draft0 = a.draft || "";
+    const toneDraft = (tone) => {
+      const subj = (a._draft0.match(/^Subject:\s*(.+)$/m) || [])[1] || `Regarding ${a.raw || a.title}`;
+      const body0 = a._draft0.replace(/^Subject:.*\n+/, "");
+      const basis = RULES[a.rule] ? `Basis: ${RULES[a.rule]}` : "";
+      if (tone === "firm") {
+        return `Subject: ${subj} — formal request\n\n${body0.trim()}\n\nPlease treat this as a formal request. ${basis}\nI expect a written confirmation within 14 days, after which I will escalate through the appropriate channel.`;
+      }
+      if (tone === "short") {
+        const amt = a.amount_label ? ` (${a.amount_label})` : "";
+        return `Subject: ${subj}\n\nPlease ${a.kind === "billing_error" ? "review and refund the duplicate charge" : a.cadence === "once" ? "process my claim" : "cancel my subscription"}${amt} and confirm in writing. Thank you.`;
+      }
+      return a._draft0; // polite (original)
+    };
+    const toneRow = el("div", "tone-row");
+    toneRow.innerHTML = `<span class="tone-label">Tone:</span>` +
+      ["polite", "firm", "short"].map((t) => `<button class="tone-chip${(a._tone || "polite") === t ? " on" : ""}" data-tone="${t}">${t}</button>`).join("");
+    const prevTone = $("#drawer .tone-row"); if (prevTone) prevTone.remove();
+    $("#drawer-body").before(toneRow);
+    toneRow.querySelectorAll("[data-tone]").forEach((b) => {
+      b.onclick = () => { a._tone = b.dataset.tone; a.draft = toneDraft(a._tone); $("#drawer-body").textContent = a.draft;
+        toneRow.querySelectorAll(".tone-chip").forEach((c) => c.classList.toggle("on", c.dataset.tone === a._tone)); };
+    });
+    a.draft = toneDraft(a._tone || "polite");
     $("#drawer-body").textContent = a.draft || "(no draft)";
     // live AI plan on THIS charge (your real scanned data included) — one call, honest model label
     const aiOut = $("#drawer-ai-out"), aiBtn = $("#drawer-ai-btn");
