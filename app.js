@@ -1166,7 +1166,10 @@
     if (!a || (a.kind !== "dead_subscription" && a.kind !== "price_creep")) return null;
     const name = String(a.raw || a.title || "").toUpperCase();
     for (const k in CANCEL_URLS) if (name.includes(k)) return CANCEL_URLS[k];
-    const m = name.replace(/^(REVIEW|CANCEL|CHALLENGE)\s+|\s+(SUBSCRIPTION|PRICE HIKE)$/g, "").trim();
+    // clean merchant only: drop our title decorations ("— active subscription (still using it?)",
+    // "Trial converting:", Review/Cancel prefixes) so the search is "cancel JOBLEADS subscription"
+    const m = name.split("—")[0].split("(")[0]
+      .replace(/^(REVIEW|CANCEL|CHALLENGE|TRIAL CONVERTING:)\s+|\s+(SUBSCRIPTION|PRICE HIKE)$/g, "").trim();
     return "https://www.google.com/search?q=" + encodeURIComponent("cancel " + (m || name) + " subscription");
   }
   // "Draft in Gmail" — opens the user's OWN Gmail compose window pre-filled with the claim
