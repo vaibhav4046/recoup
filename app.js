@@ -554,11 +554,62 @@
     toast(`Recovered ${a.amount_label} — ${a.title}`);
   }
 
-  function approveAllSafe() {
+  // BULK AUTONOMOUS EXECUTION — "Approve all safe wins" now runs the WHOLE fleet: every pending
+  // leak is approved, then the execution agent walks each vendor's cancellation portal one by
+  // one (real Playwright, sequential — the server runs one browser at a time), narrating live.
+  // When the sweep finishes you get a notification: done, here are your final clicks.
+  async function approveAllSafe() {
     if (demoBlocked()) return;
     const safe = S.actions.filter((a) => a.approvalState === "pending" && isLeak(a.kind));
-    safe.forEach((a, i) => setTimeout(() => approve(a.id), i * 180));
+    if (!safe.length) { toast("Nothing pending to approve"); return; }
+    try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
+    safe.forEach((a) => { a.approvalState = "approved"; a.status = "claim_ready"; });
+    await appendAudit("human", "You", "ACTION_APPROVED", `Bulk approval: ${safe.length} claims approved in one sweep`, safe.reduce((t, a) => t + a.amount, 0));
+    recompute(); renderAll(false);
+    // narrated fleet panel
+    let host = $("#sentinel-alert") || $("#findings");
+    const panel = el("div", "sentinel-banner");
+    panel.innerHTML = `<div class="sb-t">⚡ <b>Bulk execution</b> — ${safe.length} approved; the agent is walking each vendor's cancellation portal…</div><div class="exec-steps" id="bulk-steps"></div>`;
+    host.parentNode.insertBefore(panel, host);
+    const stepsBox = panel.querySelector("#bulk-steps");
+    const execable = safe.filter((a) => { const u = cancelUrl(a); return u && !u.includes("google.com/search"); });
+    const manual = safe.filter((a) => !execable.includes(a));
+    let walked = 0;
+    for (const a of execable) {
+      const vendor = (a.raw || a.title || "vendor").split(/[—(]/)[0].trim();
+      const line = el("div", "ap-step dim");
+      line.innerHTML = `<span class="ap-tick">⟳</span><span class="ap-t">Executing: ${esc(vendor)} (${esc(a.amount_label)})…</span>`;
+      stepsBox.appendChild(line); line.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      try {
+        const d = await fetch(API + "/api/agent/execute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: cancelUrl(a) }) }).then((r) => r.json());
+        if (d && d.ok) {
+          walked++;
+          line.className = "ap-step ok";
+          line.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">${esc(vendor)} — portal walked (${d.total_ms}ms, Playwright)${d.login_wall ? " · login wall: your final click" : ""} · <a href="${safeUrl(cancelUrl(a))}" target="_blank" rel="noopener">open portal ↗</a></span>`;
+        } else {
+          line.className = "ap-step warn";
+          line.innerHTML = `<span class="ap-tick">△</span><span class="ap-t">${esc(vendor)} — preview unavailable · <a href="${safeUrl(cancelUrl(a))}" target="_blank" rel="noopener">open portal ↗</a></span>`;
+        }
+      } catch (e) {
+        line.className = "ap-step warn";
+        line.innerHTML = `<span class="ap-tick">△</span><span class="ap-t">${esc(vendor)} — <a href="${safeUrl(cancelUrl(a))}" target="_blank" rel="noopener">open portal ↗</a></span>`;
+      }
+    }
+    for (const a of manual) {
+      const vendor = (a.raw || a.title || "vendor").split(/[—(]/)[0].trim();
+      const line = el("div", "ap-step ok");
+      line.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">${esc(vendor)} — claim drafted & queued · <a href="${safeUrl(cancelUrl(a) || '#')}" target="_blank" rel="noopener">find cancel route ↗</a></span>`;
+      stepsBox.appendChild(line);
+    }
+    const foot = el("div", "ap-step ok");
+    foot.innerHTML = `<span class="ap-tick">🏁</span><span class="ap-t"><b>Done.</b> ${safe.length} approved · ${walked} portals walked by the agent — each needs only YOUR final click inside your account.</span>`;
+    stepsBox.appendChild(foot); foot.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    await appendAudit("agent", "Execution Agent (Playwright)", "BULK_EXECUTION", `Bulk sweep: ${walked}/${execable.length} vendor portals walked, ${safe.length} claims queued`);
+    renderAudit();
+    try { if ("Notification" in window && Notification.permission === "granted") new Notification("Recoup: bulk execution done 🏁", { body: safe.length + " cancellations approved, " + walked + " portals walked by the agent. Your final clicks are ready.", icon: "/mark.png" }); } catch (e) {}
+    toast("Bulk execution done — " + walked + " portals walked, final clicks are yours");
   }
+
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   let demoRunning = false;
