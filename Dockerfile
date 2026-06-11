@@ -14,6 +14,8 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 # pre-fetch the MongoDB MCP server so the first tool call is fast (pinned == the runtime spawn version)
 RUN npx -y mongodb-mcp-server@1.12.0 --version || true
+# Chromium for the Playwright execution agent (browser automation on vendor portals)
+RUN python -m playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 
 COPY backend/app ./app
 RUN mkdir -p ./static
