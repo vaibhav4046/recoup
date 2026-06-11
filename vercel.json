@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://recoup-agent-681822930558.us-central1.run.app/:path*",
+      "permanent": false
+    }
+  ]
+}
