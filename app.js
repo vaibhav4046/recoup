@@ -103,7 +103,7 @@
     const b = document.getElementById("install-app"); if (!b) return;
     const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
     const apple = /iphone|ipad|macintosh/i.test(navigator.userAgent) && !window.chrome;
-    if (!standalone && apple) b.classList.remove("hidden");  // Safari: show with manual steps
+    if (standalone) b.classList.add("hidden");  // already installed -> hide
     b.onclick = async () => {
       if (_installEvt) { _installEvt.prompt(); try { await _installEvt.userChoice; } catch (e) {} _installEvt = null; }
       else if (apple) alert("Install Recoup as an app:\n\niPhone/iPad: Share button, then Add to Home Screen\nMac (Safari): File menu, then Add to Dock\nChrome/Edge: address-bar install icon");
@@ -1382,7 +1382,7 @@
     GRAMMARLY: "https://account.grammarly.com/subscription",
     NORTON: "https://my.norton.com/extspa/account",
     MCAFEE: "https://home.mcafee.com/secure/protected/dashboard.aspx",
-    STREAMMAX: "https://www.google.com/search?q=cancel+StreamMax+subscription",
+    "DISNEY+": "https://www.disneyplus.com/account/subscription",
     GYM: "https://www.google.com/search?q=how+to+cancel+gym+membership+by+letter",
   };
   function cancelUrl(a) {

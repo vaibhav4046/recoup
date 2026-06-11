@@ -23,7 +23,7 @@
   // seeded reference run (mirrors POST /api/agent/recover output shape). Labelled "simulated"
   // until the live backend answers, then re-rendered from the REAL response and labelled "live".
   const SEED = {
-    charge: { merchant: "FitLife Gym", kind: "dead_subscription", amount_label: "$480/yr" },
+    charge: { merchant: "PureGym", kind: "dead_subscription", amount_label: "$480/yr" },
     steps: [
       { k: "plan", label: "Plan", text: "Classify the charge → retrieve a recovery playbook → draft → await your approval." },
       { k: "mcp", label: "MCP tool call", text: "<b>mongodb-mcp-server</b> &middot; inspect Atlas for the matching merchant + playbook." },
@@ -71,7 +71,7 @@
 
   // Upgrade to a REAL run if a backend is reachable — turns the showcase genuinely live.
   if (!API) return;
-  const charge = { merchant: "FitLife Gym", kind: "dead_subscription", amount: 480, amount_label: "$480/yr" };
+  const charge = { merchant: "PureGym", kind: "dead_subscription", amount: 480, amount_label: "$480/yr" };
   fetch(API + "/api/agent/recover", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ charge }),
   }).then((r) => r.ok ? r.json() : null).then((d) => {
