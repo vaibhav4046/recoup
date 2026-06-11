@@ -319,7 +319,7 @@
       row.innerHTML = `
         <span class="drain-rank">#${i + 1}</span>
         <div class="drain-main">
-          <b>${name}</b>
+          <b style="${(function(){var c=brandColor(name);return c?('color:'+c):''})()}">${name}</b>
           <span class="drain-why">${esc(a.kind === "price_creep" ? "price keeps climbing — challenge it or walk" : "auto-paying every cycle — keep it if you use it; cancel only if you don't")}</span>
         </div>
         <span class="drain-amt">$${money(a.amount)}<small>/yr</small></span>
@@ -378,6 +378,35 @@
     renderFilters(); applyFilter();
   }
 
+  // BRAND COLORS — every merchant rendered in its own brand color, instantly scannable
+  const BRAND_COLORS = {
+    NETFLIX: "#E50914", SPOTIFY: "#1DB954", "DISNEY": "#3aa2f7", YOUTUBE: "#FF4040",
+    LINKEDIN: "#37a3f5", AMAZON: "#FF9900", PRIME: "#FF9900", ADOBE: "#ff6464",
+    APPLE: "#c9ced4", GOOGLE: "#6fa8ff", GEMINI: "#6fa8ff", MICROSOFT: "#46b4f0",
+    SLACK: "#ff6692", HULU: "#1CE783", HBO: "#b06bff", MAX: "#b06bff", CANVA: "#1fd6dd",
+    FIGMA: "#b27dff", ZOOM: "#4ea1ff", DROPBOX: "#4f8dff", GRAMMARLY: "#2adba8",
+    AUDIBLE: "#F8991C", PUREGYM: "#ff5a6e", GIFFGAFF: "#ffd84d", ANTHROPIC: "#d9a36c",
+    CLAUDE: "#d9a36c", MISTRAL: "#ff9d4d", NOTION: "#e8e6e1", GITHUB: "#b7bdc8",
+    OPENAI: "#7ee2d9", CHATGPT: "#7ee2d9", PARAMOUNT: "#36a0ff", PEACOCK: "#ffd84d",
+    TWITCH: "#a970ff", XBOX: "#52b043", PLAYSTATION: "#4d7cff", NINTENDO: "#ff5a5a",
+    CRUNCHYROLL: "#ff8833", DUOLINGO: "#58cc02", CALM: "#5ba9f7", HEADSPACE: "#ff9d3c",
+    NORDVPN: "#5b8cff", PATREON: "#ff6a6a", SUBSTACK: "#ff7731", NYTIMES: "#dfe3e8",
+    UBER: "#e8e6e1", DOORDASH: "#ff5a5a", INSTACART: "#54b948", CHEGG: "#ff8c1a",
+  };
+  function brandColor(name) {
+    const u = String(name || "").toUpperCase();
+    for (const k in BRAND_COLORS) { if (u.includes(k)) return BRAND_COLORS[k]; }
+    return null;
+  }
+  function brandTitle(title) {
+    const t = String(title || "");
+    const cut = t.search(/[—(]/);
+    const head = cut > 0 ? t.slice(0, cut) : t;
+    const rest = cut > 0 ? t.slice(cut) : "";
+    const col = brandColor(head);
+    return col ? `<span class="brand" style="color:${col}">${esc(head)}</span>${esc(rest)}` : esc(t);
+  }
+
   function card(a) {
     const leak = isLeak(a.kind), once = a.cadence === "once";
     const st = a.status, approved = a.approvalState === "approved";
@@ -391,7 +420,7 @@
     const conf = a.confidence ? Math.round(a.confidence * 100) : null;
     const cUrl = cancelUrl(a);
     const sendRow = `<div class="fc-send">
-        ${cUrl ? `<a class="btn btn-mail" href="${safeUrl(cUrl)}" target="_blank" rel="noopener" aria-label="Open the vendor's own cancellation page">Cancel on ${esc((a.raw || a.title || "vendor").split(" ")[0].slice(0, 14))} ${icon('upRight')}</a>` : ""}
+        ${cUrl ? `<a class="btn btn-mail" data-exec="${aid}" href="${safeUrl(cUrl)}" target="_blank" rel="noopener" aria-label="Open the vendor's own cancellation page">Cancel on ${esc((a.raw || a.title || "vendor").split(" ")[0].slice(0, 14))} ${icon('upRight')}</a>` : ""}
         <button class="btn btn-copy" data-copy="${aid}" aria-label="Copy claim text">${icon('copy')} Copy</button>
         <a class="btn btn-copy" href="${gmailComposeUrl(a)}" target="_blank" rel="noopener" aria-label="Draft this claim in your Gmail">${icon('mail')} Draft in Gmail</a>
         ${a.claim_url ? `<a class="btn btn-mail" href="${safeUrl(a.claim_url)}" target="_blank" rel="noopener" aria-label="Open official claim form">Claim form ${icon('upRight')}</a>` : (!cUrl ? `<button class="btn btn-mail" data-mail="${aid}" aria-label="Email claim draft">${icon('mail')} Email</button>` : "")}
@@ -422,7 +451,7 @@
       : `<span class="fc-kind ${leak ? "leak" : "owed"}">${once ? "owed" : "leak"}</span>`;
     c.innerHTML = `
       <div class="fc-top">
-        <div class="fc-title">${esc(a.title)}</div>
+        <div class="fc-title">${brandTitle(a.title)}</div>
         <div class="fc-tags">
           ${conf ? `<span class="fc-conf ${esc(a.confidence_band || "")}" title="confidence the rule applies">${conf}%</span>` : ""}
           ${tag}
@@ -1020,6 +1049,30 @@
       if (openScanBtn) { openScan(); return; }
       const showResultsBtn = ev.target.closest("[data-show-results]");
       if (showResultsBtn) { showResults(); return; }
+      // Cancel click = the execution agent rides along: portal tab opens via href, and the
+      // Playwright preview (live screenshot of the agent ON the vendor page) renders on the card.
+      const ex = ev.target.closest("[data-exec]");
+      if (ex && API) {
+        const a2 = S.actions.find((x) => x.id === ex.dataset.exec);
+        const cu2 = a2 && cancelUrl(a2);
+        const cardEl = ex.closest(".fcard");
+        if (a2 && cu2 && !cu2.includes("google.com/search") && cardEl && !cardEl.querySelector(".exec-steps")) {
+          const exp = el("div", "exec-steps");
+          exp.innerHTML = `<div class="ap-step dim"><span class="ap-tick">⟳</span><span class="ap-t">Execution Agent: walking the portal with a real browser…</span></div>`;
+          cardEl.appendChild(exp);
+          fetch(API + "/api/agent/execute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url: cu2 }) })
+            .then((r) => r.json()).then((d) => {
+              const line = exp.querySelector(".ap-step");
+              if (d && d.ok && d.shots && d.shots.length) {
+                line.className = "ap-step ok";
+                line.innerHTML = `<span class="ap-tick">✓</span><span class="ap-t">Agent reached ${esc(d.final_url_host || "the portal")}${d.login_wall ? " — login wall: your account, your final click" : ""} (${d.total_ms}ms, Playwright)</span>`;
+                const img = el("img", "exec-shot"); img.src = "data:image/jpeg;base64," + d.shots[0]; img.alt = "Live browser preview"; exp.appendChild(img);
+                exp.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              } else { exp.remove(); }
+            }).catch(() => { exp.remove(); });
+        }
+        return; // href handles the tab — do not block it
+      }
       const t = ev.target.closest("[data-approve],[data-skip],[data-view],[data-copy],[data-mail],[data-sent],[data-paid]"); if (!t) return;
       if (t.dataset.approve) approve(t.dataset.approve);
       else if (t.dataset.skip) skip(t.dataset.skip);
