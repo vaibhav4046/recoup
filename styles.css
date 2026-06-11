@@ -633,6 +633,7 @@ body{
 .ny-chip.urgent{border-color:rgba(255,125,107,.5);color:#ff9d8b}
 .ny-chip.warn{border-color:rgba(245,197,24,.4);color:#e9c75a}
 .ny-go{align-self:flex-start;padding:9px 16px;min-height:0}
+.exec-steps{margin-top:10px;padding:10px 12px;border:1px solid rgba(52,211,153,.3);border-radius:11px;background:rgba(52,211,153,.05);display:flex;flex-direction:column;gap:3px}
 .ap-boundary{font-size:11.5px;color:var(--muted);padding:8px 4px}
 .ap-boundary code{color:var(--cyan)}
 @media(prefers-reduced-motion:reduce){.ap-phase{animation:none;opacity:1;transform:none}.ap-spin{animation:none}}
