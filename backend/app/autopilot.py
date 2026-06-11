@@ -119,7 +119,14 @@ def run_mission(user_findings: list | None = None) -> dict:
                       f"(amounts already computed — never change them): {_json.dumps(summary)}\n"
                       "Return ONLY JSON {\"advice\":[{\"t\":str}]} — the 3 highest-value moves, concrete and grounded "
                       "in consumer-protection rules (Click-to-Cancel, FCBA chargebacks, EU261...). No invented numbers.")
-            text, used = _agent.generate_any(prompt)
+            # HARD 7s budget — the mission must stay demo-fast; a slow ladder hop must never make
+            # the user-data Autopilot take 30s+ (cached answers still return instantly).
+            from concurrent.futures import ThreadPoolExecutor
+            _ex = ThreadPoolExecutor(max_workers=1)
+            try:
+                text, used = _ex.submit(_agent.generate_any, prompt).result(timeout=7)
+            finally:
+                _ex.shutdown(wait=False, cancel_futures=True)
             advice = (_json.loads(_agent._strip_fences(text)).get("advice") or [])[:3]
             model, live = used, True
             draft_steps = [_step(f"{len(drafted)} of your claims drafted", "each cites its consumer-protection basis",
