@@ -64,7 +64,9 @@ KNOWN_SERVICES = {
     "evernote": ("Evernote", 14.99), "vimeo": ("Vimeo", 12.00), "shutterstock": ("Shutterstock", 29.00),
 }
 # currency symbol + amount; supports "1,200.00" thousands groups and plain "12.99"
-_MONEY = re.compile(r"([$£€])\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:[.,]\d{2})?)")
+_MONEY = re.compile(r"([$£€₹]|USD|GBP|EUR|INR|Rs\.?)\s?(\d{1,3}(?:,\d{3})+(?:\.\d{2})?|\d+(?:[.,]\d{2})?)", re.I)
+# REAL currency, never assumed: symbols pass through; ISO codes / Rs map to their symbol.
+_CCY_MAP = {"USD": "$", "GBP": "£", "EUR": "€", "INR": "₹", "RS": "₹", "RS.": "₹"}
 
 
 def _parse_amount(raw: str) -> float:
@@ -150,7 +152,7 @@ def detect(messages: list[dict]) -> list[dict]:
             amount, found = est, None
         if amount <= 0:
             continue
-        currency = found.group(1) if found else "$"
+        currency = (_CCY_MAP.get(found.group(1).upper(), found.group(1)) if found else "$")  # $ only when no currency is visible (estimate, labeled)
         confident_amt = bool(found)
         # detect the billing period so an annual receipt is NOT annualized again (the ×12 bug)
         if re.search(r"\b(year|yearly|annual|annually|per year|/ ?yr|12 ?months)\b", text):
