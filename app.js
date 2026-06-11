@@ -308,9 +308,52 @@
     box.querySelectorAll("[data-view]").forEach((b) => { b.onclick = () => openDrawer(b.dataset.view); });
   }
 
+  // FILTERS + INSIGHTS — zone the money surface (subscriptions / trials / price hikes / owed /
+  // kept). Counts and the insight line are computed deterministically from the data — never by
+  // a model — so they cannot hallucinate.
+  let _filter = "all";
+  function _bucket(a) {
+    if (a.approvalState === "rejected") return "kept";
+    if (/trial/i.test(a.title || "")) return "trials";
+    if (a.kind === "price_creep") return "hikes";
+    if (a.kind === "dead_subscription") return "subs";
+    if (a.cadence === "once") return "owed";
+    return "subs";
+  }
+  function renderFilters() {
+    let bar = $("#filter-bar");
+    if (!bar) {
+      bar = el("div", "filter-bar"); bar.id = "filter-bar";
+      const f = $("#findings"); if (f && f.parentNode) f.parentNode.insertBefore(bar, f);
+    }
+    const n = (k) => S.actions.filter((a) => _bucket(a) === k).length;
+    const chips = [["all", "All", S.actions.length], ["subs", "🔁 Subscriptions", n("subs")], ["trials", "⏳ Trials", n("trials")],
+                   ["hikes", "💢 Price hikes", n("hikes")], ["owed", "💰 Owed to you", n("owed")], ["kept", "✓ In use (kept)", n("kept")]];
+    bar.innerHTML = chips.filter((c) => c[0] === "all" || c[2] > 0)
+      .map(([k, label, count]) => `<button class="fchip${_filter === k ? " on" : ""}" data-f="${k}">${label} <span class="fchip-n">${count}</span></button>`).join("");
+    // honest insight line — pure arithmetic over YOUR findings, no model involved
+    const pend = S.actions.filter((a) => a.approvalState === "pending");
+    const big = pend.filter((a) => a.cadence === "yearly").sort((x, y) => y.amount - x.amount)[0];
+    const trials = pend.filter((a) => /trial/i.test(a.title || ""));
+    const bits = [];
+    if (big) bits.push(`biggest unconfirmed drain: <b>${esc((big.raw || big.title).split(/[—(]/)[0].trim())}</b> at <b>${esc(big.amount_label)}</b>`);
+    if (trials.length) bits.push(`<b>${trials.length}</b> trial${trials.length > 1 ? "s" : ""} converting soon — act before renewal`);
+    const kept = S.actions.filter((a) => a._kept || a.approvalState === "rejected").length;
+    if (kept) bits.push(`${kept} confirmed in use — excluded from cancel suggestions`);
+    bar.insertAdjacentHTML("beforeend", bits.length ? `<div class="finsight">◇ ${bits.join(" · ")}</div>` : "");
+    bar.querySelectorAll("[data-f]").forEach((b) => { b.onclick = () => { _filter = b.dataset.f; renderFilters(); applyFilter(); }; });
+  }
+  function applyFilter() {
+    S.actions.forEach((a) => {
+      const c = $("#card-" + a.id);
+      if (c) c.style.display = (_filter === "all" || _bucket(a) === _filter) ? "" : "none";
+    });
+  }
+
   function renderFindings() {
     const box = $("#findings"); box.innerHTML = "";
     S.actions.forEach((a, i) => { const c = card(a); c.style.animationDelay = (i * 0.04) + "s"; box.appendChild(c); });
+    renderFilters(); applyFilter();
   }
 
   function card(a) {

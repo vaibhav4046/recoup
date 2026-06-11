@@ -634,6 +634,13 @@ body{
 .sb-t{font-size:13.5px}
 .sb-row{display:flex;gap:8px;flex-wrap:wrap}
 .sb-row .btn{min-height:0;padding:9px 14px}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.fchip{font:inherit;font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--border2);border-radius:16px;padding:7px 13px;cursor:pointer;transition:all .2s}
+.fchip:hover{border-color:rgba(245,197,24,.4);color:var(--text)}
+.fchip.on{color:#0d0d0f;background:linear-gradient(135deg,#ffd84d,#f5c518);border-color:transparent;font-weight:700}
+.fchip-n{opacity:.75;font-size:11px;margin-left:2px}
+.finsight{flex-basis:100%;font-size:12px;color:var(--muted);padding-top:2px}
+.finsight b{color:#e9c75a}
 .ap-needsyou{background:linear-gradient(95deg,rgba(52,211,153,.1),rgba(245,197,24,.06));border:1px solid rgba(52,211,153,.35);
   border-radius:13px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
 .ny-h{font-weight:800;font-size:13.5px}
