@@ -90,6 +90,16 @@
   }
 
   async function boot() {
+    // ULTRA-FAST sign-in path: if this device signed in before, paint the dashboard IMMEDIATELY
+    // (no landing flash, no transform) — checkAuth() then confirms the session in the background
+    // and downgrades gracefully if it expired.
+    try {
+      if (localStorage.getItem("ro_signed_in") === "1") {
+        const r = $("#results"), l = $("#landing");
+        if (r) r.classList.remove("hidden");
+        if (l) l.classList.add("hidden");
+      }
+    } catch (e) {}
     const auditLink = $("#audit-verify-link");
     if (auditLink && API) {
       auditLink.href = API + "/api/health";
@@ -666,10 +676,12 @@
       link.setAttribute("aria-label", "Signed in as " + (u.email || who) + " — sign out");
       link.onclick = async (e) => {
         e.preventDefault();
+        try { localStorage.removeItem("ro_signed_in"); } catch (e3) {}
         try { await fetch(API + "/api/auth/logout", { method: "POST", credentials: "include" }); } catch (e2) {}
         location.reload();
       };
     }
+    try { localStorage.setItem("ro_signed_in", "1"); } catch (e4) {}  // fast-path future page loads
     toast("Signed in as " + (u.email || who));
     showResults(); // the command center IS the signed-in dashboard — land there, not on the marketing page
     // SIGNED IN = YOUR DATA: if no real surface is loaded yet (no fresh scan, nothing restored),

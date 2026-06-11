@@ -20,10 +20,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
 <link rel="icon" type="image/png" href="favicon.png" />
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0a0a0c" />
+<script>if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }); }</script>
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to content</a>
-<div id="bg-field" aria-hidden="true"></div>
+<div id="bg-field" aria-hidden="true">
+  <!-- money roots: zoomed-in branching veins of value flowing through the dark — unique, ultra-low opacity -->
+  <svg class="money-roots" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#f5c518" stroke-linecap="round">
+      <path class="mr mr1" stroke-width="1.6" d="M-40,820 C220,760 300,640 420,610 C560,575 590,440 720,420 C850,400 880,300 1010,280 C1120,263 1180,180 1300,150 C1380,130 1430,90 1490,70"/>
+      <path class="mr mr2" stroke-width="1.1" d="M-40,860 C180,830 320,760 430,700 C540,640 700,640 800,560 C900,480 1040,470 1140,400 C1240,330 1340,310 1480,260"/>
+      <path class="mr mr3" stroke-width="0.9" d="M420,610 C460,520 430,440 520,380 C600,326 600,230 680,180 C740,142 760,60 820,-20"/>
+      <path class="mr mr4" stroke-width="0.8" d="M720,420 C790,380 800,300 900,260 C1000,220 1010,140 1090,100 C1150,70 1170,20 1200,-30"/>
+      <path class="mr mr5" stroke-width="1.3" d="M-60,520 C140,540 260,470 380,460 C520,450 600,520 760,510 C920,500 1000,560 1160,540 C1300,523 1390,560 1500,540"/>
+      <path class="mr mr6" stroke-width="0.7" d="M380,460 C420,380 380,300 460,250 C530,206 520,120 580,60"/>
+      <path class="mr mr7" stroke-width="0.7" d="M1010,280 C1050,350 1140,360 1180,440 C1220,520 1320,540 1380,610"/>
+      <path class="mr mr8" stroke-width="1.0" d="M-40,160 C120,200 240,160 360,210 C480,260 620,230 720,290 C820,350 980,330 1080,390"/>
+    </g>
+  </svg>
+</div>
 
 <header class="topbar">
   <div class="brand">

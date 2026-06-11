@@ -73,12 +73,20 @@ body{
     radial-gradient(32% 26% at 12% 80%,rgba(212,175,55,.08),transparent 72%);
   filter:blur(34px);animation:fieldDrift 28s ease-in-out infinite alternate}
 @keyframes fieldDrift{from{transform:translate3d(-2.5%,-2%,0) scale(1)}to{transform:translate3d(2.5%,2.5%,0) scale(1.07)}}
-/* sleek non-interactive gold light sheen gliding slowly across the canvas — luxe, calm, no particles */
-#bg-field::after{content:"";position:absolute;inset:-25% -40%;pointer-events:none;
-  background:linear-gradient(112deg,transparent 40%,rgba(245,197,24,.05) 47%,rgba(255,236,170,.09) 50%,rgba(245,197,24,.05) 53%,transparent 60%);
-  filter:blur(8px);animation:goldSheen 16s ease-in-out infinite}
-@keyframes goldSheen{0%{transform:translateX(-26%)}50%{transform:translateX(26%)}100%{transform:translateX(-26%)}}
-@media(prefers-reduced-motion:reduce){#bg-field::before,#bg-field::after{animation:none}}
+/* MONEY ROOTS — zoomed-in branching veins of value, lines slowly flowing like sap through roots.
+   Unique signature animation: ultra-low opacity, pure line-work, no particles, no sheen. */
+.money-roots{position:absolute;inset:0;width:100%;height:100%;opacity:.085}
+.mr{stroke-dasharray:7 150;animation:rootFlow linear infinite}
+.mr1{animation-duration:26s}
+.mr2{animation-duration:34s;animation-delay:-8s}
+.mr3{animation-duration:22s;animation-delay:-4s}
+.mr4{animation-duration:30s;animation-delay:-14s}
+.mr5{animation-duration:38s;animation-delay:-19s}
+.mr6{animation-duration:20s;animation-delay:-2s}
+.mr7{animation-duration:24s;animation-delay:-10s}
+.mr8{animation-duration:32s;animation-delay:-6s}
+@keyframes rootFlow{to{stroke-dashoffset:-1570}}
+@media(prefers-reduced-motion:reduce){#bg-field::before{animation:none}.mr{animation:none;stroke-dasharray:none;opacity:.5}}
 
 .glass{background:var(--panel);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
