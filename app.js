@@ -125,14 +125,18 @@
     revealGroup([...document.querySelectorAll(".landing-expanded > section, #agent-timeline")]);
     checkAuth(); // signed-in session -> personalized topbar + land in the command center
     // Gmail OAuth handoff: #gmail=<short-lived-token> | err. Query support remains for old callbacks.
+    let hadHandoff = false;
     try {
       const gp = gmailHandoff();
       if (gp) {
+        hadHandoff = gp !== "err";
         history.replaceState({}, "", location.pathname);
         if (gp === "err") toast("Gmail connect failed — try again, or use the paste scan");
         else if (gp !== "ok" && API) loadGmail(gp);
       }
     } catch (e) {}
+    // no fresh handoff -> bring back YOUR last real scan instead of the sample demo
+    if (!hadHandoff) restoreUserSurface();
   }
 
   function sumAmt(pred) { return r2(S.actions.filter(pred).reduce((s, a) => s + (a.amount || 0), 0)); }
@@ -439,6 +443,7 @@
   }
 
   async function forgetData() {
+    try { localStorage.removeItem("ro_user_surface"); } catch (e) {}  // wipe the on-device real scan too
     // send the session cookie (same-origin) + any live Gmail handoff token so the server can
     // actually scope the erasure; Gmail-derived findings also auto-expire server-side in 5 minutes.
     var tok = "";
@@ -646,8 +651,30 @@
     ];
     S.audit = [];
     await appendAudit("system", opts.scanner || "Recoup", "SCAN_RUN", opts.auditLabel || `Found ${findings.length} recoverable items, $${money(S.recoverable)} recoverable`, S.recoverable);
+    // YOUR data must survive a reload — persist locally (this device only; never uploaded).
+    try { localStorage.setItem("ro_user_surface", JSON.stringify({ findings, model: opts.model || "in-browser rules", ts: Date.now() })); } catch (e) {}
     renderAll(true);
     showResults();
+  }
+
+  function restoreUserSurface() {
+    // a previously-scanned REAL surface (Gmail/statement) beats the sample demo on reload
+    try {
+      const raw = localStorage.getItem("ro_user_surface");
+      if (!raw) return false;
+      const saved = JSON.parse(raw);
+      if (!saved || !Array.isArray(saved.findings) || !saved.findings.length) return false;
+      if (Date.now() - (saved.ts || 0) > 7 * 24 * 3600e3) { localStorage.removeItem("ro_user_surface"); return false; }
+      applyFindings(saved.findings, {
+        model: saved.model, scanner: "Recoup (restored)",
+        auditLabel: `Restored YOUR ${saved.findings.length}-item scan from this device`,
+        reasoning: [
+          { t: `Restored YOUR data — ${saved.findings.length} recoverable items from your last scan`, tone: "cyan" },
+          { t: "Stored only on this device · Delete my data wipes it", tone: "dim" },
+        ],
+      });
+      return true;
+    } catch (e) { return false; }
   }
 
   async function runScan() {
@@ -766,7 +793,11 @@
       apBtn.disabled = true;
       out.innerHTML = '<div class="ap-running"><span class="ap-spin"></span> Mission running — scanning, grounding in Atlas, drafting, verifying…</div>';
       try {
-        const m = await fetch(API + "/api/agent/autopilot", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).then((r) => r.json());
+        // YOUR data active -> the mission runs on YOUR findings (sent once, grounded server-side; never stored)
+        const payload = S._real && S.actions && S.actions.length
+          ? { findings: S.actions.map((a) => ({ title: a.title, kind: a.kind, amount: a.amount, cadence: a.cadence, evidence: a.evidence, verify: a.verify, draft: !!a.draft })) }
+          : {};
+        const m = await fetch(API + "/api/agent/autopilot", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }).then((r) => r.json());
         if (!m || !m.phases) throw new Error("bad mission");
         out.innerHTML = "";
         const head = el("div", "ap-head");

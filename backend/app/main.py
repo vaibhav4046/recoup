@@ -254,9 +254,11 @@ async def unclaimed_search(request: Request, name: str = ""):
 @app.post("/api/agent/autopilot")
 async def agent_autopilot(request: Request):
     """AUTOPILOT — the autonomous mission: scan -> ground (Atlas) -> draft -> verify -> queue at
-    the human gate, one call, every step real + timed + audit-chained. Returns the layered log."""
+    the human gate, one call, every step real + timed + audit-chained. When the visitor sends
+    their OWN findings (from their real Gmail/statement scan), the mission runs on THOSE."""
     from . import autopilot
-    res = await run_in_threadpool(autopilot.run_mission)
+    body = await _json_obj(request)
+    res = await run_in_threadpool(autopilot.run_mission, (body or {}).get("findings"))
     return _ok(request, **res)
 
 
@@ -489,7 +491,7 @@ async def auth_logout():
 
 # ---- Gmail subscription intake (read-only; subscriptions only, never bank data) ----
 _GMAIL_FINDINGS: dict[str, dict] = {}
-_GMAIL_TTL_S = 5 * 60
+_GMAIL_TTL_S = 30 * 60  # consent screens are slow; the handoff token is one-shot either way
 
 
 def _store_gmail_findings(findings: list) -> str:
