@@ -676,7 +676,8 @@
       link.setAttribute("aria-label", "Signed in as " + (u.email || who) + " — sign out");
       link.onclick = async (e) => {
         e.preventDefault();
-        try { localStorage.removeItem("ro_signed_in"); } catch (e3) {}
+        // sign-out = private data leaves this browser too (surface, kept-memory, session flag)
+        try { localStorage.removeItem("ro_signed_in"); localStorage.removeItem("ro_user_surface"); localStorage.removeItem("ro_kept"); } catch (e3) {}
         try { await fetch(API + "/api/auth/logout", { method: "POST", credentials: "include" }); } catch (e2) {}
         location.reload();
       };
@@ -762,8 +763,10 @@
   }
 
   function restoreUserSurface() {
-    // a previously-scanned REAL surface (Gmail/statement) beats the sample demo on reload
+    // a previously-scanned REAL surface (Gmail/statement) beats the sample demo on reload —
+    // but ONLY for a signed-in session. Signed-out users see the sample, never private data.
     try {
+      if (localStorage.getItem("ro_signed_in") !== "1") return false;
       const raw = localStorage.getItem("ro_user_surface");
       if (!raw) return false;
       const saved = JSON.parse(raw);
