@@ -185,21 +185,32 @@ def to_findings(subs: list[dict]) -> list[dict]:
             monthly = round(amt, 2)
         note = "free trial — will auto-convert" if s["trial"] else "payment lapsing" if s["lapsing"] else ("annual plan" if period == "year" else "active recurring charge")
         gen = s.get("generic", False)
-        conf = (0.6 if gen else 0.9) if s["amount_known"] else (0.5 if gen else 0.72)
+        # HONESTY RULE (the Anthropic/Spotify bug): receipts prove a subscription EXISTS — they
+        # can NEVER prove it's unused. Regular subscriptions are framed as "you decide" review
+        # items, never cancel recommendations. Only trials (auto-convert) and lapsing payments
+        # are actionable from receipt evidence alone.
+        actionable = bool(s["trial"] or s["lapsing"])
+        conf = ((0.6 if gen else 0.9) if s["amount_known"] else (0.5 if gen else 0.72)) if actionable \
+            else (0.55 if s["amount_known"] else 0.45)
         out.append({
             "id": f"gm_{i}", "kind": "dead_subscription",
-            "title": f"Review {s['name']} subscription",
+            "title": (f"Trial converting: {s['name']}" if s["trial"] else
+                      f"{s['name']} — active subscription (still using it?)"),
             "amount": annual, "cadence": "yearly", "currency": currency,
             "amount_label": f"{currency}{annual:,.0f}/yr", "unit_note": f"{currency}{monthly:.2f}/mo" + ("" if s["amount_known"] else " (est.)"),
             "evidence": f"From your Gmail: \"{s['evidence']}\" — {note}",
             "rule": "dead_sub", "confidence": conf, "confidence_band": "high" if conf >= 0.85 else "medium" if conf >= 0.6 else "review",
-            "caveat": ("Confirm this is a recurring subscription you still want to cancel." if gen else "Confirm you've stopped using it before cancelling.") if not s["trial"] else "Cancel before the trial converts to avoid the charge.",
-            "claim_url": None, "odds": "very likely", "timeline": "before renewal" if s["trial"] else "instant–1 cycle",
+            "caveat": ("Cancel before the trial converts to avoid the charge." if s["trial"] else
+                       "Detected from receipts only — Recoup CANNOT see whether you use this service. "
+                       "Keep it if you use it; this card shows what it costs per year so YOU decide."),
+            "claim_url": None,
+            "odds": "very likely" if actionable else "your call",
+            "timeline": "before renewal" if s["trial"] else "instant–1 cycle",
             "agent": "sub_hunter", "agent_name": "Subscription Hunter",
-            "verify": {"ok": True, "checks": [
+            "verify": {"ok": True, "needs_confirm": not actionable, "checks": [
                 {"label": "email signals a recurring charge" if gen else "matched a known subscription sender", "ok": True},
                 {"label": "amount from receipt" if s["amount_known"] else "amount estimated (confirm)", "ok": s["amount_known"]},
-                {"label": "from your own Gmail", "ok": True},
+                {"label": "usage is NOT verifiable from receipts — you confirm it", "ok": actionable},
             ]},
             "draft": f"Subject: Cancel {s['name']}\n\nPlease cancel my {s['name']} subscription effective immediately and confirm in writing, including any proration owed.",
             "approvalState": "pending", "status": "drafted", "source": "gmail",

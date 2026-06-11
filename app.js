@@ -288,7 +288,7 @@
         <span class="drain-rank">#${i + 1}</span>
         <div class="drain-main">
           <b>${name}</b>
-          <span class="drain-why">${esc(a.kind === "price_creep" ? "price keeps climbing — challenge it or walk" : "auto-paying every cycle — if you're not using it, this is pure drain")}</span>
+          <span class="drain-why">${esc(a.kind === "price_creep" ? "price keeps climbing — challenge it or walk" : "auto-paying every cycle — keep it if you use it; cancel only if you don't")}</span>
         </div>
         <span class="drain-amt">$${money(a.amount)}<small>/yr</small></span>
         ${cUrl ? `<a class="btn btn-mail drain-cancel" href="${safeUrl(cUrl)}" target="_blank" rel="noopener">Cancel ${icon('upRight')}</a>` : ""}
@@ -333,7 +333,7 @@
       actions = `<div class="fc-actions">
            <button class="btn btn-approve" data-approve="${aid}">${icon('check')} Approve</button>
            <button class="btn btn-view" data-view="${aid}">Show work</button>
-           <button class="btn btn-skip" data-skip="${aid}">Skip</button>
+           <button class="btn btn-skip" data-skip="${aid}">${a.kind === "dead_subscription" || a.kind === "price_creep" ? "✓ I use it — keep" : "Skip"}</button>
          </div>`;
     } else if (st === "paid") {
       actions = `<div class="fc-paid">${icon('check')} Recovered ${esc(a.amount_label)}</div>`;
@@ -410,14 +410,35 @@
     toast(`Claim drafted — ready to send: ${a.title}`);
   }
 
+  // SELF-IMPROVING MEMORY: services you mark "I use it" are remembered on this device and never
+  // re-suggested for cancellation in future scans (the Anthropic/Spotify accuracy fix).
+  function keptList() { try { return JSON.parse(localStorage.getItem("ro_kept") || "[]"); } catch (e) { return []; } }
+  function keptKey(a) { return String(a.raw || a.title || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 24); }
+  function rememberKept(a) {
+    try { const k = keptList(); const key = keptKey(a); if (key && !k.includes(key)) { k.push(key); localStorage.setItem("ro_kept", JSON.stringify(k.slice(-100))); } } catch (e) {}
+  }
+  function applyKeptMemory(findings) {
+    const k = keptList(); if (!k.length) return 0;
+    let n = 0;
+    findings.forEach((a) => {
+      if ((a.kind === "dead_subscription" || a.kind === "price_creep") && k.includes(keptKey(a)) && a.approvalState === "pending") {
+        a.approvalState = "rejected"; a._kept = true; n++;
+      }
+    });
+    return n;
+  }
+
   async function skip(id) {
     if (demoBlocked()) return;
     const a = S.actions.find((x) => x.id === id); if (!a) return;
     a.approvalState = "rejected"; a.status = "drafted";
-    await appendAudit("human", "You", "ACTION_REJECTED", "Skipped: " + a.title);
-    recompute(); renderHero(); renderBreakdown(); renderAudit();
+    const keepWord = a.kind === "dead_subscription" || a.kind === "price_creep";
+    if (keepWord) rememberKept(a); // learn: don't re-suggest this service next scan
+    await appendAudit("human", "You", "ACTION_REJECTED", (keepWord ? "Kept (in use): " : "Skipped: ") + a.title);
+    recompute(); renderHero(); renderBreakdown(); renderDrains(); renderAudit();
     const c = $("#card-" + id); if (c) { c.outerHTML = card(a).outerHTML; const nc = $("#card-" + id); if (nc) nc.style.animation = "none"; }
     if ($("#drawer").classList.contains("open")) closeDrawer();
+    if (keepWord) toast("Got it — " + (a.raw || a.title).split(" ")[0] + " marked as in use. I won't suggest cancelling it again.");
   }
 
   async function markSent(id, fromDemo) {
@@ -703,7 +724,9 @@
 
   async function applyFindings(findings, opts) {
     opts = opts || {};
+    const kept = applyKeptMemory(findings); // self-improving: honor "I use it" memory across scans
     S.actions = findings;
+    if (kept) setTimeout(() => toast(kept + " service" + (kept === 1 ? "" : "s") + " you marked as in-use stayed kept"), 1200);
     S._real = true; S._live = false;
     S.recurring_year = r2(findings.filter((a) => a.cadence === "yearly").reduce((s, a) => s + a.amount, 0));
     S.one_time = r2(findings.filter((a) => a.cadence === "once").reduce((s, a) => s + a.amount, 0));
@@ -939,14 +962,20 @@
       gMsgs.appendChild(m); gMsgs.scrollTop = gMsgs.scrollHeight;
       return m;
     };
+    const gHist = []; // context awareness: rolling last turns, so follow-ups make sense
     const gSend = async (text) => {
       text = (text || "").trim(); if (!text) return;
       gAdd("you", text);
       const thinking = gAdd("bot", "…thinking");
       try {
         // one-line surface summary (counts only — no raw data leaves unless already server-known)
-        const surface = S._real ? `${S.actions.length} real findings, $${money(S.recurring_year)}/yr recurring + $${money(S.one_time)} one-time` : "sample demo surface";
-        const d = API ? await fetch(API + "/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface }) }).then((r) => r.json()) : null;
+        const kept = keptList().length;
+        const surface = (S._real ? `${S.actions.length} real findings, $${money(S.recurring_year)}/yr recurring + $${money(S.one_time)} one-time` : "sample demo surface")
+          + (kept ? `; user marked ${kept} services as in-use (never suggest cancelling those)` : "");
+        const history = gHist.slice(-6).map((h) => h.who + ": " + h.t).join("\n");
+        const d = API ? await fetch(API + "/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ message: text, surface, history }) }).then((r) => r.json()) : null;
+        gHist.push({ who: "user", t: text.slice(0, 200) });
+        if (d && d.reply) gHist.push({ who: "assistant", t: d.reply.slice(0, 200) });
         thinking.remove();
         if (d && d.reply) {
           gAdd("bot", d.reply, d.live ? ("answered by " + d.model) : "instant guide");

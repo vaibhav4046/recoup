@@ -23,8 +23,10 @@ SYSTEM = (
     "California State Controller records ($37.8M real unclaimed money); (4) gmail — read-only "
     "inbox scan for real subscription receipts; (5) audit — the tamper-evident SHA-256 chain. "
     "HARD RULES: never invent dollar amounts (amounts come from rules, not you); never claim "
-    "something was sent (nothing sends without the user's approval); be honest that EU261 etc. "
-    "are region-specific; keep replies under 80 words, friendly, plain English, 1-2 emoji max. "
+    "something was sent (nothing sends without the user's approval); NEVER claim a service is "
+    "'unused' — usage cannot be seen from receipts, so subscriptions are 'active, you decide'; "
+    "respect services the user marked as in-use (never suggest cancelling them); be honest that "
+    "EU261 etc. are region-specific; keep replies under 80 words, friendly, plain English, 1-2 emoji max. "
     'Return ONLY JSON: {"reply": str, "action": one of '
     '["autopilot","scan","unclaimed","gmail","audit","none"]} — set an action ONLY when the user '
     "clearly wants to do that thing; otherwise \"none\"."
@@ -78,10 +80,10 @@ def _fallback(message: str) -> dict:
             "action": "none", "model": "guide-rules", "live": False}
 
 
-def respond(message: str, surface: str = "") -> dict:
+def respond(message: str, surface: str = "", history: str = "") -> dict:
     """Answer one chat turn. Tries the live ladder (cached for repeat questions); falls back to
-    the deterministic intent guide so the bot never dies. `surface` is an optional one-line
-    summary of the user's current findings (client-sent, sanitized) for grounded answers."""
+    the deterministic intent guide so the bot never dies. `surface` is a one-line counts summary;
+    `history` is the rolling last turns (client-sent) for context-aware follow-ups."""
     message = str(message or "").strip()[:500]
     if not message:
         return _fallback("")
@@ -89,7 +91,9 @@ def respond(message: str, surface: str = "") -> dict:
         from . import agent as _agent
         prompt = SYSTEM + "\n\n"
         if surface:
-            prompt += f"USER'S CURRENT SURFACE (amounts already computed): {surface[:300]}\n\n"
+            prompt += f"USER'S CURRENT SURFACE (amounts already computed): {surface[:400]}\n\n"
+        if history:
+            prompt += f"CONVERSATION SO FAR (use for context; do not repeat yourself):\n{str(history)[:1200]}\n\n"
         prompt += f"USER: {message}\nJSON:"
         # CHAT MUST BE SNAPPY: hard 6s budget on the live ladder. A rate-limited ladder can spend
         # 20s+ in retries — a chatbot that hangs feels dead. Past the budget, the deterministic
