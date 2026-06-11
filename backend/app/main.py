@@ -257,9 +257,10 @@ async def assistant_chat(request: Request):
     Same honest model ladder; deterministic intent fallback so the guide never goes dead."""
     body = await _json_obj(request)
     msg = str((body or {}).get("message") or "")[:500]
-    surface = str((body or {}).get("surface") or "")[:300]
+    surface = str((body or {}).get("surface") or "")[:400]
+    history = str((body or {}).get("history") or "")[:1200]
     from . import assistant
-    res = await run_in_threadpool(assistant.respond, msg, surface)
+    res = await run_in_threadpool(assistant.respond, msg, surface, history)
     return _ok(request, **res)
 
 
