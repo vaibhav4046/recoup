@@ -583,6 +583,57 @@ body{
 .rh-sub{font-size:12px;color:var(--muted);line-height:1.45}
 @media(max-width:760px){.rh-grid{grid-template-columns:1fr}}
 
+/* AUTOPILOT — layered autonomous-mission timeline */
+.rh-kbd{float:right;font-size:10.5px;color:var(--dim);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;letter-spacing:.06em}
+.rh-autopilot{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;padding:14px 18px;border-radius:14px;cursor:pointer;
+  border:1px solid rgba(245,197,24,.5);background:linear-gradient(95deg,rgba(245,197,24,.14),rgba(245,197,24,.04));color:var(--text);font-family:inherit;
+  transition:transform .25s var(--ease),box-shadow .25s}
+.rh-autopilot:hover{transform:translateY(-2px);box-shadow:0 16px 36px -16px rgba(245,197,24,.5)}
+.rh-autopilot:disabled{opacity:.6;cursor:wait;transform:none}
+.ap-bolt{font-size:22px;flex:none}
+.ap-copy{flex:1;font-size:13px;line-height:1.5;color:var(--muted)}
+.ap-copy b{color:#ffd84d;font-size:14.5px}
+.ap-go{flex:none;font-weight:800;color:#1a1402;background:var(--grad);border-radius:10px;padding:9px 16px;font-size:13px}
+.ap-mission{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.ap-running{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding:10px 4px}
+.ap-spin{width:14px;height:14px;border:2px solid rgba(245,197,24,.3);border-top-color:#ffd84d;border-radius:50%;animation:apSpin .8s linear infinite;flex:none}
+@keyframes apSpin{to{transform:rotate(360deg)}}
+.ap-head{font-size:12.5px;color:var(--muted);padding:8px 4px;border-bottom:1px solid var(--border)}
+.ap-head b{color:#ffd84d}
+.ap-phase{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;opacity:0;transform:translateY(8px);animation:apIn .5s var(--ease) forwards}
+@keyframes apIn{to{opacity:1;transform:none}}
+.ap-phase-h{display:flex;align-items:center;gap:9px;font-weight:800;font-size:13px;margin-bottom:8px;letter-spacing:.03em;text-transform:uppercase;color:#ffd84d}
+.ap-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.4);font-size:11px;color:#ffd84d}
+.ap-step{display:flex;align-items:baseline;gap:8px;padding:4px 0 4px 8px;font-size:12.5px;border-left:2px solid var(--border);margin-left:9px}
+.ap-step .ap-tick{color:var(--emerald);flex:none}
+.ap-step.warn .ap-tick{color:#e9c75a}
+.ap-step .ap-t{color:var(--text);font-weight:600}
+.ap-step .ap-d{color:var(--muted);font-size:11.5px}
+.ap-step .ap-ms{margin-left:auto;color:var(--dim);font-size:10.5px;flex:none}
+.ap-step.cyan .ap-tick{color:var(--cyan)}
+.ap-step.dim .ap-t{color:var(--muted);font-weight:500}
+.ap-boundary{font-size:11.5px;color:var(--muted);padding:8px 4px}
+.ap-boundary code{color:var(--cyan)}
+@media(prefers-reduced-motion:reduce){.ap-phase{animation:none;opacity:1;transform:none}.ap-spin{animation:none}}
+
+/* command palette (Ctrl/Cmd+K) */
+.cmdk-scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:.2s;z-index:90}
+.cmdk-scrim.open{opacity:1;pointer-events:auto}
+.cmdk{position:fixed;left:50%;top:18%;transform:translateX(-50%) scale(.97);width:min(560px,92vw);z-index:91;opacity:0;pointer-events:none;transition:.2s var(--ease);
+  background:var(--bg2);border:1px solid rgba(245,197,24,.35);border-radius:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);overflow:hidden}
+.cmdk.open{opacity:1;pointer-events:auto;transform:translateX(-50%) scale(1)}
+.cmdk-input{width:100%;padding:16px 18px;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:inherit;font-size:15px}
+.cmdk-input:focus{outline:none}
+.cmdk-list{max-height:320px;overflow:auto;padding:8px}
+.cmdk-item{padding:11px 12px;border-radius:10px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.cmdk-item:hover,.cmdk-item.sel{background:rgba(245,197,24,.1);color:var(--text)}
+
+/* use-case preset chips in the scan modal */
+.uc-presets{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.uc-presets-label{font-size:11.5px;color:var(--dim)}
+.preset-chip{padding:7px 13px;border-radius:20px;border:1px solid var(--border2);background:var(--panel2);color:var(--muted);font-family:inherit;font-size:12.5px;cursor:pointer;transition:.2s}
+.preset-chip:hover{border-color:rgba(245,197,24,.5);color:var(--text)}
+
 /* live AI plan inside the drawer */
 .drawer-ai{padding:0 22px 8px}
 .drawer-ai .btn{width:100%;justify-content:center}
