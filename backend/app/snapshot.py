@@ -56,7 +56,7 @@ def _money_surface() -> dict:
     """Seeded but realistic. In live mode this comes from the user's own statement / inbox."""
     return {
         "subscriptions": [
-            {"id": "sub_1", "name": "StreamMax Premium", "monthly": 19.99, "last_used_days": 142, "since": "2023-04"},
+            {"id": "sub_1", "name": "Disney+ Premium", "monthly": 19.99, "last_used_days": 142, "since": "2023-04"},
             {"id": "sub_2", "name": "CloudStore 2TB", "monthly": 9.99, "last_used_days": 8, "since": "2022-01"},
             {"id": "sub_3", "name": "FitPlus Gym App", "monthly": 14.99, "last_used_days": 210, "since": "2024-02"},
             {"id": "sub_4", "name": "NewsDaily+", "monthly": 12.99, "last_used_days": 20, "since": "2023-09",

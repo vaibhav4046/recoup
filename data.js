@@ -9,7 +9,7 @@ window.RO_FALLBACK = {
       {
         "id": "f_sub_1",
         "kind": "dead_subscription",
-        "title": "Cancel StreamMax Premium",
+        "title": "Cancel Disney+ Premium",
         "cadence": "yearly",
         "amount": 239.88,
         "currency": "$",
@@ -529,7 +529,7 @@ window.RO_FALLBACK = {
       "subscriptions": [
         {
           "id": "sub_1",
-          "name": "StreamMax Premium",
+          "name": "Disney+ Premium",
           "monthly": 19.99,
           "last_used_days": 142,
           "since": "2023-04"
@@ -635,7 +635,7 @@ window.RO_FALLBACK = {
       "id": "act_1",
       "finding_id": "f_sub_1",
       "kind": "dead_subscription",
-      "title": "Cancel StreamMax Premium",
+      "title": "Cancel Disney+ Premium",
       "verb": "Cancel",
       "amount": 239.88,
       "cadence": "yearly",

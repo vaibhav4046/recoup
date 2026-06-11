@@ -46,7 +46,7 @@ def _warmup():
     try:
         import asyncio
         from . import adk_agent
-        asyncio.run(adk_agent.mcp_probe({"merchant": "FitLife Gym", "kind": "dead_subscription"}))
+        asyncio.run(adk_agent.mcp_probe({"merchant": "PureGym", "kind": "dead_subscription"}))
     except Exception:
         pass
     # A boot-time 429 (free-tier per-minute burst from the warmup's calls) must NOT leave the
@@ -308,7 +308,7 @@ async def mcp_proof(request: Request):
     if the free-tier quota breaker is open, returns the last genuine cached tool-call proof with a
     human-readable note + when it was captured (never a bare 'quota_cooldown')."""
     from . import adk_agent
-    res = await adk_agent.mcp_probe({"merchant": "FitLife Gym", "kind": "dead_subscription"})
+    res = await adk_agent.mcp_probe({"merchant": "PureGym", "kind": "dead_subscription"})
     if not res.get("tool_calls"):
         cached = adk_agent.last_mcp_proof()
         if cached.get("tool_calls"):
