@@ -896,11 +896,19 @@
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
 
+    // real browser notifications — ask on the first agent action (a user gesture, like
+    // Claude/ChatGPT do); notify when long-running agent work completes.
+    const askNotify = () => { try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {} };
+    const notify = (title, body) => {
+      try { if ("Notification" in window && Notification.permission === "granted" && document.hidden) new Notification(title, { body, icon: "/mark.png" }); } catch (e) {}
+    };
+
     // AUTOPILOT — the autonomous mission, rendered as a layered live timeline
     const apBtn = $("#rh-autopilot");
     if (apBtn) apBtn.onclick = async () => {
       const out = $("#ap-mission"); if (!out) return;
       if (!API) { toast("Autopilot needs the live backend."); return; }
+      askNotify();
       apBtn.disabled = true;
       out.innerHTML = '<div class="ap-running"><span class="ap-spin"></span> Mission running — scanning, grounding in Atlas, drafting, verifying…</div>';
       try {
@@ -956,6 +964,7 @@
         setTimeout(() => foot.scrollIntoView({ behavior: "smooth", block: "nearest" }), 140 * (m.phases.length + 1));
         recompute(); renderAll(false);
         toast("Autopilot done — " + m.pending_approval + " claims waiting for YOUR approval");
+        notify("Recoup Autopilot finished ⚡", m.pending_approval + " claims are queued at your approval gate — only the Needs-YOU items want your attention.");
       } catch (e4) {
         out.innerHTML = '<div class="ap-running">Mission failed to reach the backend — try again in a few seconds.</div>';
       }

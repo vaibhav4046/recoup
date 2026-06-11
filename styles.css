@@ -712,6 +712,10 @@ body{
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(245,197,24,.45),rgba(212,175,55,.3));border-radius:8px}
 ::-webkit-scrollbar-thumb:hover{background:rgba(245,197,24,.6)}
 ::-webkit-scrollbar-corner{background:transparent}
+/* nested panels: near-invisible 3px bars — only the PAGE keeps a visible scrollbar (no clutter) */
+.guide-msgs::-webkit-scrollbar,.cmdk-list::-webkit-scrollbar,.ai-plan::-webkit-scrollbar,.drawer::-webkit-scrollbar{width:3px}
+.guide-msgs::-webkit-scrollbar-thumb,.cmdk-list::-webkit-scrollbar-thumb,.ai-plan::-webkit-scrollbar-thumb,.drawer::-webkit-scrollbar-thumb{background:rgba(245,197,24,.18)}
+.guide-msgs:hover::-webkit-scrollbar-thumb,.cmdk-list:hover::-webkit-scrollbar-thumb,.ai-plan:hover::-webkit-scrollbar-thumb,.drawer:hover::-webkit-scrollbar-thumb{background:rgba(245,197,24,.45)}
 .guide-msgs,.cmdk-list,.ai-plan,.drawer{scroll-behavior:smooth}
 
 /* tone selector in the claim drawer */
