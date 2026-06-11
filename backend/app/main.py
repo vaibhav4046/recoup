@@ -251,6 +251,15 @@ async def unclaimed_search(request: Request, name: str = ""):
     return _ok(request, **res)
 
 
+@app.post("/api/agent/autopilot")
+async def agent_autopilot(request: Request):
+    """AUTOPILOT — the autonomous mission: scan -> ground (Atlas) -> draft -> verify -> queue at
+    the human gate, one call, every step real + timed + audit-chained. Returns the layered log."""
+    from . import autopilot
+    res = await run_in_threadpool(autopilot.run_mission)
+    return _ok(request, **res)
+
+
 @app.get("/api/unclaimed/stats")
 async def unclaimed_stats(request: Request):
     """REAL aggregate of the indexed official-CA-records slice: total unclaimed $, count, largest."""

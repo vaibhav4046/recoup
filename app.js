@@ -758,6 +758,86 @@
     const fm = $("#find-money"); if (fm) fm.onclick = openScan;
     const se = $("#see-example"); if (se) se.onclick = showResults;
 
+    // AUTOPILOT — the autonomous mission, rendered as a layered live timeline
+    const apBtn = $("#rh-autopilot");
+    if (apBtn) apBtn.onclick = async () => {
+      const out = $("#ap-mission"); if (!out) return;
+      if (!API) { toast("Autopilot needs the live backend."); return; }
+      apBtn.disabled = true;
+      out.innerHTML = '<div class="ap-running"><span class="ap-spin"></span> Mission running — scanning, grounding in Atlas, drafting, verifying…</div>';
+      try {
+        const m = await fetch(API + "/api/agent/autopilot", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).then((r) => r.json());
+        if (!m || !m.phases) throw new Error("bad mission");
+        out.innerHTML = "";
+        const head = el("div", "ap-head");
+        head.innerHTML = `<b>Mission ${esc(m.mission_id)}</b> · ${m.findings} findings → ${m.drafted} claims drafted → ${m.pending_approval} at your approval gate · ${m.total_ms}ms · ${esc(modelLabel(m))}`;
+        out.appendChild(head);
+        let delay = 0;
+        m.phases.forEach((p, pi) => {
+          const ph = el("div", "ap-phase");
+          ph.style.animationDelay = (delay += 120) + "ms";
+          ph.innerHTML = `<div class="ap-phase-h"><span class="ap-num">${pi + 1}</span> ${esc(p.name)}</div>` +
+            p.steps.map((s) => `<div class="ap-step ${esc(s.tone || "ok")}"><span class="ap-tick">${s.tone === "warn" ? "△" : "✓"}</span><span class="ap-t">${esc(s.t)}</span>${s.detail ? `<span class="ap-d">${esc(s.detail)}</span>` : ""}${s.ms ? `<span class="ap-ms">${s.ms}ms</span>` : ""}</div>`).join("");
+          out.appendChild(ph);
+        });
+        const foot = el("div", "ap-boundary");
+        foot.innerHTML = `🔒 ${esc(m.boundary)} · audit head <code>${esc(String((m.audit || {}).head || "").slice(0, 12))}…</code>`;
+        out.appendChild(foot);
+        recompute(); renderAll(false);
+        toast("Autopilot done — " + m.pending_approval + " claims waiting for YOUR approval");
+      } catch (e4) {
+        out.innerHTML = '<div class="ap-running">Mission failed to reach the backend — try again in a few seconds.</div>';
+      }
+      apBtn.disabled = false;
+    };
+
+    // use-case presets — multiple personas, one click, scanned by the REAL engine
+    const PRESETS = {
+      student: "Transaction Date,Description,Amount\n01/05/2026,SPOTIFY USA,-11.99\n02/05/2026,SPOTIFY USA,-11.99\n01/09/2026,CHEGG STUDY,-19.95\n02/09/2026,CHEGG STUDY,-19.95\n01/14/2026,PLANET FIT,-24.99\n02/14/2026,PLANET FIT,-27.99\n02/20/2026,UBER EATS,-23.40\n02/21/2026,UBER EATS,-23.40",
+      traveler: "Transaction Date,Description,Amount\n01/03/2026,RYANAIR FR2231,-89.99\n01/18/2026,BOOKING.COM HOTEL,-240.00\n02/01/2026,PRIORITY PASS,-99.00\n01/02/2026,PRIORITY PASS,-99.00\n02/12/2026,AIRBNB DEPOSIT,-300.00\n02/15/2026,REVOLUT METAL,-16.99\n01/15/2026,REVOLUT METAL,-16.99",
+      family: "Transaction Date,Description,Amount\n01/04/2026,NETFLIX.COM,-22.99\n02/04/2026,NETFLIX.COM,-22.99\n01/07/2026,DISNEY PLUS,-13.99\n02/07/2026,DISNEY PLUS,-15.99\n01/11/2026,FITLIFE GYM FAMILY,-79.00\n02/11/2026,FITLIFE GYM FAMILY,-79.00\n02/18/2026,AMZN MKTP,-43.18\n02/19/2026,AMZN MKTP,-43.18",
+      freelancer: "Transaction Date,Description,Amount\n01/06/2026,ADOBE CREATIVE CLD,-54.99\n02/06/2026,ADOBE CREATIVE CLD,-59.99\n01/08/2026,DROPBOX PLUS,-11.99\n02/08/2026,DROPBOX PLUS,-11.99\n01/12/2026,LINKEDIN PREMIUM,-39.99\n02/12/2026,LINKEDIN PREMIUM,-39.99\n01/20/2026,ZOOM PRO,-15.99\n02/20/2026,ZOOM PRO,-15.99",
+    };
+    document.querySelectorAll(".preset-chip").forEach((ch) => {
+      ch.onclick = () => { const i = $("#scan-input"); if (i && PRESETS[ch.dataset.preset]) { i.value = PRESETS[ch.dataset.preset]; i.focus(); toast("Use-case loaded — hit Scan privately (parsed in your browser)"); } };
+    });
+
+    // ⌘K / Ctrl-K command palette — every agent action one keystroke away
+    const CMDS = [
+      { t: "⚡ Run Autopilot (autonomous mission)", run: () => { showResults(); setTimeout(() => { const b = $("#rh-autopilot"); if (b) { b.scrollIntoView({ block: "center" }); b.click(); } }, 250); } },
+      { t: "📄 Scan my real statement (in-browser)", run: () => openScan() },
+      { t: "💰 Search $37.8M real unclaimed money", run: () => { showResults(); setTimeout(() => { const u = $("#unclaimed"); if (u) { u.scrollIntoView({ block: "start" }); const i = $("#uc-name"); if (i) i.focus(); } }, 250); } },
+      { t: "📧 Scan my Gmail (read-only)", run: () => { if (API) window.location.href = API + "/api/gmail/start"; } },
+      { t: "🛡 Verify the audit chain (live)", run: () => { if (API) window.open(API + "/api/health", "_blank", "noopener"); } },
+      { t: "✅ Approve all safe wins", run: () => { showResults(); setTimeout(() => { const b = $("#btn-approve-all"); if (b) b.click(); }, 250); } },
+      { t: "▶ See a claim recovered (demo)", run: () => { showResults(); setTimeout(() => { const b = $("#demo-recovery"); if (b) b.click(); }, 250); } },
+    ];
+    const ck = $("#cmdk"), ckIn = $("#cmdk-input"), ckList = $("#cmdk-list"), ckScrim = $("#cmdk-scrim");
+    let ckSel = 0;
+    const ckRender = (q) => {
+      const items = CMDS.filter((c) => !q || c.t.toLowerCase().includes(q.toLowerCase()));
+      ckSel = Math.min(ckSel, Math.max(0, items.length - 1));
+      ckList.innerHTML = items.length ? items.map((c, i) => `<div class="cmdk-item${i === ckSel ? " sel" : ""}" data-i="${i}" role="option" aria-selected="${i === ckSel}">${c.t}</div>`).join("") : '<div class="cmdk-item">No matching command</div>';
+      ckList.querySelectorAll(".cmdk-item[data-i]").forEach((n) => { n.onclick = () => { ckClose(); items[+n.dataset.i].run(); }; });
+      return items;
+    };
+    const ckOpen = () => { if (!ck) return; ck.classList.add("open"); ckScrim.classList.add("open"); ck.setAttribute("aria-hidden", "false"); ckIn.value = ""; ckSel = 0; ckRender(""); setTimeout(() => ckIn.focus(), 40); };
+    const ckClose = () => { if (!ck) return; ck.classList.remove("open"); ckScrim.classList.remove("open"); ck.setAttribute("aria-hidden", "true"); };
+    if (ck && ckIn) {
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); ck.classList.contains("open") ? ckClose() : ckOpen(); }
+        else if (e.key === "Escape" && ck.classList.contains("open")) ckClose();
+      });
+      ckIn.addEventListener("input", () => { ckSel = 0; ckRender(ckIn.value); });
+      ckIn.addEventListener("keydown", (e) => {
+        const items = CMDS.filter((c) => !ckIn.value || c.t.toLowerCase().includes(ckIn.value.toLowerCase()));
+        if (e.key === "ArrowDown") { e.preventDefault(); ckSel = Math.min(ckSel + 1, items.length - 1); ckRender(ckIn.value); }
+        else if (e.key === "ArrowUp") { e.preventDefault(); ckSel = Math.max(ckSel - 1, 0); ckRender(ckIn.value); }
+        else if (e.key === "Enter" && items[ckSel]) { e.preventDefault(); ckClose(); items[ckSel].run(); }
+      });
+      ckScrim.onclick = ckClose;
+    }
+
     // REAL-MONEY HUB — live paths above the sample demo
     const rs = $("#rh-scan"); if (rs) rs.onclick = openScan;
     const rg = $("#rh-gmail"); if (rg) rg.onclick = () => { if (API) window.location.href = API + "/api/gmail/start"; else toast("Gmail scan needs the live backend."); };

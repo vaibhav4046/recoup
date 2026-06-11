@@ -383,7 +383,14 @@
 
   <!-- REAL-MONEY HUB — the live paths to YOUR money, above the labeled sample demo -->
   <section class="glass panel real-hub" id="real-hub" aria-label="Your real money — live paths">
-    <div class="rh-head"><span class="rh-live">● LIVE</span> Your <b>real</b> money — three real paths, real data</div>
+    <div class="rh-head"><span class="rh-live">● LIVE</span> Your <b>real</b> money — three real paths, real data
+      <span class="rh-kbd" title="Command palette">Ctrl K</span></div>
+    <button class="rh-autopilot" id="rh-autopilot">
+      <span class="ap-bolt">⚡</span>
+      <span class="ap-copy"><b>Run Autopilot</b> — the agent scans, grounds every claim in Atlas, drafts, verifies and queues — autonomously. You keep the approve button.</span>
+      <span class="ap-go">Run →</span>
+    </button>
+    <div class="ap-mission" id="ap-mission" aria-live="polite"></div>
     <div class="rh-grid">
       <button class="rh-card" id="rh-scan">
         <span class="rh-big">Scan your real statement</span>
@@ -531,6 +538,13 @@
   </button>
   <p class="ga-desc"><b>Read-only</b> — it reads subscription receipts and renewal emails from the Google account you pick (one account per connect), never sends or deletes anything, and you can erase the results anytime. Google shows an <b>"unverified app"</b> screen: click <b>Advanced → Continue</b>.</p>
   <div class="modal-divider">or paste a statement — 100% in your browser, no sign-in</div>
+  <div class="uc-presets" role="group" aria-label="Try a use case">
+    <span class="uc-presets-label">Use cases:</span>
+    <button class="preset-chip" data-preset="student">🎓 Student</button>
+    <button class="preset-chip" data-preset="traveler">✈️ Traveler</button>
+    <button class="preset-chip" data-preset="family">🏠 Family</button>
+    <button class="preset-chip" data-preset="freelancer">💼 Freelancer</button>
+  </div>
   <textarea id="scan-input" class="scan-input" spellcheck="false" aria-label="Paste your statement" placeholder="Paste a REAL bank CSV export (Chase / Wells Fargo / Amex — keep the header row) or any list, one per line:&#10;&#10;Transaction Date,Description,Amount&#10;01/05/2026,NETFLIX.COM,-15.49&#10;&#10;Netflix, 19.99&#10;Gym membership 49.99"></textarea>
   <div class="modal-actions">
     <button class="btn btn-ghost" id="scan-sample">Try a sample</button>
@@ -555,6 +569,13 @@
     <button class="btn btn-ghost" id="drawer-skip">Skip</button>
   </div>
 </aside>
+
+<!-- command palette (Ctrl/Cmd+K) — every agent action, one keystroke away -->
+<div class="cmdk-scrim" id="cmdk-scrim" aria-hidden="true"></div>
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Command palette" aria-hidden="true">
+  <input class="cmdk-input" id="cmdk-input" type="text" placeholder="Type a command… (autopilot, scan, search, audit)" aria-label="Search commands" autocomplete="off" />
+  <div class="cmdk-list" id="cmdk-list" role="listbox"></div>
+</div>
 
 <script src="config.js"></script>
 <script src="data.js"></script>
