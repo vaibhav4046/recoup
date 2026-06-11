@@ -611,6 +611,7 @@
           if (d && d.plan) {
             const pb = d.playbook || {};
             aiOut.innerHTML = `<div class="ai-model">${esc(modelLabel(d))}${pb.basis ? " · grounded in: " + esc(pb.basis).slice(0, 70) : ""}</div><pre class="ai-plan">${esc(d.plan)}</pre>`;
+            aiOut.scrollIntoView({ behavior: "smooth", block: "nearest" }); // auto-scroll the plan into view
           } else aiOut.innerHTML = '<div class="ai-thinking">' + esc((d && d.error) || "Agent unavailable — try again.") + "</div>";
         } catch (e3) { aiOut.innerHTML = '<div class="ai-thinking">Backend waking — try again in a few seconds.</div>'; aiBtn.disabled = false; }
       };
@@ -889,6 +890,11 @@
         const foot = el("div", "ap-boundary");
         foot.innerHTML = `🔒 ${esc(m.boundary)} · audit head <code>${esc(String((m.audit || {}).head || "").slice(0, 12))}…</code>`;
         out.appendChild(foot);
+        // auto-scroll: follow each phase as it reveals (staggered 120ms), ending on the boundary line
+        m.phases.forEach((p, pi) => {
+          setTimeout(() => { const ph = out.querySelectorAll(".ap-phase")[pi]; if (ph) ph.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 140 * (pi + 1));
+        });
+        setTimeout(() => foot.scrollIntoView({ behavior: "smooth", block: "nearest" }), 140 * (m.phases.length + 1));
         recompute(); renderAll(false);
         toast("Autopilot done — " + m.pending_approval + " claims waiting for YOUR approval");
       } catch (e4) {
