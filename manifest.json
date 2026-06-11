@@ -1,0 +1,13 @@
+{
+  "name": "Recoup — AI Money Recovery Agent",
+  "short_name": "Recoup",
+  "description": "Budgeting apps show where your money went. Recoup gets it back.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0a0a0c",
+  "icons": [
+    { "src": "/mark.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/mark.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
