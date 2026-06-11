@@ -91,7 +91,15 @@ def respond(message: str, surface: str = "") -> dict:
         if surface:
             prompt += f"USER'S CURRENT SURFACE (amounts already computed): {surface[:300]}\n\n"
         prompt += f"USER: {message}\nJSON:"
-        text, used = _agent.generate_any(prompt)
+        # CHAT MUST BE SNAPPY: hard 6s budget on the live ladder. A rate-limited ladder can spend
+        # 20s+ in retries — a chatbot that hangs feels dead. Past the budget, the deterministic
+        # guide answers instantly (cached live answers still return in <1s).
+        from concurrent.futures import ThreadPoolExecutor
+        ex = ThreadPoolExecutor(max_workers=1)
+        try:
+            text, used = ex.submit(_agent.generate_any, prompt).result(timeout=6)
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)  # never block the chat on a slow ladder thread
         data = json.loads(_agent._strip_fences(text))
         reply = str(data.get("reply") or "").strip()[:600]
         action = data.get("action") if data.get("action") in ACTIONS else "none"
