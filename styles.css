@@ -634,6 +634,9 @@ body{
 .sb-t{font-size:13.5px}
 .sb-row{display:flex;gap:8px;flex-wrap:wrap}
 .sb-row .btn{min-height:0;padding:9px 14px}
+.install-btn{font:inherit;font-size:12.5px;font-weight:700;color:#0d0d0f;background:linear-gradient(135deg,#ffd84d,#f5c518);border:none;border-radius:18px;padding:8px 14px;cursor:pointer;transition:all .2s}
+.install-btn:hover{filter:brightness(1.08)}
+.install-btn.hidden{display:none}
 .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
 .fchip{font:inherit;font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--border2);border-radius:16px;padding:7px 13px;cursor:pointer;transition:all .2s}
 .fchip:hover{border-color:rgba(245,197,24,.4);color:var(--text)}

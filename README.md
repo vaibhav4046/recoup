@@ -259,3 +259,11 @@ All 19 checks pass with no secrets or live services required (deterministic path
 ## License
 
 MIT © 2026 Vaibhav Lalwani
+
+## Use Recoup everywhere — app installs and integrations
+
+**Install as an app (PWA).** Recoup is installable on every platform from the same live URL — click **⤓ Install app** in the topbar (Chrome/Edge on Windows, Linux, macOS, Android), or on iPhone/iPad use Share → Add to Home Screen. The installed app is standalone, shares the same on-device memory and session as the web app, and fires real browser notifications when Autopilot missions, bulk executions, or Sentinel alerts complete.
+
+**Recoup is an MCP server.** Any MCP-capable agent host (Claude, Gemini CLI, custom ADK agents) can connect to the JSON-RPC surface at `/mcp` and call 5 tools — `recoup_scan`, `recoup_plan_recovery`, `recoup_get_audit`, `recoup_search_unclaimed`, `recoup_health`. Approval is deliberately **not** exposed over MCP: machines can plan, only the human approves.
+
+**Agent stack.** Six cooperating agents: Scanner (Gmail read-only / in-browser CSV), Grounder (MongoDB Atlas `$vectorSearch` over 41 consumer-protection precedents + playbooks), Drafter (Gemini 3 via Google ADK, Gemma 4 resilience tier), Verifier (independent checks that flag what you may NOT qualify for), **Executor (Playwright — a real headless Chromium walks the vendor's cancellation portal and streams a live screenshot into the card)**, and **Sentinel (scheduled drain watch that notifies you and executes on your one tap)**. Every step is written to a tamper-evident SHA-256 audit chain persisted in Atlas.

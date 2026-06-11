@@ -89,6 +89,28 @@
     return (h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0")).repeat(4).slice(0, 64);
   }
 
+  // PWA INSTALL — surface the real install prompt as a visible button (Chrome/Edge fire
+  // beforeinstallprompt; Safari/iOS get clear manual steps; hidden once installed).
+  let _installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); _installEvt = e;
+    const b = document.getElementById("install-app"); if (b) b.classList.remove("hidden");
+  });
+  window.addEventListener("appinstalled", () => {
+    const b = document.getElementById("install-app"); if (b) b.classList.add("hidden");
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    const b = document.getElementById("install-app"); if (!b) return;
+    const standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    const apple = /iphone|ipad|macintosh/i.test(navigator.userAgent) && !window.chrome;
+    if (!standalone && apple) b.classList.remove("hidden");  // Safari: show with manual steps
+    b.onclick = async () => {
+      if (_installEvt) { _installEvt.prompt(); try { await _installEvt.userChoice; } catch (e) {} _installEvt = null; }
+      else if (apple) alert("Install Recoup as an app:\n\niPhone/iPad: Share button, then Add to Home Screen\nMac (Safari): File menu, then Add to Dock\nChrome/Edge: address-bar install icon");
+      else alert("In Chrome or Edge: click the install icon in the address bar, or Menu -> Cast, save and share -> Install Recoup.");
+    };
+  });
+
   async function boot() {
     // ULTRA-FAST sign-in path: if this device signed in before, paint the dashboard IMMEDIATELY
     // (no landing flash, no transform) — checkAuth() then confirms the session in the background
